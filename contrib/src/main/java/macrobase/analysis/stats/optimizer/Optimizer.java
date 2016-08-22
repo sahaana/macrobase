@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Jama.Matrix;
+import org.apache.commons.lang3.ObjectUtils;
+import org.eclipse.jetty.util.log.Log;
+import org.jblas.DoubleMatrix;
+import weka.core.matrix.DoubleVector;
 
 public abstract class Optimizer {
     protected int N; //orig dimension
@@ -17,6 +21,10 @@ public abstract class Optimizer {
     public Optimizer(double epsilon){
         this.epsilon = epsilon;
     }
+
+    public int getN(){return N;}
+
+    public int getM(){return M;}
 
     public void extractData(List<Datum> records){
         ArrayList<double[]> metrics = new ArrayList<>();
@@ -33,9 +41,25 @@ public abstract class Optimizer {
         this.dataMatrix = new Matrix(metricArray);
     }
 
-    public abstract Matrix tranform(int K, int Nt);
+    public DoubleVector calcDistances(Matrix dataA, Matrix dataB){
+        DoubleMatrix differences;
+        DoubleMatrix squaredSum;
+        DoubleVector norms;
 
-    public abstract double epsilonAttained(Matrix transformedMatrix);
+        differences = new DoubleMatrix((dataA.minus(dataB)).getArray());
+        squaredSum = differences.muli(differences);
+        norms = (new DoubleVector(squaredSum.rowSums().toArray())).sqrt();
+
+        return norms;
+    }
+
+    public double LBR(DoubleVector trueDists, DoubleVector tranformedDists){
+        return trueDists.dividedBy(tranformedDists).sum()/tranformedDists.size();
+    }
+
+    public abstract Matrix transform(int K, int Nt);
+
+    public abstract double epsilonAttained(int iter, Matrix transformedMatrix);
 
     public abstract int getNextNt(int iter);
 }

@@ -3,6 +3,7 @@ package macrobase.analysis.stats.optimizer;
 import Jama.Matrix;
 import com.mkobos.pca_transform.PCA;
 import macrobase.datamodel.Datum;
+import weka.core.matrix.DoubleVector;
 
 import java.util.List;
 import java.util.Random;
@@ -20,14 +21,21 @@ public class PCAOptimizer extends Optimizer {
     }
 
     @Override
-    public Matrix tranform(int K, int Nt) {
+    public Matrix transform(int K, int Nt) {
         Matrix trainMatrix = this.dataMatrix.getMatrix(0, Nt, 0, this.N);
         PCA pca = new PCA(trainMatrix);
         return pca.transform(this.dataMatrix, PCA.TransformationType.WHITENING).getMatrix(0, this.M, 0, K);
     } //TODO: MAKE ONLY THIS PART IN JAMA, REST IN VECTOR/BLAS
 
     @Override
-    public double epsilonAttained(Matrix transformedData) {
+    public double epsilonAttained(int iter, Matrix transformedData) {
+        if (iter == 0){
+            return 1;
+        }
+
+        DoubleVector transformedDists;
+        DoubleVector trueDists;
+        double lbr;
         int[] indicesA = new int[this.M];
         int[] indicesB = new int[this.M];
         int K = transformedData.getRowDimension();
@@ -38,11 +46,11 @@ public class PCAOptimizer extends Optimizer {
             indicesB[i] = rand.nextInt(this.M);
         }
 
-        Matrix tranformedDifferences = transformedData.getMatrix(indicesA,0,K).minus(transformedData.getMatrix(indicesB,0,K));
-        Matrix originalDifferences = this.dataMatrix.getMatrix(indicesA,0,this.N).minus(this.dataMatrix.getMatrix(indicesB,0,this.N));
+        transformedDists = this.calcDistances(transformedData.getMatrix(indicesA,0,K), transformedData.getMatrix(indicesB,0,K));
+        trueDists = this.calcDistances(this.dataMatrix.getMatrix(indicesA,0,this.N), this.dataMatrix.getMatrix(indicesB,0,this.N));
+        lbr = this.LBR(trueDists, transformedDists);
 
-
-        return 0;
+        return lbr;
     }
 
     @Override
