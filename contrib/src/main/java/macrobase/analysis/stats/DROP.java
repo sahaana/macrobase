@@ -8,17 +8,20 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.util.List;
 
 public class DROP extends FeatureTransform {
+    private static final Logger log = LoggerFactory.getLogger(DROP.class);
     private final MBStream<Datum> output = new MBStream<>();
     double epsilon;
     int iter;
     int currNt;
-    int K = 10;
-    Matrix currTranform;
+    int K = 2;
+    Matrix currTransform;
     PCAOptimizer pcaOpt;
 
 
@@ -38,15 +41,17 @@ public class DROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
-        currNt = pcaOpt.getNextNt(iter++);
-        while (pcaOpt.epsilonAttained(iter, currTranform) > epsilon && currNt < pcaOpt.getM()){
+        //currNt = pcaOpt.getNextNt(iter);
+        ///currTransform is Null first iteration
+        while (pcaOpt.epsilonAttained(iter, currTransform) > epsilon && currNt < pcaOpt.getM() && iter < 50){
+            log.debug("Iteration {}", iter);
             currNt = pcaOpt.getNextNt(iter++);
-            currTranform = pcaOpt.transform(K,currNt);
+            currTransform = pcaOpt.transform(K,currNt);
         }
 
-        assert (currTranform.getRowDimension() == K);
+        assert (currTransform.getColumnDimension() == K);
 
-        double[][] finalTransform = currTranform.getArray();
+        double[][] finalTransform = currTransform.getArray();
         int i = 0;
         for (Datum d: records){
             RealVector transformedMetricVector = new ArrayRealVector(finalTransform[i++]);

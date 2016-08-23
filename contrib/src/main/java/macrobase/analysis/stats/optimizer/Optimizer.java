@@ -20,6 +20,7 @@ public abstract class Optimizer {
 
     public Optimizer(double epsilon){
         this.epsilon = epsilon;
+        this.NtList = new ArrayList<>();
     }
 
     public int getN(){return N;}

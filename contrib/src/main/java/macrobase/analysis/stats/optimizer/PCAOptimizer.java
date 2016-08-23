@@ -3,6 +3,8 @@ package macrobase.analysis.stats.optimizer;
 import Jama.Matrix;
 import com.mkobos.pca_transform.PCA;
 import macrobase.datamodel.Datum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import weka.core.matrix.DoubleVector;
 
 import java.util.List;
@@ -10,21 +12,19 @@ import java.util.Random;
 
 
 
+
 public class PCAOptimizer extends Optimizer {
+
+    private static final Logger log = LoggerFactory.getLogger(PCAOptimizer.class);
+
     public PCAOptimizer(double epsilon) {
         super(epsilon);
     }
-
-    @Override
-    public void extractData(List<Datum> records) {
-        super.extractData(records);
-    }
-
     @Override
     public Matrix transform(int K, int Nt) {
-        Matrix trainMatrix = this.dataMatrix.getMatrix(0, Nt, 0, this.N);
+        Matrix trainMatrix = this.dataMatrix.getMatrix(0, Nt, 0, 3);
         PCA pca = new PCA(trainMatrix);
-        return pca.transform(this.dataMatrix, PCA.TransformationType.WHITENING).getMatrix(0, this.M, 0, K);
+        return pca.transform(this.dataMatrix, PCA.TransformationType.WHITENING).getMatrix(0, this.M-1, 0, K-1);
     } //TODO: MAKE ONLY THIS PART IN JAMA, REST IN VECTOR/BLAS
 
     @Override
@@ -38,7 +38,7 @@ public class PCAOptimizer extends Optimizer {
         double lbr;
         int[] indicesA = new int[this.M];
         int[] indicesB = new int[this.M];
-        int K = transformedData.getRowDimension();
+        int K = transformedData.getColumnDimension();
         Random rand = new Random();
 
         for (int i = 0; i < this.M; i++){
@@ -46,8 +46,11 @@ public class PCAOptimizer extends Optimizer {
             indicesB[i] = rand.nextInt(this.M);
         }
 
-        transformedDists = this.calcDistances(transformedData.getMatrix(indicesA,0,K), transformedData.getMatrix(indicesB,0,K));
-        trueDists = this.calcDistances(this.dataMatrix.getMatrix(indicesA,0,this.N), this.dataMatrix.getMatrix(indicesB,0,this.N));
+        log.debug("transformed data dim {} x {}",transformedData.getRowDimension(),transformedData.getColumnDimension());
+        log.debug("K {}", K);
+
+        transformedDists = this.calcDistances(transformedData.getMatrix(indicesA,0,K-1), transformedData.getMatrix(indicesB,0,K-1));
+        trueDists = this.calcDistances(this.dataMatrix.getMatrix(indicesA,0,this.N-1), this.dataMatrix.getMatrix(indicesB,0,this.N-1));
         lbr = this.LBR(trueDists, transformedDists);
 
         return lbr;
@@ -55,7 +58,7 @@ public class PCAOptimizer extends Optimizer {
 
     @Override
     public int getNextNt(int iter) {
-        int interval = this.M /10;
+        int interval = this.M / 2;
         if (iter == 0){
             this.NtList.add(interval);
             return interval;
