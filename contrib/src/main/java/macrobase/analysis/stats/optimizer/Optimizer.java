@@ -63,7 +63,7 @@ public abstract class Optimizer {
                 if (trueDists.getEntry(i) == 0) lbr += 1; //they were same to begin w/, so max of 1
                 else lbr += 0; //can never be negative, so lowest
             }
-            else lbr += trueDists.getEntry(i)/transformedDists.getEntry(i);
+            else lbr += transformedDists.getEntry(i)/trueDists.getEntry(i);
         }
 
         //arbitrarily choose to average all of the LBRs

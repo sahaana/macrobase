@@ -78,13 +78,13 @@ public class PCAOptimizer extends Optimizer {
         transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N/K));
         trueDists = this.calcDistances(this.dataMatrix.getSubMatrix(indicesA,allIndices), this.dataMatrix.getSubMatrix(indicesB,allIndices));
         lbr = this.LBR(trueDists, transformedDists);
-        System.out.println(lbr);
+        //System.out.println(lbr);
         return lbr;
     }
 
     @Override
     public int getNextNt(int iter, int K) {
-        int interval = this.M/ 1;
+        int interval = 1;//this.M/ 1;
         if (iter == 0){
             this.NtList.add(Math.max(K,interval)); //this is to make sure we have at least K samples for PCA
             return Math.max(K,interval);
