@@ -5,18 +5,17 @@ import macrobase.datamodel.Datum;
 import java.util.ArrayList;
 import java.util.List;
 
-import Jama.Matrix;
-import org.apache.commons.lang3.ObjectUtils;
-import org.eclipse.jetty.util.log.Log;
-import org.jblas.DoubleMatrix;
-import weka.core.matrix.DoubleVector;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 
 public abstract class Optimizer {
     protected int N; //orig dimension
     protected int M; //orig number of training samples
     protected ArrayList<Integer> NtList;
     protected double epsilon;
-    protected Matrix dataMatrix;
+    protected RealMatrix dataMatrix;
 
     public Optimizer(double epsilon){
         this.epsilon = epsilon;
@@ -26,6 +25,8 @@ public abstract class Optimizer {
     public int getN(){return N;}
 
     public int getM(){return M;}
+
+    public int getNtList(int i){return NtList.get(i);}
 
     public void extractData(List<Datum> records){
         ArrayList<double[]> metrics = new ArrayList<>();
@@ -39,28 +40,39 @@ public abstract class Optimizer {
         for (int i = 0; i < M; i++){
             metricArray[i] = metrics.get(i);
         }
-        this.dataMatrix = new Matrix(metricArray);
+        this.dataMatrix = new Array2DRowRealMatrix(metricArray);
     }
 
-    public DoubleVector calcDistances(Matrix dataA, Matrix dataB){
-        DoubleMatrix differences;
-        DoubleMatrix squaredSum;
-        DoubleVector norms;
-
-        differences = new DoubleMatrix((dataA.minus(dataB)).getArray());
-        squaredSum = differences.muli(differences);
-        norms = (new DoubleVector(squaredSum.rowSums().toArray())).sqrt();
-
-        return norms;
+    public RealVector calcDistances(RealMatrix dataA, RealMatrix dataB){
+        int rows = dataA.getRowDimension();
+        RealMatrix differences = dataA.subtract(dataB);
+        RealVector distances = new ArrayRealVector(rows);
+        RealVector currVec;
+        for (int i = 0; i < rows; i++){
+            currVec = differences.getRowVector(i);
+            distances.setEntry(i, currVec.getNorm());
+        }
+        return distances;
     }
 
-    public double LBR(DoubleVector trueDists, DoubleVector tranformedDists){
-        return trueDists.dividedBy(tranformedDists).sum()/tranformedDists.size();
+    public double LBR(RealVector trueDists, RealVector transformedDists){
+        int num_entries = trueDists.getDimension();
+        double lbr = 0;
+        for (int i = 0; i < num_entries; i++) {
+            if (transformedDists.getEntry(i) == 0){
+                if (trueDists.getEntry(i) == 0) lbr += 1; //they were same to begin w/, so max of 1
+                else lbr += 0; //can never be negative, so lowest
+            }
+            else lbr += trueDists.getEntry(i)/transformedDists.getEntry(i);
+        }
+
+        //arbitrarily choose to average all of the LBRs
+        return lbr/num_entries;
     }
 
-    public abstract Matrix transform(int K, int Nt);
+    public abstract RealMatrix transform(int K, int Nt);
 
-    public abstract double epsilonAttained(int iter, Matrix transformedMatrix);
+    public abstract double epsilonAttained(int iter, RealMatrix transformedMatrix);
 
-    public abstract int getNextNt(int iter);
+    public abstract int getNextNt(int iter, int K);
 }
