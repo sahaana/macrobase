@@ -28,14 +28,16 @@ public class PCAOptimizer extends Optimizer {
         assert (this.N % minReducedDim == 0 );
         RealVector currVec;
         double temp = 0;
+        int entriesAveraged = this.N / minReducedDim;
         this.dataMatrix = new Array2DRowRealMatrix(this.M, minReducedDim);
-        this.Nproc = this.N / minReducedDim;
+        this.Nproc = minReducedDim;
+
 
         for (int i = 0; i < this.M; i++){
             currVec = this.rawDataMatrix.getRowVector(i);
             for (int j = 0; j < this.N; j++){
-                if (j % minReducedDim == 0){
-                    this.dataMatrix.setEntry(i, j/minReducedDim,temp);
+                if (j % minReducedDim == 0 && j != 0){
+                    this.dataMatrix.setEntry(i, j/minReducedDim - 1,temp/entriesAveraged);
                     temp = 0;
                 }
                 temp += currVec.getEntry(j);

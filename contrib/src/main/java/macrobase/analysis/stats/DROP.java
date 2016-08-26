@@ -22,11 +22,12 @@ public class DROP extends FeatureTransform {
     int currNt;
     int K;
     int num_Nt;
+    int processedDim;
     RealMatrix currTransform;
     PCAOptimizer pcaOpt;
 
 
-    public DROP(MacroBaseConf conf, int K, int num_Nt){
+    public DROP(MacroBaseConf conf, int K, int num_Nt, int processedDim){
         //for now, no options
         epsilon = 50;//0.01; checking for broked-
         iter =  0;
@@ -34,6 +35,7 @@ public class DROP extends FeatureTransform {
         pcaOpt = new PCAOptimizer(epsilon);
         this.K = K;
         this.num_Nt = num_Nt;
+        this.processedDim = processedDim;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class DROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
-        pcaOpt.preprocess(25);
+        pcaOpt.preprocess(processedDim);
         pcaOpt.printData(0,pcaOpt.getM()/10,0,pcaOpt.getNproc()/10);
         currNt = pcaOpt.getNextNt(iter, K, num_Nt);
         ///currTransform is Null first iteration
