@@ -53,11 +53,10 @@ public class PCA {
 
     public RealMatrix transform(RealMatrix inputData, int K){
         if (K > Math.min(this.N,this.M)){
-          log.warn("Watch your K...K {} M {} N {}", K, this.M, this.N);
+          log.warn("Watch your K...K {} M {} Nproc {}", K, this.M, this.N);
         }
         K = Math.min(Math.min(K, this.N), this.M);
-
-        RealMatrix centeredInput = inputData;
+        RealMatrix centeredInput = new Array2DRowRealMatrix(inputData.getData());
         RealMatrix transformation = this.transformationMatrix.getSubMatrix(0,this.P-1,0,K-1);
         RealVector currVec;
         for (int i = 0; i < this.N; i++){
