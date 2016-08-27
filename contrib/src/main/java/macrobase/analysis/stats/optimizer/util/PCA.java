@@ -67,16 +67,4 @@ public class PCA {
         return centeredInput.multiply(transformation);
     }
 
-    public void debugDump(){
-        Matrix A;
-
-        log.debug("M {}  {}", this.M, this.N);
-
-        A = new Matrix(dataMatrix.getData());
-        A.print(8,6);
-        A = new Matrix(centeredDataMatrix.getData());
-        A.print(8,6);
-        A = new Matrix(transformationMatrix.getData());
-        A.print(8,6);
-    }
 }

@@ -16,6 +16,7 @@ public abstract class Optimizer {
     protected int Nproc; //preprocessed dimension
     protected int M; //orig number of training samples
     protected ArrayList<Integer> NtList;
+    protected ArrayList<Double> LBRList;
     protected double epsilon;
     protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
@@ -23,6 +24,7 @@ public abstract class Optimizer {
     public Optimizer(double epsilon){
         this.epsilon = epsilon;
         this.NtList = new ArrayList<>();
+        this.LBRList = new ArrayList<>();
     }
 
     public int getNproc(){return Nproc;}
