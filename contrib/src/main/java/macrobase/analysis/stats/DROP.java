@@ -8,7 +8,6 @@ import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.jblas.DoubleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,9 @@ public class DROP extends FeatureTransform {
     private static final Logger log = LoggerFactory.getLogger(DROP.class);
     private final MBStream<Datum> output = new MBStream<>();
     double epsilon;
+    double lbr;
     double currEp;
+    double currLBR;
     int iter;
     int currNt;
     int K;
@@ -30,13 +31,14 @@ public class DROP extends FeatureTransform {
     PCAOptimizer pcaOpt;
 
 
-    public DROP(MacroBaseConf conf, int K, int num_Nt, int processedDim){
-        //for now, no options
-        epsilon = 50;//0.01; checking for broked-
+    public DROP(MacroBaseConf conf, int K, int num_Nt, int processedDim, double epsilon, double lbr){
+        this.epsilon = epsilon;
+        this.lbr = lbr;
         iter =  0;
         currNt = 0;
-        pcaOpt = new PCAOptimizer(epsilon);
+        pcaOpt = new PCAOptimizer(epsilon, lbr);
         currEp = 0;
+        currLBR = 0;
         this.K = K;
         this.num_Nt = num_Nt;
         this.processedDim = processedDim;
@@ -50,23 +52,27 @@ public class DROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
+        log.debug("Extracted Records");
         pcaOpt.preprocess(processedDim);
-        //pcaOpt.printData(0,pcaOpt.getM()/10,0,pcaOpt.getNproc()/10);
+        log.debug("Processed data w/ PAA");
         currNt = pcaOpt.getNextNt(iter, K, num_Nt);
-        currEp = pcaOpt.epsilonAttained(iter, currTransform);
+        //currEp = pcaOpt.LBRAttained(iter, currTransform);
+        currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+        log.debug("Beginning DROP");
         ///currTransform is Null first iteration
-        while (currEp < epsilon && currNt <= pcaOpt.getM() && iter < 50){
+        while (currLBR < lbr && currEp < epsilon && currNt <= pcaOpt.getM()){
             log.debug("Iteration {} with {} samples ", iter, currNt);
             //pcaOpt.printData(0,5,0,5);
             currTransform = pcaOpt.transform(K, currNt);
             //pcaOpt.printData(0,5,0,5);
             currNt = pcaOpt.getNextNt(++iter, K, num_Nt);
-            currEp = pcaOpt.epsilonAttained(iter, currTransform);
-            pcaOpt.setLBRList(currNt, currEp);
-            log.debug("LBR {}, next Nt {}", currEp, currNt);
+            //currEp = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+            currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+            pcaOpt.setLBRList(pcaOpt.getNtList(iter-1), currLBR);
+            log.debug("LBR {}", currLBR);
         }
 
-        log.debug("Number of samples used {} to obtain LBR {}", pcaOpt.getNtList(iter-1), pcaOpt.epsilonAttained(iter-1, currTransform));
+        log.debug("Number of samples used {} to obtain LBR {}", pcaOpt.getNtList(iter-1), pcaOpt.LBRAttained(iter-1, epsilon, currTransform));
         double[][] finalTransform = currTransform.getData();
 
         int i = 0;

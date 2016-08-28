@@ -20,11 +20,13 @@ public abstract class Optimizer {
     protected ArrayList<Integer> NtList;
     protected Map<Integer, Double> LBRList;
     protected double epsilon;
+    protected double lbr;
     protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
 
-    public Optimizer(double epsilon){
+    public Optimizer(double epsilon, double lbr){
         this.epsilon = epsilon;
+        this.lbr = lbr;
         this.NtList = new ArrayList<>();
         this.LBRList = new HashMap<>();
     }
@@ -97,7 +99,7 @@ public abstract class Optimizer {
 
     public abstract RealMatrix transform(int K, int Nt);
 
-    public abstract double epsilonAttained(int iter, RealMatrix transformedMatrix);
+    public abstract double LBRAttained(int iter, double epsilon, RealMatrix transformedMatrix);
 
     public abstract int getNextNt(int iter, int K, int num_Nt);
 }
