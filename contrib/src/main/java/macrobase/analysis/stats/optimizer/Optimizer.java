@@ -4,7 +4,9 @@ import Jama.Matrix;
 import macrobase.datamodel.Datum;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -16,7 +18,7 @@ public abstract class Optimizer {
     protected int Nproc; //preprocessed dimension
     protected int M; //orig number of training samples
     protected ArrayList<Integer> NtList;
-    protected ArrayList<Double> LBRList;
+    protected Map<Integer, Double> LBRList;
     protected double epsilon;
     protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
@@ -24,7 +26,7 @@ public abstract class Optimizer {
     public Optimizer(double epsilon){
         this.epsilon = epsilon;
         this.NtList = new ArrayList<>();
-        this.LBRList = new ArrayList<>();
+        this.LBRList = new HashMap<>();
     }
 
     public int getNproc(){return Nproc;}
@@ -32,6 +34,12 @@ public abstract class Optimizer {
     public int getN(){ return N;}
 
     public int getM(){return M;}
+
+    public void setLBRList(int k, double v){
+        LBRList.put(k, v);
+    }
+
+    public Map getLBRList(){ return LBRList; }
 
     public void printData(int i0, int i1, int j0, int j1){
         (new Matrix(dataMatrix.getSubMatrix(i0,i1,j0,j1).getData())).print(5,8);

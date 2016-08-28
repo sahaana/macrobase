@@ -8,11 +8,13 @@ import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.jblas.DoubleMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 import java.util.List;
+import java.util.Map;
 
 public class DROP extends FeatureTransform {
     private static final Logger log = LoggerFactory.getLogger(DROP.class);
@@ -60,6 +62,7 @@ public class DROP extends FeatureTransform {
             //pcaOpt.printData(0,5,0,5);
             currNt = pcaOpt.getNextNt(++iter, K, num_Nt);
             currEp = pcaOpt.epsilonAttained(iter, currTransform);
+            pcaOpt.setLBRList(currNt, currEp);
             log.debug("LBR {}, next Nt {}", currEp, currNt);
         }
 
@@ -81,5 +84,9 @@ public class DROP extends FeatureTransform {
     @Override
     public MBStream<Datum> getStream() throws Exception {
         return output;
+    }
+
+    public Map<Integer, Double> getLBR(){
+        return pcaOpt.getLBRList();
     }
 }

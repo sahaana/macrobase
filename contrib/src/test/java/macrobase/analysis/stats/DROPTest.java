@@ -79,7 +79,8 @@ public class DROPTest {
                 "5,MALLAT",
                 "6,StarLightCurves",
                 "7,Phoneme",
-                "8,ElectricDevices"
+                "8,ElectricDevices",
+                "9,CinC-PAA"
         ).collect(Collectors.toMap(k -> Integer.parseInt(k.split(",")[0]), v -> v.split(",")[1]));
         Map<Integer, Integer> TABLE_SIZE = Stream.of(
                 "1,1500",
@@ -89,7 +90,8 @@ public class DROPTest {
                 "5,1000",
                 "6,1000",
                 "7,1000",
-                "8,50"
+                "8,50",
+                "9,25"
         ).collect(Collectors.toMap(k -> Integer.parseInt(k.split(",")[0]), v -> Integer.parseInt(v.split(",")[1])));
 
         int datasetID = 1;

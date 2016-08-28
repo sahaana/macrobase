@@ -27,7 +27,7 @@ public class PCAOptimizer extends Optimizer {
         // Implementation of PAA. TODO: clean it up at some point...
         assert (this.N % minReducedDim == 0 );
         RealVector currVec;
-        double temp = 0;
+        double temp;
         int entriesAveraged = this.N / minReducedDim;
         this.dataMatrix = new Array2DRowRealMatrix(this.M, minReducedDim);
         this.Nproc = minReducedDim;
@@ -109,8 +109,8 @@ public class PCAOptimizer extends Optimizer {
             transformedDists.setEntry(i, transformedDists.getEntry(i)*Math.sqrt(this.N/this.Nproc));
         }
      //   this.printData(0,5,0,5);
-        (new Matrix(transformedData.getSubMatrix(indicesA,kIndices).getData())).getMatrix(0,5,0,5).print(8,5);
-        (new Matrix(transformedData.getSubMatrix(indicesB,kIndices).getData())).getMatrix(0,5,0,5).print(8,5);
+     //   (new Matrix(transformedData.getSubMatrix(indicesA,kIndices).getData())).getMatrix(0,5,0,9).print(8,5);
+     //   (new Matrix(transformedData.getSubMatrix(indicesB,kIndices).getData())).getMatrix(0,5,0,9).print(8,5);
         trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
         lbr = this.LBR(trueDists, transformedDists);
         //System.out.println(lbr);
@@ -121,7 +121,7 @@ public class PCAOptimizer extends Optimizer {
     @Override
     public int getNextNt(int iter, int K, int num_Nt) {
         // testing against python
-        int[] Nts = {10,11,12,13,14,15,16,17,18,19,21,29,38,46,55,64,72,81,90,98,107,116,124,133,142};
+        int[] Nts = {11,12,13,14,15,16,17,18,19,21,29,38,46,55,64,72,81,90,98,107,116,124,133,142};
         if (iter >= Nts.length) {
             this.NtList.add(2000000);
             return 2000000;
