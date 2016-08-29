@@ -3,11 +3,9 @@ package macrobase.analysis.stats.optimizer;
 import Jama.Matrix;
 import macrobase.datamodel.Datum;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -19,6 +17,7 @@ public abstract class Optimizer {
     protected int M; //orig number of training samples
     protected ArrayList<Integer> NtList;
     protected Map<Integer, Double> LBRList;
+    protected Map<Integer, Double> trainTimeList;
     protected double epsilon;
     protected double lbr;
     protected RealMatrix rawDataMatrix;
@@ -29,6 +28,7 @@ public abstract class Optimizer {
         this.lbr = lbr;
         this.NtList = new ArrayList<>();
         this.LBRList = new HashMap<>();
+        this.trainTimeList = new HashMap<>();
     }
 
     public int getNproc(){return Nproc;}
@@ -41,7 +41,13 @@ public abstract class Optimizer {
         LBRList.put(k, v);
     }
 
+    public void setTrainTimeList(int k, double v){
+        trainTimeList.put(k, v);
+    }
+
     public Map getLBRList(){ return LBRList; }
+
+    public Map getTrainTimeList(){ return trainTimeList; }
 
     public void printData(int i0, int i1, int j0, int j1){
         (new Matrix(dataMatrix.getSubMatrix(i0,i1,j0,j1).getData())).print(5,8);
@@ -89,6 +95,21 @@ public abstract class Optimizer {
 
         //arbitrarily choose to average all of the LBRs
         return lbr/num_entries;
+    }
+
+    public void shuffleData(){
+        List<Integer> indicesM = new ArrayList<>();
+        int[] indicesN = new int[N];
+        for (int i = 0; i < N; i++){
+            indicesN[i] = i;
+        }
+        for (int i = 0; i < M; i++){
+            indicesM.add(i); //TODO: this is stupid
+        }
+        Collections.shuffle(indicesM);
+        int[] iA = ArrayUtils.toPrimitive(indicesM.toArray(new Integer[M]));
+
+        rawDataMatrix = rawDataMatrix.getSubMatrix(iA, indicesN);
     }
 
     //arguments for both, why min and why max

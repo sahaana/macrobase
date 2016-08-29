@@ -66,10 +66,11 @@ public class PCAOptimizer extends Optimizer {
             indicesB = new int[this.M];
 
             for (int i = 0; i < this.M; i++){
-                indicesA[i] = rand.nextInt(this.M);
-                indicesB[i] = rand.nextInt(this.M);
+                int currNt = this.getNtList(iter);
+                indicesA[i] = rand.nextInt(this.M - currNt) + currNt;
+                indicesB[i] = rand.nextInt(this.M - currNt) + currNt;
                 while(indicesA[i] == indicesB[i]){
-                    indicesA[i] = rand.nextInt(this.M);
+                    indicesA[i] = rand.nextInt(this.M - currNt) + currNt;
                 }
             }
             return 0;
@@ -95,7 +96,7 @@ public class PCAOptimizer extends Optimizer {
     public int getNextNt(int iter, int K, int num_Nt) {
         // for testing against python
         /*
-        int[] Nts = {11,12,13,14,15,16,17,18,19,21,29,38,46,55,64,72,81,90,98,107,116,124,133,142};
+        int[] Nts = {11,12,13,14,15,16,17,18,19,21,29,38,46,55,64,72,81,90,98,107,116,124,133,142,200,300,400,500,600};
         if (iter >= Nts.length) {
             this.NtList.add(2000000);
             return 2000000;
@@ -103,6 +104,7 @@ public class PCAOptimizer extends Optimizer {
         this.NtList.add(Nts[iter]);
         return Nts[iter];
         */
+
         int interval = this.M/num_Nt;
         if (iter == 0){
             this.NtList.add(Math.max(K+1,interval)); //this is to make sure we have at least K+1 samples for PCA, +1 for edge effects
@@ -110,6 +112,7 @@ public class PCAOptimizer extends Optimizer {
         }
         this.NtList.add(interval + this.NtList.get(iter-1));
         return this.NtList.get(iter);
+
     }
 }
 
