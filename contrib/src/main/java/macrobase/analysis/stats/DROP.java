@@ -29,6 +29,8 @@ public class DROP extends FeatureTransform {
     int K;
     int num_Nt;
     int processedDim;
+    int b;
+    int s;
     RealMatrix currTransform;
     PCAOptimizer pcaOpt;
     Stopwatch sw;
@@ -45,6 +47,8 @@ public class DROP extends FeatureTransform {
         this.K = K;
         this.num_Nt = num_Nt;
         this.processedDim = processedDim;
+        b = 300;
+        s = 20;
         sw = Stopwatch.createUnstarted();
     }
 
@@ -63,7 +67,8 @@ public class DROP extends FeatureTransform {
         log.debug("Processed data w/ PAA");
         currNt = pcaOpt.getNextNt(iter, K, num_Nt);
         //currEp = pcaOpt.LBRAttained(iter, currTransform);
-        currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+        ///////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+        currLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
         log.debug("Beginning DROP");
         sw.start();
         ///currTransform is Null first iteration
@@ -71,13 +76,13 @@ public class DROP extends FeatureTransform {
             log.debug("Iteration {} with {} samples ", iter, currNt);
             //pcaOpt.printData(0,5,0,5);
             currTransform = pcaOpt.transform(K, currNt);
-            //pcaOpt.printData(0,5,0,5);
-            currNt = pcaOpt.getNextNt(++iter, K, num_Nt);
             //currEp = pcaOpt.LBRAttained(iter, epsilon, currTransform);
-            currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
-            pcaOpt.setLBRList(pcaOpt.getNtList(iter-1), currLBR);
-            pcaOpt.setTrainTimeList(pcaOpt.getNtList(iter-1), (double) sw.elapsed(TimeUnit.MILLISECONDS));
+            ////////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+            currLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
+            pcaOpt.setLBRList(pcaOpt.getNtList(iter), currLBR);
+            pcaOpt.setTrainTimeList(pcaOpt.getNtList(iter), (double) sw.elapsed(TimeUnit.MILLISECONDS));
             log.debug("LBR {}", currLBR);
+            currNt = pcaOpt.getNextNt(++iter, K, num_Nt);
         }
 
         log.debug("Number of samples used {} to obtain LBR {}", pcaOpt.getNtList(iter-1), pcaOpt.LBRAttained(iter-1, epsilon, currTransform));

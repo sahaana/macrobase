@@ -82,6 +82,7 @@ public abstract class Optimizer {
         return distances;
     }
 
+    //TODO: this should really just call LBRList
     public double LBR(RealVector trueDists, RealVector transformedDists){
         int num_entries = trueDists.getDimension();
         double lbr = 0;
@@ -95,6 +96,32 @@ public abstract class Optimizer {
 
         //arbitrarily choose to average all of the LBRs
         return lbr/num_entries;
+    }
+
+    public List<Double> LBRList(RealVector trueDists, RealVector transformedDists){
+        int num_entries = trueDists.getDimension();
+        List<Double> lbr = new ArrayList<>();
+        for (int i = 0; i < num_entries; i++) {
+            if (transformedDists.getEntry(i) == 0){
+                if (trueDists.getEntry(i) == 0) lbr.add(1.0); //they were same to begin w/, so max of 1
+                else lbr.add(0.0); //can never be negative, so lowest
+            }
+            lbr.add(transformedDists.getEntry(i)/trueDists.getEntry(i));
+        }
+        return lbr;
+    }
+
+    //TODO: Move this to a util class or something. Silly to have this here
+    public  RealVector multinomial(int n, int k){
+        RealVector sample = new ArrayRealVector(k);
+        RealVector temp;
+        Random rand = new Random();
+        for (int i = 0; i < n; i++){
+            temp = new ArrayRealVector(k);
+            temp.setEntry(rand.nextInt(k),1.0);
+            sample = sample.add(temp);
+        }
+        return sample;
     }
 
     public void shuffleData(){
