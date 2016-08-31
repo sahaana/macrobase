@@ -17,7 +17,8 @@ matplotlib.rcParams['font.family'] = "sans-serif"
 data = np.loadtxt(file_name, delimiter=',')
 sorted_data = data[np.argsort(data[:,0])]
 plt.figure()
-plt.plot(sorted_data[:,0],sorted_data[:,1])
+for i in range(sorted_data.shape[1]-1):
+    plt.plot(sorted_data[:,0],sorted_data[:,i+1])
 plt.title(get_dataset(file_name))
 plt.xlabel("Nt")
 if "Nt" in file_name.split("/"):

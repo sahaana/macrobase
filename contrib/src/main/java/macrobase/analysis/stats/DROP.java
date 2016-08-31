@@ -24,6 +24,7 @@ public class DROP extends FeatureTransform {
     double lbr;
     double currEp;
     double currLBR;
+    double[] currBLBR;
     int iter;
     int currNt;
     int K;
@@ -47,8 +48,8 @@ public class DROP extends FeatureTransform {
         this.K = K;
         this.num_Nt = num_Nt;
         this.processedDim = processedDim;
-        b = 300;
-        s = 20;
+        b = 50;
+        s = 10;
         sw = Stopwatch.createUnstarted();
     }
 
@@ -67,8 +68,8 @@ public class DROP extends FeatureTransform {
         log.debug("Processed data w/ PAA");
         currNt = pcaOpt.getNextNt(iter, K, num_Nt);
         //currEp = pcaOpt.LBRAttained(iter, currTransform);
-        ///////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
-        currLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
+        //////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+        currBLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
         log.debug("Beginning DROP");
         sw.start();
         ///currTransform is Null first iteration
@@ -77,11 +78,12 @@ public class DROP extends FeatureTransform {
             //pcaOpt.printData(0,5,0,5);
             currTransform = pcaOpt.transform(K, currNt);
             //currEp = pcaOpt.LBRAttained(iter, epsilon, currTransform);
-            ////////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
-            currLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
-            pcaOpt.setLBRList(pcaOpt.getNtList(iter), currLBR);
+            /////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+            currBLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
+            /////pcaOpt.setLBRList(pcaOpt.getNtList(iter), currLBR);
+            pcaOpt.setBLBRList(pcaOpt.getNtList(iter), currBLBR);
             pcaOpt.setTrainTimeList(pcaOpt.getNtList(iter), (double) sw.elapsed(TimeUnit.MILLISECONDS));
-            log.debug("LBR {}", currLBR);
+            log.debug("LOW {}, LBR {}, HIGH {}", currBLBR[0], currBLBR[1], currBLBR[2]);
             currNt = pcaOpt.getNextNt(++iter, K, num_Nt);
         }
 
@@ -108,6 +110,8 @@ public class DROP extends FeatureTransform {
     public Map<Integer, Double> getLBR(){
         return pcaOpt.getLBRList();
     }
+
+    public Map<Integer, double[]> getBLBR() { return pcaOpt.getBLBRList();}
 
     public Map<Integer, Double> getTime(){
         return pcaOpt.getTrainTimeList();

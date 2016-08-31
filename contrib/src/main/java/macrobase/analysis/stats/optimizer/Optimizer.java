@@ -17,6 +17,7 @@ public abstract class Optimizer {
     protected int M; //orig number of training samples
     protected ArrayList<Integer> NtList;
     protected Map<Integer, Double> LBRList;
+    protected Map<Integer, double[]> BLBRList;
     protected Map<Integer, Double> trainTimeList;
     protected double epsilon;
     protected double lbr;
@@ -28,6 +29,7 @@ public abstract class Optimizer {
         this.lbr = lbr;
         this.NtList = new ArrayList<>();
         this.LBRList = new HashMap<>();
+        this.BLBRList = new HashMap<>();
         this.trainTimeList = new HashMap<>();
     }
 
@@ -41,11 +43,17 @@ public abstract class Optimizer {
         LBRList.put(k, v);
     }
 
+    public void setBLBRList(int k, double[] v){
+        BLBRList.put(k, v);
+    }
+
     public void setTrainTimeList(int k, double v){
         trainTimeList.put(k, v);
     }
 
     public Map getLBRList(){ return LBRList; }
+
+    public Map getBLBRList(){ return BLBRList; }
 
     public Map getTrainTimeList(){ return trainTimeList; }
 
@@ -106,7 +114,7 @@ public abstract class Optimizer {
                 if (trueDists.getEntry(i) == 0) lbr.add(1.0); //they were same to begin w/, so max of 1
                 else lbr.add(0.0); //can never be negative, so lowest
             }
-            lbr.add(transformedDists.getEntry(i)/trueDists.getEntry(i));
+            else lbr.add(transformedDists.getEntry(i)/trueDists.getEntry(i));
         }
         return lbr;
     }

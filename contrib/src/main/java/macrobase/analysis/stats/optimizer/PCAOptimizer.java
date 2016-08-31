@@ -54,9 +54,9 @@ public class PCAOptimizer extends Optimizer {
         return retVal;
     }
 
-   public double blbLBRAttained(int iter, double epsilon, RealMatrix transformedData, int b, int s){
+   public double[] blbLBRAttained(int iter, double epsilon, RealMatrix transformedData, int b, int s){
        if (iter == 0){
-           return 0;
+           return new double[] {0.0, 0.0, 0.0};
        }
        int currNt = this.getNtList(iter);
        int[] allIndices = new int[this.N];
@@ -67,12 +67,20 @@ public class PCAOptimizer extends Optimizer {
        int[] kIndices = Arrays.copyOf(allIndices,K);
 
        int num_pairs = (this.M - currNt)*((this.M - currNt) - 1)/2;
+       int threshL = new Double((epsilon/2)*num_pairs).intValue();
+       int threshH = new Double((1 - epsilon/2)*num_pairs).intValue();
        double lower = 0;
        double mean = 0;
        double upper = 0;
-       HashMap<List<Integer>, Double> LBRList = new HashMap<>(); //pair -> distance
+       HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> distance
+       Double[][] LBRValCard = new Double[b][2];
 
        double tLower, tMean, tUpper;
+       double lbr;
+       double card;
+       double currCount;
+       int currIter;
+
 
        Random rand = new Random();
        int[] indicesA = new int[b];
@@ -88,11 +96,13 @@ public class PCAOptimizer extends Optimizer {
            for (int j = 0; j < b; j++){
                indicesA[j] = rand.nextInt(this.M - currNt) + currNt;
                indicesB[j] = rand.nextInt(this.M - currNt) + currNt;
-               while (indicesA[j] == indicesB[j] &&
-                       LBRList.containsKey(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])))){
+               while (indicesA[j] == indicesB[j] ||
+                       LBRs.containsKey(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j]))) ||
+                       LBRs.containsKey(new ArrayList<>(Arrays.asList(indicesB[j], indicesA[j])))){
                    indicesA[j] = rand.nextInt(this.M - currNt) + currNt;
                    indicesB[j] = rand.nextInt(this.M - currNt) + currNt;
                }
+               LBRs.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), 0.0);
            }
            // compute lbr over those b distinct pairs.
            // It is super ugly to do this in two separate for loops, but easier to check and stuff
@@ -100,7 +110,7 @@ public class PCAOptimizer extends Optimizer {
            trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
            tempLBR =  this.LBRList(trueDists, transformedDists);
            for (int j = 0; j < b; j++){
-               LBRList.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), tempLBR.get(j));
+               LBRs.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), tempLBR.get(j));
            }
 
            // sample (n choose 2) (or num_pairs) times with replacement from b, use multinomial trick
@@ -111,14 +121,43 @@ public class PCAOptimizer extends Optimizer {
            tLower = 0;
            tUpper = 0;
            for (int j = 0; j < b; j++){
-               tMean += multinomialVals.getEntry(j) * LBRList.get(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])));
-           }
+               lbr = LBRs.get(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])));
+               card  = multinomialVals.getEntry(j);
+               tMean += card * lbr;
 
-           // add {Tlower,Tmean,Tupper}/s to the vars
+               LBRValCard[j][0] = lbr;
+               LBRValCard[j][1] = card;
+           }
+            tMean /= num_pairs;
+
+           // sort the lbr-cardinality array by lbr
+           Arrays.sort(LBRValCard, new Comparator<Double[]>() {
+               @Override
+               public int compare(Double[] d1, Double[] d2) {
+                   Double k1 = d1[0];
+                   Double k2 = d2[0];
+                   return k1.compareTo(k2);
+               }
+           });
+
+           currIter = 0;
+           currCount = 0;
+           while (currCount < threshL){
+               currCount += LBRValCard[currIter++][1];
+           }
+           tLower = LBRValCard[currIter][0];
+           while (currCount < threshH){
+               currCount += LBRValCard[currIter++][1];
+           }
+           tUpper = LBRValCard[currIter][0];
+
            mean += tMean/s;
+           lower += tLower/s;
+           upper += tUpper/s;
+
        }
-       return mean;
-       //return new double[] {lower, mean,upper};
+       //return mean;
+       return new double[] {lower, mean,upper};
    }
 
 
@@ -164,7 +203,7 @@ public class PCAOptimizer extends Optimizer {
 
     @Override
     public int getNextNt(int iter, int K, int num_Nt) {
-        int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
+        int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
         if (iter >= Nts.length) {
             this.NtList.add(2000000);
             return 2000000;
