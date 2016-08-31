@@ -37,7 +37,7 @@ public class DROP extends FeatureTransform {
     Stopwatch sw;
 
 
-    public DROP(MacroBaseConf conf, int K, int num_Nt, int processedDim, double epsilon, double lbr){
+    public DROP(MacroBaseConf conf, int K, int num_Nt, int processedDim, double epsilon, double lbr, int b, int s){
         this.epsilon = epsilon;
         this.lbr = lbr;
         iter =  0;
@@ -48,8 +48,8 @@ public class DROP extends FeatureTransform {
         this.K = K;
         this.num_Nt = num_Nt;
         this.processedDim = processedDim;
-        b = 50;
-        s = 10;
+        this.b = b;
+        this.s = s;
         sw = Stopwatch.createUnstarted();
     }
 
