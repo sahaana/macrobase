@@ -5,6 +5,7 @@ import macrobase.analysis.stats.optimizer.util.PCA;
 import macrobase.datamodel.Datum;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
@@ -16,26 +17,28 @@ public abstract class SkiingOptimizer {
     protected int M; //original number of training samples
 
     protected List<Integer> NtList;
-    protected List<Integer> KList;
-    protected List<Double> LBRList;
-    protected List<Double> trainTimeList;
+    protected Map<Integer, Integer> KList;
+    protected Map<Integer, double[]> LBRList;
+    protected Map<Integer, Double> trainTimeList;
 
     protected double epsilon;
-    protected double lbr;
+    protected int s;
+    protected int b;
 
     protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
 
     protected PCA pca;
 
-    public SkiingOptimizer(double epsilon, double lbr){
+    public SkiingOptimizer(double epsilon, int b, int s){
         this.epsilon = epsilon;
-        this.lbr = lbr;
+        this.s = s;
+        this.b = b;
 
         this.NtList = new ArrayList<>();
-        this.LBRList = new ArrayList<>();
-        this.KList = new ArrayList<>();
-        this.trainTimeList = new ArrayList<>();
+        this.LBRList = new HashMap<>();
+        this.KList = new HashMap<>();
+        this.trainTimeList = new HashMap<>();
     }
 
     public void extractData(List<Datum> records){
@@ -73,15 +76,6 @@ public abstract class SkiingOptimizer {
         dataMatrix = rawDataMatrix;
     }
 
-    public void train(int Nt){
-        RealMatrix trainMatrix = dataMatrix.getSubMatrix(0, Nt-1, 0, Nproc-1);
-        pca = new PCA(trainMatrix);
-    }
-
-    public RealMatrix transform(int K){
-        return pca.transform(dataMatrix, K);
-    }
-
     public int getNextNt(int iter, int maxNt){
         //int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
         int K =  KList.get(KList.size()-1);
@@ -95,25 +89,25 @@ public abstract class SkiingOptimizer {
     }
 
 
-    public double[] blbLBRAttained(int iter, double epsilon, RealMatrix transformedData, int b, int s){
+    public double[] LBRAttained(int iter, RealMatrix transformedData){
         if (iter == 0){
             return new double[] {0.0, 0.0, 0.0};
         }
-        int currNt = this.getNtList(iter);
-        int[] allIndices = new int[this.N];
+        int currNt = NtList.get(iter);
+        int[] allIndices = new int[N]; //bc we compare to raw data matrix
         int K = transformedData.getColumnDimension();
-        for (int i = 0; i < this.N; i++){
+        for (int i = 0; i < N; i++){
             allIndices[i] = i; //TODO: this is stupid
         }
         int[] kIndices = Arrays.copyOf(allIndices,K);
 
-        int num_pairs = (this.M - currNt)*((this.M - currNt) - 1)/2;
+        int num_pairs = (M - currNt)*((M - currNt) - 1)/2;
         int threshL = new Double((epsilon/2)*num_pairs).intValue();
         int threshH = new Double((1 - epsilon/2)*num_pairs).intValue();
         double lower = 0;
         double mean = 0;
         double upper = 0;
-        HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> distance
+        HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> LBR
         Double[][] LBRValCard = new Double[b][2];
 
         double tLower, tMean, tUpper;
@@ -145,22 +139,21 @@ public abstract class SkiingOptimizer {
                 }
                 LBRs.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), 0.0);
             }
+
             // compute lbr over those b distinct pairs.
             // It is super ugly to do this in two separate for loops, but easier to check and stuff
-            transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N/this.Nproc));
-            trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
-            tempLBR =  this.LBRList(trueDists, transformedDists);
+            transformedDists = calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(N/Nproc));
+            trueDists = calcDistances(rawDataMatrix.getSubMatrix(indicesA,allIndices), rawDataMatrix.getSubMatrix(indicesB,allIndices));
+            tempLBR =  calcLBRList(trueDists, transformedDists);
             for (int j = 0; j < b; j++){
                 LBRs.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), tempLBR.get(j));
             }
 
             // sample (n choose 2) (or num_pairs) times with replacement from b, use multinomial trick
-            multinomialVals = this.multinomial(num_pairs, b);
+            multinomialVals = multinomial(num_pairs, b);
 
             //compute bootstrap Tmean, Tlower, Tupper on b
             tMean = 0;
-            tLower = 0;
-            tUpper = 0;
             for (int j = 0; j < b; j++){
                 lbr = LBRs.get(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])));
                 card  = multinomialVals.getEntry(j);
@@ -181,6 +174,7 @@ public abstract class SkiingOptimizer {
                 }
             });
 
+            //find %-ile via thresh
             currIter = 0;
             currCount = 0;
             while (currCount < threshL){
@@ -192,23 +186,97 @@ public abstract class SkiingOptimizer {
             }
             tUpper = LBRValCard[currIter][0];
 
+            //update all vals
             mean += tMean/s;
             lower += tLower/s;
             upper += tUpper/s;
-
         }
-        //return mean;
         return new double[] {lower, mean,upper};
     }
 
 
+    //TODO: this should really just call calcLBRList
+    public double LBR(RealVector trueDists, RealVector transformedDists){
+        int num_entries = trueDists.getDimension();
+        double lbr = 0;
+        for (int i = 0; i < num_entries; i++) {
+            if (transformedDists.getEntry(i) == 0){
+                if (trueDists.getEntry(i) == 0) lbr += 1; //they were same to begin w/, so max of 1
+                else lbr += 0; //can never be negative, so lowest
+            }
+            else lbr += transformedDists.getEntry(i)/trueDists.getEntry(i);
+        }
+
+        //arbitrarily choose to average all of the LBRs
+        return lbr/num_entries;
+    }
+
+    public List<Double> calcLBRList(RealVector trueDists, RealVector transformedDists){
+        int num_entries = trueDists.getDimension();
+        List<Double> lbr = new ArrayList<>();
+        for (int i = 0; i < num_entries; i++) {
+            if (transformedDists.getEntry(i) == 0){
+                if (trueDists.getEntry(i) == 0) lbr.add(1.0); //they were same to begin w/, so max of 1
+                else lbr.add(0.0); //can never be negative, so lowest
+            }
+            else lbr.add(transformedDists.getEntry(i)/trueDists.getEntry(i));
+        }
+        return lbr;
+    }
+
+    public int getNproc(){return Nproc;}
+
+    public int getN(){ return N;}
+
+    public int getM(){return M;}
+
+    public void setKList(int k, int v){ KList.put(k,v); }
+
+    public void setLBRList(int k, double[] v){
+        LBRList.put(k, v);
+    }
+
+    public void setTrainTimeList(int k, double v){
+        trainTimeList.put(k, v);
+    }
+
+    public Map getLBRList(){ return LBRList; }
+
+    public Map getTrainTimeList(){ return trainTimeList; }
+
+    public Map getKList(){ return KList; }
 
 
+    public abstract void fit(int Nt);
 
+    public abstract RealMatrix transform(int K);
 
+    public abstract RealMatrix getK(int iter, double targetLBR);
 
+   //TODO: rest are util funcs that should probably just be moved
 
+    public RealVector calcDistances(RealMatrix dataA, RealMatrix dataB){
+        int rows = dataA.getRowDimension();
+        RealMatrix differences = dataA.subtract(dataB);
+        RealVector distances = new ArrayRealVector(rows);
+        RealVector currVec;
+        for (int i = 0; i < rows; i++){
+            currVec = differences.getRowVector(i);
+            distances.setEntry(i, currVec.getNorm());
+        }
+        return distances;
+    }
 
-
+    public  RealVector multinomial(int n, int k){
+        RealVector sample = new ArrayRealVector(k);
+        RealVector temp;
+        Random rand = new Random();
+        for (int i = 0; i < n; i++){
+            temp = new ArrayRealVector(k);
+            temp.setEntry(rand.nextInt(k),1.0);
+            sample = sample.add(temp);
+        }
+        return sample;
+    }
 
 }
