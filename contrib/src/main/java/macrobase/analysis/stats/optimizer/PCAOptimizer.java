@@ -54,6 +54,7 @@ public class PCAOptimizer extends Optimizer {
         return retVal;
     }
 
+    //TODO: this shouldn't be here. refactor DROP to be just DROP v1 w/out skiing or bootstrap
    public double[] blbLBRAttained(int iter, double epsilon, RealMatrix transformedData, int b, int s){
        if (iter == 0){
            return new double[] {0.0, 0.0, 0.0};
@@ -203,7 +204,8 @@ public class PCAOptimizer extends Optimizer {
 
     @Override
     public int getNextNt(int iter, int K, int num_Nt) {
-        int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
+        //int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
+        int[] Nts = {21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
         if (iter >= Nts.length) {
             this.NtList.add(2000000);
             return 2000000;

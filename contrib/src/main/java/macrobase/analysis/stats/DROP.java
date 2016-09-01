@@ -22,7 +22,7 @@ public class DROP extends FeatureTransform {
     private final MBStream<Datum> output = new MBStream<>();
     double epsilon;
     double lbr;
-    double currEp;
+    //double currEp;
     double currLBR;
     double[] currBLBR;
     int iter;
@@ -43,7 +43,7 @@ public class DROP extends FeatureTransform {
         iter =  0;
         currNt = 0;
         pcaOpt = new PCAOptimizer(epsilon, lbr);
-        currEp = 0;
+        //currEp = 0;
         currLBR = 0;
         this.K = K;
         this.num_Nt = num_Nt;
@@ -73,7 +73,7 @@ public class DROP extends FeatureTransform {
         log.debug("Beginning DROP");
         sw.start();
         ///currTransform is Null first iteration
-        while (currLBR < lbr && currEp < epsilon && currNt <= pcaOpt.getM()){
+        while (currLBR < lbr && currNt <= pcaOpt.getM()){
             log.debug("Iteration {} with {} samples ", iter, currNt);
             //pcaOpt.printData(0,5,0,5);
             currTransform = pcaOpt.transform(K, currNt);

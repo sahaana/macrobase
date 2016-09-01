@@ -82,12 +82,12 @@ public class BatchDROP {
 
     private static String LBROutFile(int datasetID, int b, int s, int k, int num_Nt, int procD, double lbr, double ep){
         String output = String.format("%s_blbr_b%d_s%d_k%d_procDim%d_lbr%.3f_ep%.3f",TABLE_NAMES.get(datasetID),b, s, k,procD,lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/Nt/%s.csv", output);
+        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/BLB/Nt/%s.csv", output);
     }
 
     private static String timeOutFile(int datasetID, int b, int s, int k, int num_Nt, int procD, double lbr, double ep){
         String output = String.format("%s_blbr_b%d_s%d_k%d_procDim%d_lbr%.3f_ep%.3f",TABLE_NAMES.get(datasetID),b, s, k,procD,lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/time/%s.csv", output);
+        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/BLB/time/%s.csv", output);
     }
 
     public static void main(String[] args) throws Exception{
@@ -95,8 +95,8 @@ public class BatchDROP {
         int num_Nt = 20;
         int processedDim = 1500;
         int datasetID = 1;
-        int b = 500;
-        int s = 50;
+        int b = 300; //[25,50,100,200,300,400,500]
+        int s = 25 ; //[5,10,20,25,35,50,75,100,200]
         double lbr = .99;
         double epsilon = .2;
 
