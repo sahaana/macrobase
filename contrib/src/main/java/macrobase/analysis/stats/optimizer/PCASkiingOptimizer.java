@@ -25,7 +25,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     public RealMatrix getK(int iter, double targetLBR) {
         RealMatrix currTransform = new Array2DRowRealMatrix();
         double[] LBR;
-        for (int i = 0; i < Math.min(this.Nproc, this.NtList.get(iter)); i++){
+        for (int i = 5; i < Math.min(this.Nproc, this.NtList.get(iter)); i++){
             currTransform = this.transform(i);
             LBR = this.LBRAttained(iter, currTransform);
             if (LBR[1] >= targetLBR){

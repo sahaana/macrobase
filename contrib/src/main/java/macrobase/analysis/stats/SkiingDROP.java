@@ -65,8 +65,9 @@ public class SkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         pcaOpt.preprocess(procDim);
         log.debug("Processed Data");
-        currNt = pcaOpt.getNextNt(iter, maxNt);
-        currLBR = pcaOpt.LBRAttained(iter, currTransform); //currTransform is currently null
+        pcaOpt.setKList(currNt,0); //hacky for test run of getNextNt
+        currNt = pcaOpt.getNextNt(iter, currNt, maxNt);
+        //currLBR = pcaOpt.LBRAttained(iter, currTransform); //currTransform is currently null
         log.debug("Beginning DROP");
         sw.start();
         while (currNt < pcaOpt.getM()){
@@ -78,7 +79,7 @@ public class SkiingDROP extends FeatureTransform {
             pcaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, K {}", currLBR[0], currLBR[1], currLBR[2], currTransform.getColumnDimension());
-            currNt = pcaOpt.getNextNt(++iter, maxNt);
+            currNt = pcaOpt.getNextNt(++iter, currNt, maxNt);
         }
         finalTransform = currTransform.getData();
 

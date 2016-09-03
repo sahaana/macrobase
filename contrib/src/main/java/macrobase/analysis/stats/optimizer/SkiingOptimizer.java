@@ -76,10 +76,11 @@ public abstract class SkiingOptimizer {
         dataMatrix = rawDataMatrix;
     }
 
-    public int getNextNt(int iter, int maxNt){
+    public int getNextNt(int iter, int currNt, int maxNt){
         //int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
-        int K =  KList.get(KList.size()-1);
-        int[] Nts = {21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
+        //if (iter == 0){ return 0; }
+        int K =  KList.get(currNt);
+        int[] Nts = {10, 20,30,40,50,60,70,80,90,100,110,125,150,175,200};
         if (iter >= Nts.length || NtList.size() >= maxNt) {
             NtList.add(2000000);
             return 2000000;
@@ -90,9 +91,9 @@ public abstract class SkiingOptimizer {
 
 
     public double[] LBRAttained(int iter, RealMatrix transformedData){
-        if (iter == 0){
-            return new double[] {0.0, 0.0, 0.0};
-        }
+        //if (iter == 0){
+        //    return new double[] {0.0, 0.0, 0.0};
+        //}
         int currNt = NtList.get(iter);
         int[] allIndices = new int[N]; //bc we compare to raw data matrix
         int K = transformedData.getColumnDimension();
@@ -118,6 +119,7 @@ public abstract class SkiingOptimizer {
 
 
         Random rand = new Random();
+        int tempA, tempB, tMin, tMax;
         int[] indicesA = new int[b];
         int[] indicesB = new int[b];
 
@@ -129,15 +131,20 @@ public abstract class SkiingOptimizer {
         for (int i = 0; i < s; i++){
             // sample w/out replacement from whole set, b times, so b distinct pairs
             for (int j = 0; j < b; j++){
-                indicesA[j] = rand.nextInt(this.M - currNt) + currNt;
-                indicesB[j] = rand.nextInt(this.M - currNt) + currNt;
-                while (indicesA[j] == indicesB[j] ||
-                        LBRs.containsKey(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j]))) ||
-                        LBRs.containsKey(new ArrayList<>(Arrays.asList(indicesB[j], indicesA[j])))){
-                    indicesA[j] = rand.nextInt(this.M - currNt) + currNt;
-                    indicesB[j] = rand.nextInt(this.M - currNt) + currNt;
+                tempA = rand.nextInt(this.M - currNt) + currNt;
+                tempB = rand.nextInt(this.M - currNt) + currNt;
+                tMax = Math.max(tempA, tempB);
+                tMin = Math.min(tempA, tempB);
+                while (tempA == tempB ||
+                        LBRs.containsKey(new ArrayList<>(Arrays.asList(tMin, tMax)))){
+                    tempA = rand.nextInt(this.M - currNt) + currNt;
+                    tempB = rand.nextInt(this.M - currNt) + currNt;
+                    tMax = Math.max(tempA, tempB);
+                    tMin = Math.min(tempA, tempB);
                 }
-                LBRs.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), 0.0);
+                indicesA[j] = tMin;
+                indicesB[j] = tMax;
+                LBRs.put(new ArrayList<>(Arrays.asList(tMin, tMax)), 0.0);
             }
 
             // compute lbr over those b distinct pairs.
@@ -192,6 +199,31 @@ public abstract class SkiingOptimizer {
             upper += tUpper/s;
         }
         return new double[] {lower, mean,upper};
+    }
+
+    public double meanLBR(int iter, RealMatrix transformedData){
+        int num_pairs = M;
+        int K = transformedData.getColumnDimension();
+        int currNt = NtList.get(iter);
+
+        int[] allIndices = new int[this.N];
+        int[] indicesA = new int[num_pairs];
+        int[] indicesB = new int[num_pairs];
+        int[] kIndices;
+
+        Random rand = new Random();
+
+        RealVector transformedDists;
+        RealVector trueDists;
+
+        for (int i = 0; i < num_pairs; i++){
+            allIndices[i] = i; //TODO: // FIXME: 9/2/16
+        }
+        kIndices = Arrays.copyOf(allIndices,K);
+
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N/this.Nproc));
+        trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
+        return this.LBR(trueDists, transformedDists);
     }
 
 

@@ -101,7 +101,7 @@ public class SkiingBatchDROP {
 
     private static String LBROutFile(int datasetID, int b, int s, int num_Nt, int procD, double lbr, double ep){
         String output = String.format("%s_b%d_s%d_procDim%d_lbr%.3f_ep%.3f",TABLE_NAMES.get(datasetID),b, s, procD,lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/skiing/Nt/%s.csv", output);
+        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
     }
 
     private static String timeOutFile(int datasetID, int b, int s, int num_Nt, int procD, double lbr, double ep){
@@ -120,8 +120,8 @@ public class SkiingBatchDROP {
         int processedDim = 1500;
         int datasetID = 1;
         int b = 50; //[25,50,100,200,300,400,500]
-        int s = 50; //[5,10,20,25,35,50,75,100,200]
-        double lbr = .99;
+        int s = 25; //[5,10,20,25,35,50,75,100,200]
+        double lbr = .98;
         double epsilon = .2;
 
 
