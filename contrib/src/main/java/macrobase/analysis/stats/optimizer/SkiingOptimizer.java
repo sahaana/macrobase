@@ -16,6 +16,11 @@ public abstract class SkiingOptimizer {
     protected int Nproc; //processed data dimension (PAA, Mary, etc)
     protected int M; //original number of training samples
 
+    protected int[] kDiffs;
+    protected int prevK;
+    protected int numDiffs;
+    protected int NtInterval;
+
     protected List<Integer> NtList;
     protected Map<Integer, Integer> KList;
     protected Map<Integer, double[]> LBRList;
@@ -31,6 +36,7 @@ public abstract class SkiingOptimizer {
     protected PCA pca;
 
     public SkiingOptimizer(double epsilon, int b, int s){
+        this.numDiffs = 4;
         this.epsilon = epsilon;
         this.s = s;
         this.b = b;
@@ -39,6 +45,9 @@ public abstract class SkiingOptimizer {
         this.LBRList = new HashMap<>();
         this.KList = new HashMap<>();
         this.trainTimeList = new HashMap<>();
+        this.kDiffs = new int[this.numDiffs]; //TODO: 3 to change to general param
+
+        this.prevK = 0;
     }
 
     public void extractData(List<Datum> records){
@@ -54,6 +63,8 @@ public abstract class SkiingOptimizer {
             metricArray[i] = metrics.get(i);
         }
         this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
+
+        this.NtInterval = new Double(this.M*0.01).intValue(); //arbitrary 1%
     }
 
     public void shuffleData(){
@@ -76,17 +87,51 @@ public abstract class SkiingOptimizer {
         dataMatrix = rawDataMatrix;
     }
 
-    public int getNextNt(int iter, int currNt, int maxNt){
+    public int getNextNtFromList(int iter, int currNt, int maxNt){
         //int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
         //if (iter == 0){ return 0; }
-        int K =  KList.get(currNt);
+        //int K =  KList.get(currNt);
         int[] Nts = {10, 20,30,40,50,60,70,80,90,100,110,125,150,175,200};
         if (iter >= Nts.length || NtList.size() >= maxNt) {
             NtList.add(2000000);
             return 2000000;
         }
-        NtList.add(Math.max(K+1,Nts[iter]));
-        return Math.max(K+1,Nts[iter]);
+        NtList.add(Nts[iter]);
+        return Nts[iter];
+    }
+
+    public int getNextNt(int iter, int currNt, int maxNt){
+        //int interval = new Double(M*0.01).intValue(); //arbitrary 1%
+        double avgDiff = 0;
+
+        if (iter == 0) {
+            NtList.add(NtInterval);
+            return NtInterval;
+        }
+
+        for (double i: kDiffs){
+            avgDiff += i/numDiffs;
+        }
+
+        //if things haven't changed much on average, you can stop
+        if (avgDiff < 1){
+            NtList.add(M+1);
+            return M+1;
+        }
+
+        //double the interval if it's choking
+        if (avgDiff == NtInterval){
+            NtInterval = NtInterval*2;
+        }
+
+        //halve the interval if it's aight. overshoots tho. lbr-based?
+       // if (LBRList.get(currNt) >= )
+        if (avgDiff < NtInterval/2){
+            NtInterval = new Double(NtInterval/2).intValue();
+        }
+
+        NtList.add(NtInterval + currNt);
+        return NtInterval+currNt;
     }
 
 
@@ -108,8 +153,8 @@ public abstract class SkiingOptimizer {
         double lower = 0;
         double mean = 0;
         double upper = 0;
-        HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> LBR
-        Double[][] LBRValCard = new Double[b][2];
+        HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> LBR //change to (pair, LBR)
+        Double[][] LBRValCard = new Double[b][2]; //convert to pairs? so list of pairs
 
         double tLower, tMean, tUpper;
         double lbr;
@@ -217,6 +262,14 @@ public abstract class SkiingOptimizer {
         RealVector trueDists;
 
         for (int i = 0; i < num_pairs; i++){
+            indicesA[i] = rand.nextInt(M - currNt) + currNt;
+            indicesB[i] = rand.nextInt(M - currNt) + currNt;
+            while(indicesA[i] == indicesB[i]){
+                indicesA[i] = rand.nextInt(M - currNt) + currNt;
+            }
+        }
+
+        for (int i = 0; i < N; i++){
             allIndices[i] = i; //TODO: // FIXME: 9/2/16
         }
         kIndices = Arrays.copyOf(allIndices,K);
@@ -261,6 +314,13 @@ public abstract class SkiingOptimizer {
     public int getN(){ return N;}
 
     public int getM(){return M;}
+
+    public void setKDiff(int iter, int currK){
+        kDiffs[iter % numDiffs] = Math.abs(currK - prevK);
+        prevK = currK;
+    }
+
+    public void addNtList(int Nt){ NtList.add(Nt); }
 
     public void setKList(int k, int v){ KList.put(k,v); }
 

@@ -117,8 +117,8 @@ public class SkiingBatchDROP {
     public static void main(String[] args) throws Exception{
         //int k = 20;
         int maxNt = 25;
-        int processedDim = 1500;
-        int datasetID = 1;
+        int processedDim = 1000;
+        int datasetID = 7;
         int b = 50; //[25,50,100,200,300,400,500]
         int s = 25; //[5,10,20,25,35,50,75,100,200]
         double lbr = .98;
