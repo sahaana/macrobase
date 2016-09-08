@@ -36,14 +36,14 @@ public class SkiingDROP extends FeatureTransform {
     int b;
     int s;
 
-    public SkiingDROP(MacroBaseConf conf, int maxNt, int procDim, double epsilon, double lbr, int b, int s){
+    public SkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
         currNt = 0;
         pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
         sw = Stopwatch.createUnstarted();
 
         this.maxNt = maxNt;
-        this.procDim = procDim;
+        this.procDim = 707; //This is an appendix
         this.epsilon = epsilon;
         this.lbr = lbr;
         this.b = b;

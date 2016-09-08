@@ -41,6 +41,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         int low = 0;
         int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
+        System.out.println(high);
 
         while (low <= high) {
             mid = (low + high) / 2;
