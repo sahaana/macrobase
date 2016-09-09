@@ -80,11 +80,16 @@ public class SkiingDROP extends FeatureTransform {
             pcaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
-            log.debug("LOW {}, LBR {}, HIGH {}, K {}", currLBR[0], currLBR[1], currLBR[2], currTransform.getColumnDimension());
+            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
             currNt = pcaOpt.getNextNt(++iter, currNt, maxNt);
         } while (currNt < pcaOpt.getM() && currLBR[0] < lbr);
 
         finalTransform = currTransform.getData();
+
+        //pcaOpt.fit(pcaOpt.getM());
+        currTransform = pcaOpt.getKFull(lbr);
+        currLBR = pcaOpt.LBRAttained(iter, currTransform);
+        log.debug("For full PCA, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
 
         int i = 0;
         for (Datum d: records){

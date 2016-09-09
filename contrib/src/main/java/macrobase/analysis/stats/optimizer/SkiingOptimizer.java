@@ -150,15 +150,20 @@ public abstract class SkiingOptimizer {
         int[] kIndices = Arrays.copyOf(allIndices,K);
 
         int num_pairs = (M - currNt)*((M - currNt) - 1)/2;
+        //while (num_pairs < b*s){
+        //    b -= 1;
+        //    s -= 1;
+        //}
         int threshL = new Double((epsilon/2)*num_pairs).intValue();
         int threshH = new Double((1 - epsilon/2)*num_pairs).intValue();
         double lower = 0;
         double mean = 0;
         double upper = 0;
+        double var = 0;
         HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> LBR //change to (pair, LBR)
         Double[][] LBRValCard = new Double[b][2]; //convert to pairs? so list of pairs
 
-        double tLower, tMean, tUpper;
+        double tLower, tMean, tUpper, tvar;
         double lbr;
         double card;
         double currCount;
@@ -176,16 +181,17 @@ public abstract class SkiingOptimizer {
         RealVector multinomialVals;
 
         for (int i = 0; i < s; i++){
+            LBRs = new HashMap<>(); //pair -> LBR //change to (pair, LBR)
             // sample w/out replacement from whole set, b times, so b distinct pairs
             for (int j = 0; j < b; j++){
-                tempA = rand.nextInt(this.M - currNt) + currNt;
-                tempB = rand.nextInt(this.M - currNt) + currNt;
+                tempA = rand.nextInt(this.M);// - currNt) + currNt;
+                tempB = rand.nextInt(this.M );//- currNt) + currNt;
                 tMax = Math.max(tempA, tempB);
                 tMin = Math.min(tempA, tempB);
                 while (tempA == tempB ||
                         LBRs.containsKey(new ArrayList<>(Arrays.asList(tMin, tMax)))){
-                    tempA = rand.nextInt(this.M - currNt) + currNt;
-                    tempB = rand.nextInt(this.M - currNt) + currNt;
+                    tempA = rand.nextInt(this.M);// - currNt) + currNt;
+                    tempB = rand.nextInt(this.M );//- currNt) + currNt;
                     tMax = Math.max(tempA, tempB);
                     tMin = Math.min(tempA, tempB);
                 }
@@ -218,6 +224,15 @@ public abstract class SkiingOptimizer {
             }
             tMean /= num_pairs;
 
+            //compute bootstrap variance
+            tvar = 0;
+            for (int j = 0; j < b; j++){
+                lbr = LBRs.get(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])));
+                card = multinomialVals.getEntry(j);
+                tvar += card*(tMean-lbr)*(tMean-lbr);
+            }
+            tvar /= num_pairs;
+
             // sort the lbr-cardinality array by lbr
             Arrays.sort(LBRValCard, new Comparator<Double[]>() {
                 @Override
@@ -244,14 +259,15 @@ public abstract class SkiingOptimizer {
             mean += tMean/s;
             lower += tLower/s;
             upper += tUpper/s;
+            var += tvar/s;
         }
-        return new double[] {lower, mean,upper};
+        return new double[] {lower, mean,upper, var};
     }
 
     public double meanLBR(int iter, RealMatrix transformedData){
         int num_pairs = M;
         int K = transformedData.getColumnDimension();
-        int currNt = NtList.get(iter);
+        //int currNt = NtList.get(iter);
 
         int[] allIndices = new int[this.N];
         int[] indicesA = new int[num_pairs];
@@ -264,10 +280,10 @@ public abstract class SkiingOptimizer {
         RealVector trueDists;
 
         for (int i = 0; i < num_pairs; i++){
-            indicesA[i] = rand.nextInt(M - currNt) + currNt;
-            indicesB[i] = rand.nextInt(M - currNt) + currNt;
+            indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
+            indicesB[i] = rand.nextInt(M );//- currNt) + currNt;
             while(indicesA[i] == indicesB[i]){
-                indicesA[i] = rand.nextInt(M - currNt) + currNt;
+                indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
             }
         }
 
