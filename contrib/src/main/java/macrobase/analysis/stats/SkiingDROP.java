@@ -113,4 +113,8 @@ public class SkiingDROP extends FeatureTransform {
         return pcaOpt.getKList();
     }
 
+    public Map<Integer, Integer> getKItersList(){
+        return pcaOpt.getKItersList();
+    }
+
 }

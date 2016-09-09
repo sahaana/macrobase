@@ -37,7 +37,7 @@ public abstract class SkiingOptimizer {
     protected PCA pca;
 
     public SkiingOptimizer(double epsilon, int b, int s){
-        this.numDiffs = 4;
+        this.numDiffs = 3;
         this.epsilon = epsilon;
         this.s = s;
         this.b = b;
@@ -66,7 +66,7 @@ public abstract class SkiingOptimizer {
         this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
         //RealMatrix cov = new Covariance(this.rawDataMatrix).getCovarianceMatrix();
 
-        this.NtInterval = new Double(this.M*0.01).intValue(); //arbitrary 1%
+        this.NtInterval = Math.max(3, new Double(this.M*0.01).intValue()); //arbitrary 1%
     }
 
     public void shuffleData(){
@@ -116,7 +116,7 @@ public abstract class SkiingOptimizer {
         }
 
         //if things haven't changed much on average, you can stop
-        if (avgDiff < 1){
+        if (avgDiff < .5){
             NtList.add(M+1);
             return M+1;
         }
