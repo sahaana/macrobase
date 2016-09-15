@@ -125,20 +125,20 @@ public class SkiingBatchDROP {
         //int k = 20;
         int maxNt = 25;
         //int datasetID = 7;
-        //String dataset = args[0];
-        //double lbr = Double.parseDouble(args[1]);
-        //double epsilon = Double.parseDouble(args[2]);
-        //System.out.println(dataset);
-        //System.out.println(lbr);
-        //System.out.println(epsilon);
+        String dataset = args[0];
+        double lbr = Double.parseDouble(args[1]);
+        double epsilon = Double.parseDouble(args[2]);
+        System.out.println(dataset);
+        System.out.println(lbr);
+        System.out.println(epsilon);
         int b = 50; //[25,50,100,200,300,400,500]
         int s = 20; //[5,10,20,25,35,50,75,100,200]
 
 
         //int processedDim = TABLE_SIZE.get(datasetID);
-        String dataset = "Herring";
-        double lbr = .98;
-        double epsilon = .2;
+        //String dataset = "Herring";
+        //double lbr = .98;
+        //double epsilon = .2;
 
 
         Map<Integer, double[]> LBRResults;

@@ -40,6 +40,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
 
     public RealMatrix getKFull(double targetLBR){
+        // computes the best K for a complete transformation using all the data
         double LBR;
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
 
@@ -79,6 +80,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     @Override
     public RealMatrix getK(int iter, double targetLBR) {
+        //simply uses the mean LBR to do K computations with
         double LBR;
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
 
@@ -118,6 +120,74 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         }
         KItersList.put(this.NtList.get(iter), iters);
         return this.transform(mid);
+    }
+
+    public RealMatrix getKCI(int iter, double targetLBR) {
+        //confidence interval based method for getting K
+        double LBR;
+        RealMatrix currTransform; //= new Array2DRowRealMatrix();
+
+        double thresh = 1.96;
+        int numPairs = new Double(0.01*(this.M)*((this.M) - 1)/2).intValue();
+
+        int iters = 0;
+        int low = 0;
+        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
+        int mid = (low + high) / 2;
+
+        //System.out.println(this.M);
+        currTransform = this.transform(high);
+        LBR = evalK(thresh, currTransform);//this.LBRCI(currTransform,numPairs, thresh)[0];
+        if (targetLBR > LBR){
+            KItersList.put(this.NtList.get(iter), ++iters);
+            return currTransform;
+        }
+
+        while (low < high) {
+            currTransform = this.transform(mid);
+            LBR = evalK(thresh, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
+            if (targetLBR < LBR) {
+                currTransform = this.transform(mid - 1);
+                LBR = evalK(thresh, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
+                if (targetLBR > LBR) {
+                    KItersList.put(this.NtList.get(iter), iters);
+                    return currTransform;
+                }
+                high = mid - 1;
+            } else if (targetLBR > LBR) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+            iters += 1;
+            mid = (low + high) / 2;
+        }
+        KItersList.put(this.NtList.get(iter), iters);
+        return this.transform(mid);
+    }
+
+    private double evalK(double thresh, RealMatrix currTransform){
+        double[] CI;
+        double prevMean = 0;
+        int numPairs = (this.M)*((this.M) - 1)/2;
+        int currPairs = new Double(0.1*numPairs).intValue();
+        while (currPairs < numPairs){
+            CI = this.LBRCI(currTransform,currPairs, thresh);
+            if (CI[0] > thresh){
+                return thresh;
+            }
+            else if (CI[2] < thresh){
+                return 0.0;
+            }
+            else if (CI[1]-prevMean < .02){
+                return 0.0;
+            }
+            else {
+                currPairs *= 2;
+                prevMean = CI[1];
+            }
+        }
+        return 0.0;
     }
 
 

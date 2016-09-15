@@ -265,13 +265,13 @@ public abstract class SkiingOptimizer {
     }
 
     public double meanLBR(int iter, RealMatrix transformedData){
-        int num_pairs = M;
+        int numPairs = M;
         int K = transformedData.getColumnDimension();
         //int currNt = NtList.get(iter);
 
         int[] allIndices = new int[this.N];
-        int[] indicesA = new int[num_pairs];
-        int[] indicesB = new int[num_pairs];
+        int[] indicesA = new int[numPairs];
+        int[] indicesB = new int[numPairs];
         int[] kIndices;
 
         Random rand = new Random();
@@ -279,7 +279,7 @@ public abstract class SkiingOptimizer {
         RealVector transformedDists;
         RealVector trueDists;
 
-        for (int i = 0; i < num_pairs; i++){
+        for (int i = 0; i < numPairs; i++){
             indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
             indicesB[i] = rand.nextInt(M );//- currNt) + currNt;
             while(indicesA[i] == indicesB[i]){
@@ -296,6 +296,58 @@ public abstract class SkiingOptimizer {
         trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
         return this.LBR(trueDists, transformedDists);
     }
+
+
+    public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold){
+        //int numPairs = M;
+        int K = transformedData.getColumnDimension();
+        //int currNt = NtList.get(iter);
+
+        int[] allIndices = new int[this.N];
+        int[] indicesA = new int[numPairs];
+        int[] indicesB = new int[numPairs];
+        int[] kIndices;
+
+        Random rand = new Random();
+
+        RealVector transformedDists;
+        RealVector trueDists;
+
+        List<Double> LBRs;
+        double mean = 0;
+        double std = 0;
+        double slop;
+
+        for (int i = 0; i < numPairs; i++){
+            indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
+            indicesB[i] = rand.nextInt(M );//- currNt) + currNt;
+            while(indicesA[i] == indicesB[i]){
+                indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
+            }
+        }
+
+        for (int i = 0; i < N; i++){
+            allIndices[i] = i; //TODO: // FIXME: 9/2/16
+        }
+        kIndices = Arrays.copyOf(allIndices,K);
+
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N/this.Nproc));
+        trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
+        LBRs = this.calcLBRList(trueDists, transformedDists);
+        for(double l: LBRs){
+            mean += l;
+        }
+        mean /= numPairs;
+
+        for(double l: LBRs){
+            std += (l - mean)*(l - mean);
+        }
+        std = Math.sqrt(std/numPairs);
+        slop = (threshold*std)/Math.sqrt(numPairs);
+        return new double[] {mean-slop, mean, mean+slop};
+    }
+
+
 
 
     //TODO: this should really just call calcLBRList
