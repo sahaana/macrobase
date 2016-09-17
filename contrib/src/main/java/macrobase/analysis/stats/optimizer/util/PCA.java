@@ -14,6 +14,7 @@ public class PCA {
     private RealMatrix transformationMatrix; // V
     private RealVector columnMeans;
     private SingularValueDecomposition SVD; //gives X = UDV', U=mxp D=pxp V = pxn
+    //private RealMatrix cachedTransform;
     private int N;
     private int M;
     private int P;

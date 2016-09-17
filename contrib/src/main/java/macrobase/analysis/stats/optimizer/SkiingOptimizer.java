@@ -344,7 +344,7 @@ public abstract class SkiingOptimizer {
         }
         std = Math.sqrt(std/numPairs);
         slop = (threshold*std)/Math.sqrt(numPairs);
-        return new double[] {mean-slop, mean, mean+slop};
+        return new double[] {mean-slop, mean, mean+slop, std*std};
     }
 
 

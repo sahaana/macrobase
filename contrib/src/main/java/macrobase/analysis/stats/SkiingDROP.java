@@ -12,6 +12,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +21,7 @@ public class SkiingDROP extends FeatureTransform {
     private static final Logger log = LoggerFactory.getLogger(SkiingDROP.class);
 
     private final MBStream<Datum> output;
-    double[][] finalTransform;
+    double[][] finalTransform;;
     double[] currLBR;
     int currNt;
     int iter;
@@ -29,18 +30,23 @@ public class SkiingDROP extends FeatureTransform {
     PCASkiingOptimizer pcaOpt;
     Stopwatch sw;
 
+    Map<String, Long> times;
+
     int maxNt;
     int procDim;
     double epsilon;
     double lbr;
     int b;
     int s;
+    boolean rpFlag;
 
-    public SkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
+    public SkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s, boolean rpFlag){
         iter = 0;
         currNt = 0;
         pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
         sw = Stopwatch.createUnstarted();
+
+        times = new HashMap<>();
 
         this.maxNt = maxNt;
         this.procDim = 707; //This is an appendix
@@ -48,6 +54,7 @@ public class SkiingDROP extends FeatureTransform {
         this.lbr = lbr;
         this.b = b;
         this.s = s;
+        this.rpFlag = rpFlag;
 
         output = new MBStream<>();
     }
@@ -73,9 +80,10 @@ public class SkiingDROP extends FeatureTransform {
         sw.start();
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
-            pcaOpt.fit(currNt);
-            currTransform = pcaOpt.getK(iter, lbr); //function to get knee for K for this transform;
-            currLBR = pcaOpt.LBRAttained(iter, currTransform);
+            if (rpFlag) pcaOpt.maryFit(currNt);
+            else  pcaOpt.fit(currNt);
+            currTransform = pcaOpt.getKCICached(iter, lbr); //function to get knee for K for this transform;
+            currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//pcaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
             pcaOpt.setLBRList(currNt, currLBR);
             pcaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
@@ -86,11 +94,12 @@ public class SkiingDROP extends FeatureTransform {
 
         finalTransform = currTransform.getData();
 
-        //pcaOpt.fit(pcaOpt.getM());
+        /*
+        pcaOpt.fit(pcaOpt.getM());
         currTransform = pcaOpt.getKFull(lbr);
-        currLBR = pcaOpt.LBRAttained(iter, currTransform);
+        currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//pcaOpt.LBRAttained(iter, currTransform);
         log.debug("For full PCA, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-
+        */
         int i = 0;
         for (Datum d: records){
             RealVector transformedMetricVector = new ArrayRealVector(finalTransform[i++]);

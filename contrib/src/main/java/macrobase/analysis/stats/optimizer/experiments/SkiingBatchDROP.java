@@ -100,23 +100,23 @@ public class SkiingBatchDROP {
     }
 
 
-    private static String LBROutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String LBROutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
+        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
     }
 
-    private static String timeOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String timeOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
+        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
     }
 
-    private static String kOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String kOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
+        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/k/%s.csv", output);
     }
 
-    private static String kItersOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String kItersOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
+        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
     }
 
@@ -125,21 +125,24 @@ public class SkiingBatchDROP {
         //int k = 20;
         int maxNt = 25;
         //int datasetID = 7;
+
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double epsilon = Double.parseDouble(args[2]);
+        boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
+        //*/
         int b = 50; //[25,50,100,200,300,400,500]
         int s = 20; //[5,10,20,25,35,50,75,100,200]
 
 
         //int processedDim = TABLE_SIZE.get(datasetID);
-        //String dataset = "Herring";
-        //double lbr = .98;
-        //double epsilon = .2;
-
+        /*String dataset = "CinC";
+        double lbr = .98;
+        double epsilon = .2;
+        */
 
         Map<Integer, double[]> LBRResults;
         Map<Integer, Double> timeResults;
@@ -147,28 +150,25 @@ public class SkiingBatchDROP {
         Map<Integer, Integer> kIters;
 
         MacroBaseConf conf = new MacroBaseConf();
-        //conf.set(MacroBaseConf.CSV_INPUT_FILE, String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/%s.csv", TABLE_NAMES.get(datasetID)));
-        //conf.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
-        //conf.set(MacroBaseConf.METRICS, getMetrics(datasetID));
 
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         //SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/afs/cs.stanford.edu/u/sahaana/Desktop/workspace/optimizer/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        SkiingDROP drop = new SkiingDROP(conf, maxNt, epsilon, lbr, b, s);
+        SkiingDROP drop = new SkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
         drop.consume(data);
 
         LBRResults = drop.getLBR();
-        mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,maxNt,lbr,epsilon));
+        mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,maxNt,lbr,epsilon, rpFlag));
 
         timeResults = drop.getTime();
-        mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,maxNt,lbr,epsilon));
+        mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
 
         kResults = drop.getKList();
-        mapIntToCSV(kResults, kOutFile(dataset,b,s,maxNt,lbr,epsilon));
+        mapIntToCSV(kResults, kOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
 
         kIters = drop.getKItersList();
-        mapIntToCSV(kIters, kItersOutFile(dataset,b,s,maxNt,lbr,epsilon));
+        mapIntToCSV(kIters, kItersOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
 
     }
 
