@@ -327,7 +327,7 @@ public abstract class SkiingOptimizer {
         }
 
         for (int i = 0; i < N; i++){
-            allIndices[i] = i; //TODO: // FIXME: 9/2/16
+            allIndices[i] = i; //TODO: FIXME: 9/2/16
         }
         kIndices = Arrays.copyOf(allIndices,K);
 
