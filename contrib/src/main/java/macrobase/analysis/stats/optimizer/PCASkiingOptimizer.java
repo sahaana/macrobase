@@ -1,8 +1,8 @@
 package macrobase.analysis.stats.optimizer;
 
 import macrobase.analysis.stats.optimizer.util.PCA;
-import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
-import org.apache.commons.math3.linear.*;
+//import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+//import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.random.*;
 
 import java.util.HashMap;
@@ -67,7 +67,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int iters = 0;
         int iter = 8008;
         int low = 0;
-        int high = Math.min(this.M,this.Nproc);// - 1;
+        int high = Math.min(this.M,this.Nproc) - 1;
         int mid = (low + high) / 2;
 
         this.cacheInput(high);
@@ -106,7 +106,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         int iters = 0;
         int low = 0;
-        int high = Math.min(this.Nproc, this.NtList.get(iter));// - 1;
+        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
         int mid = (low + high) / 2;
 
         //System.out.println(this.M);
@@ -153,7 +153,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         int iters = 0;
         int low = 0;
-        int high = Math.min(this.Nproc, this.NtList.get(iter));// - 1;
+        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
         int mid = (low + high) / 2;
 
         this.cacheInput(high);
@@ -199,7 +199,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         int iters = 0;
         int low = 0;
-        int high = Math.min(this.Nproc, this.NtList.get(iter));// - 1;
+        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
         int mid = (low + high) / 2;
 
         //System.out.println(this.M);

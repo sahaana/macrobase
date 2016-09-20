@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.optimizer;
 
 import macrobase.analysis.stats.optimizer.util.PCA;
+import no.uib.cipr.matrix.NotConvergedException;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;

@@ -94,12 +94,12 @@ public class SkiingDROP extends FeatureTransform {
 
         finalTransform = currTransform.getData();
 
-        /*
+
         pcaOpt.fit(pcaOpt.getM());
         currTransform = pcaOpt.getKFull(lbr);
         currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//pcaOpt.LBRAttained(iter, currTransform);
         log.debug("For full PCA, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-        */
+
         int i = 0;
         for (Datum d: records){
             RealVector transformedMetricVector = new ArrayRealVector(finalTransform[i++]);
