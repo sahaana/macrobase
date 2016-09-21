@@ -36,6 +36,9 @@ public abstract class SkiingOptimizer {
 
     protected PCA pca;
 
+    protected boolean feasible;
+    protected int lastFeasible;
+
     public SkiingOptimizer(double epsilon, int b, int s){
         this.numDiffs = 3;
         this.epsilon = epsilon;
@@ -49,6 +52,9 @@ public abstract class SkiingOptimizer {
         this.kDiffs = new int[this.numDiffs]; //TODO: 3 to change to general param
 
         this.prevK = 0;
+
+        this.feasible = false;
+        this.lastFeasible = 0;
     }
 
     public void extractData(List<Datum> records){

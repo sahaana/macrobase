@@ -2,11 +2,14 @@ package macrobase.analysis.stats.optimizer;
 
 import macrobase.analysis.stats.optimizer.util.PCA;
 //import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
-//import org.apache.commons.math3.linear.*;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.Matrices;
+import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.random.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class PCASkiingOptimizer extends SkiingOptimizer {
 
@@ -32,15 +35,27 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         //mnd.reseedRandomGenerator(randomSeed);
 
         //NormalizedRandomGenerator generator = new UniformRandomGenerator(new Well19937a());
+        /*
         NormalizedRandomGenerator generator = new GaussianRandomGenerator(new Well19937a());
         UncorrelatedRandomVectorGenerator gen = new UncorrelatedRandomVectorGenerator(M,generator);
         RealMatrix projectionMatrix = new Array2DRowRealMatrix(Nt,M);
         for (int i = 0; i < Nt; i++){
             projectionMatrix.setRow(i,gen.nextVector());
+        } */
+        Random rand = new Random();
+        RealMatrix projectionMatrix = new Array2DRowRealMatrix(Nt,M);
+        for (int i = 0; i < Nt; i++){
+            for (int j = 0; j < N; j++){
+                projectionMatrix.setEntry(i,j,rand.nextGaussian());
+            }
         }
         //RealMatrix randomProjectionMatrix = new Array2DRowRealMatrix(mnd.sample(M));
-        RealMatrix trainMatrix = projectionMatrix.multiply(dataMatrix);
-        this.pca = new PCA(trainMatrix);
+        DenseMatrix dm = new DenseMatrix(dataMatrix.getData());
+        DenseMatrix pm = new DenseMatrix(projectionMatrix.getData());
+        DenseMatrix tm = new DenseMatrix(Nt, N);
+        pm.mult(dm,tm);
+        //RealMatrix trainMatrix = projectionMatrix.multiply(dataMatrix);
+        this.pca = new PCA(new Array2DRowRealMatrix(Matrices.getArray(tm)));
     }
 
 
@@ -68,6 +83,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int iter = 8008;
         int low = 0;
         int high = Math.min(this.M,this.Nproc) - 1;
+        if (this.feasible) high = this.lastFeasible;
         int mid = (low + high) / 2;
 
         this.cacheInput(high);
@@ -84,7 +100,9 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 currTransform = this.getCachedTransform(mid - 1);
                 LBR = evalK(targetLBR, currTransform);//this.meanLBR(iter, currTransform);
                 if (targetLBR > LBR) {
-                    return currTransform;
+                    this.feasible = true;
+                    this.lastFeasible = mid;
+                    return this.getCachedTransform(mid);
                 }
                 high = mid - 1;
             } else if (targetLBR > LBR) {
@@ -95,6 +113,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             iters += 1;
             mid = (low + high) / 2;
         }
+        this.feasible = true;
+        this.lastFeasible = mid;
         return this.getCachedTransform(mid);
     }
 
@@ -107,6 +127,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int iters = 0;
         int low = 0;
         int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
+        if (this.feasible) high = this.lastFeasible;
         int mid = (low + high) / 2;
 
         //System.out.println(this.M);
@@ -124,8 +145,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 currTransform = this.transform(mid - 1);
                 LBR = this.meanLBR(iter, currTransform);
                 if (targetLBR > LBR) {
+                    this.feasible = true;
+                    this.lastFeasible = mid;
                     KItersList.put(this.NtList.get(iter), iters);
-                    return currTransform;
+                    return this.getCachedTransform(mid);
                 }
                 high = mid - 1;
             } else if (targetLBR > LBR) {
@@ -138,6 +161,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             iters += 1;
             mid = (low + high) / 2;
         }
+        this.feasible = true;
+        this.lastFeasible = mid;
         KItersList.put(this.NtList.get(iter), iters);
         return this.transform(mid);
     }
@@ -153,7 +178,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         int iters = 0;
         int low = 0;
+
         int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
+        if (this.feasible) high = this.lastFeasible;
+
         int mid = (low + high) / 2;
 
         this.cacheInput(high);
@@ -172,8 +200,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 currTransform = this.getCachedTransform(mid - 1);
                 LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
                 if (targetLBR > LBR) {
+                    this.feasible = true;
+                    this.lastFeasible = mid;
                     KItersList.put(this.NtList.get(iter), iters);
-                    return currTransform;
+                    return this.getCachedTransform(mid);
                 }
                 high = mid - 1;
             } else if (targetLBR > LBR) {
@@ -184,6 +214,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             iters += 1;
             mid = (low + high) / 2;
         }
+        this.feasible = true;
+        this.lastFeasible = mid;
         KItersList.put(this.NtList.get(iter), iters);
         return this.getCachedTransform(mid);
     }
@@ -200,6 +232,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int iters = 0;
         int low = 0;
         int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
+        if (this.feasible) high = this.lastFeasible;
         int mid = (low + high) / 2;
 
         //System.out.println(this.M);
@@ -217,8 +250,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 currTransform = this.transform(mid - 1);
                 LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
                 if (targetLBR > LBR) {
+                    this.feasible = true;
+                    this.lastFeasible = mid;
                     KItersList.put(this.NtList.get(iter), iters);
-                    return currTransform;
+                    return this.getCachedTransform(mid);
                 }
                 high = mid - 1;
             } else if (targetLBR > LBR) {
@@ -229,6 +264,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             iters += 1;
             mid = (low + high) / 2;
         }
+        this.feasible = true;
+        this.lastFeasible = mid;
         KItersList.put(this.NtList.get(iter), iters);
         return this.transform(mid);
     }
@@ -238,7 +275,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         double q = 1.96;
         double prevMean = 0;
         int numPairs = (this.M)*((this.M) - 1)/2;
-        int currPairs = Math.max(5, this.M);//new Double(0.005*numPairs).intValue());
+        int currPairs = 100;//Math.max(5, this.M);//new Double(0.005*numPairs).intValue());
         while (currPairs < numPairs){
             CI = this.LBRCI(currTransform,currPairs, q);
             if (CI[0] > LBRThresh){

@@ -88,13 +88,14 @@ public class SkiingDROP extends FeatureTransform {
             pcaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
-            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
+            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
             currNt = pcaOpt.getNextNt(++iter, currNt, maxNt);
         } while (currNt < pcaOpt.getM() && currLBR[0] < lbr);
 
+        log.debug("MIC DROP COMPLETE");
         finalTransform = currTransform.getData();
 
-
+        log.debug("Computing Full Transform");
         pcaOpt.fit(pcaOpt.getM());
         currTransform = pcaOpt.getKFull(lbr);
         currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//pcaOpt.LBRAttained(iter, currTransform);

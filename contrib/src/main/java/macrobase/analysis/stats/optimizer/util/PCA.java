@@ -1,62 +1,60 @@
 package macrobase.analysis.stats.optimizer.util;
 
-import com.sun.tools.javac.util.Assert;
-import no.uib.cipr.matrix.DenseMatrix;
-import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.NotConvergedException;
-import no.uib.cipr.matrix.SVD;
-//import org.apache.commons.math3.linear.*;
+//import com.sun.tools.javac.util.Assert;
+import no.uib.cipr.matrix.*;
+import org.apache.commons.math3.linear.*;
 
 //import org.jblas.DoubleMatrix;
 //import org.jblas.Singular;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertTrue;
+//import static org.junit.Assert.assertTrue;
 
 
 public class PCA {
     private static final Logger log = LoggerFactory.getLogger(PCA.class);
 
-    private DenseMatrix dataMatrix; // A
-    private DenseMatrix centeredDataMatrix; // X
-    private DenseMatrix transformationMatrix; // V
-    private DenseVector columnMeans;
+    private RealMatrix dataMatrix; // A
+    private RealMatrix centeredDataMatrix; // X
+    private RealMatrix transformationMatrix; // V
+    private RealVector columnMeans;
     private SVD svd; //gives X = UDV', U=mxp D=pxp V = pxn
     //private RealMatrix cachedTransform;
     private int N;
     private int M;
     private int P;
 
-    public PCA(DenseMatrix rawDataMatrix) {
+    public PCA(RealMatrix rawDataMatrix) {
         this.dataMatrix = rawDataMatrix;
-        this.M = rawDataMatrix.numRows();
-        this.N = rawDataMatrix.numColumns();
-        this.centeredDataMatrix = rawDataMatrix.copy();//new DenseMatrix(M,N);
-        this.columnMeans = new DenseVector(N);
+        this.M = rawDataMatrix.getRowDimension();//.numRows();
+        this.N = rawDataMatrix.getColumnDimension();//numColumns();
+        this.centeredDataMatrix = new Array2DRowRealMatrix(M,N);//rawDataMatrix.copy();//new DenseMatrix(M,N);
+        this.columnMeans = new ArrayRealVector(N);//DenseVector(N);
         double mean;
+        RealVector currVec;
 
-        for (int j = 0; j < N; j++){
-            //calculate column means
+
+        for (int i = 0; i < N; i++){
+            currVec = this.dataMatrix.getColumnVector(i);
             mean = 0;
-            for (int i = 0; i < M; i++){
-                mean += dataMatrix.get(i,j);
+            for (double entry: currVec.toArray()){
+                mean += entry;
             }
-            mean /= N;
-            columnMeans.set(j, mean);
-
-            //subtract the column average from original matrix
-            for (int i = 0; i < M; i++) {
-                centeredDataMatrix.add(i, j, -mean);
-            }
+            mean /= M;
+            columnMeans.setEntry(i, mean);
+            currVec.mapSubtractToSelf(mean);
+            centeredDataMatrix.setColumnVector(i, currVec);
         }
 
-        //svd = new SVD(M, N);
+        svd = new SVD(M, N);
         try {
-            svd = svd.factor(centeredDataMatrix);
-            transformationMatrix = svd.getVt();
-            transformationMatrix.transpose();
-            P = transformationMatrix.numRows();
+            DenseMatrix cdm = new DenseMatrix(centeredDataMatrix.getData());
+            svd = svd.factor(cdm);
+            DenseMatrix tm = svd.getVt();
+            tm.transpose();
+            transformationMatrix = new Array2DRowRealMatrix(Matrices.getArray(tm));
+            P = transformationMatrix.getRowDimension();//numRows();
         } catch (NotConvergedException ie) {
             ie.printStackTrace();
         }
@@ -107,14 +105,14 @@ public class PCA {
 
     public int getM(){ return this.M; }
 
-    public DenseMatrix transform(DenseMatrix inputData, int K){
-        if (K > Math.min(this.N,this.M)){
+    public RealMatrix transform(RealMatrix inputData, int K){
+        /*if (K > Math.min(this.N,this.M)){
           log.warn("Watch your K...K {} M {} Nproc {}", K, this.M, this.N);
         }
         K = Math.min(Math.min(K, this.N), this.M);
-        DenseMatrix centeredInput = inputData.copy();//new Array2DRowRealMatrix(inputData.getData());
-        DenseMatrix transformation = new DenseMatrix(P,K);//this.transformationMatrix.getSubMatrix(0,this.P-1,0,K-1);
-        DenseMatrix transformedData = new DenseMatrix(inputData.numRows(),K);
+        RealMatrix centeredInput = new Array2DRowRealMatrix(inputData.getData());
+        RealMatrix transformation = this.transformationMatrix.getSubMatrix(0,this.P-1,0,K-1);
+        RealMatrix transformedData = new DenseMatrix(inputData.numRows(),K);
 
         //TODO: do a deep copy by checking if it's full transform. It mostly will be...
         for (int i = 0; i < P; i++){
@@ -133,34 +131,25 @@ public class PCA {
         //computing transformation
         centeredInput.mult(transformation, transformedData);
         return transformedData;
-
-        /*
-
+        */
+        if (K > Math.min(this.N,this.M)){
+            log.warn("Watch your K...K {} M {} Nproc {}", K, this.M, this.N);
+        }
+        K = Math.min(Math.min(K, this.N), this.M);
+        RealMatrix centeredInput = new Array2DRowRealMatrix(inputData.getData());
+        RealMatrix transformation = this.transformationMatrix.getSubMatrix(0,this.P-1,0,K-1);
+        DenseMatrix ci;
+        DenseMatrix transformedData = new DenseMatrix(inputData.getRowDimension(),K);
+        DenseMatrix t = new DenseMatrix(transformation.getData());
+        RealVector currVec;
         for (int i = 0; i < this.N; i++){
             currVec = inputData.getColumnVector(i);
             currVec.mapSubtractToSelf(this.columnMeans.getEntry(i));
             centeredInput.setColumn(i, currVec.toArray());
         }
-        DenseMatrix t = new DenseMatrix(centeredInput.getData());
-        DenseMatrix t2 = new DenseMatrix(transformation.getData());
-        DenseMatrix t3 = new DenseMatrix(inputData.getRowDimension(),K);
-        t.mult(t2,t3);
-
-        //DoubleMatrix s = new DoubleMatrix(centeredInput.getData());
-        //DoubleMatrix s2 = new DoubleMatrix(transformation.getData());
-        //DoubleMatrix s3 = s.mmul(s2);
-
-        RealMatrix u = new Array2DRowRealMatrix(inputData.getRowDimension(),K);//s3.toArray2());//centeredInput.multiply(transformation);
-        for (int i = 0; i < inputData.getRowDimension(); i++){
-            for (int j = 0; j < K; j++){
-                //assertTrue("string",Math.abs(t.get(i,j)-s3.get(i,j)) < .0001);
-                //assertTrue("string", Math.abs(u.getEntry(i,j)-t.get(i,j)) < .0001);
-                u.setEntry(i,j,t3.get(i,j));
-            }
-        }
-
-
-        return u;*/
+        ci = new DenseMatrix(centeredInput.getData());
+        ci.mult(t, transformedData);
+        return new Array2DRowRealMatrix(Matrices.getArray(transformedData));
     }
 
 }
