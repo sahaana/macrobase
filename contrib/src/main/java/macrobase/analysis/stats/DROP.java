@@ -67,20 +67,20 @@ public class DROP extends FeatureTransform {
         pcaOpt.preprocess(processedDim);
         log.debug("Processed data w/ PAA");
         currNt = pcaOpt.getNextNt(iter, K, num_Nt);
-        //currEp = pcaOpt.LBRAttained(iter, currTransform);
-        //////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+        //currEp = paaOpt.LBRAttained(iter, currTransform);
+        //////currLBR = paaOpt.LBRAttained(iter, epsilon, currTransform);
         currBLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
         log.debug("Beginning DROP");
         sw.start();
         ///currTransform is Null first iteration
         while (currLBR < lbr && currNt <= pcaOpt.getM()){
             log.debug("Iteration {} with {} samples ", iter, currNt);
-            //pcaOpt.printData(0,5,0,5);
+            //paaOpt.printData(0,5,0,5);
             currTransform = pcaOpt.transform(K, currNt);
-            //currEp = pcaOpt.LBRAttained(iter, epsilon, currTransform);
-            /////currLBR = pcaOpt.LBRAttained(iter, epsilon, currTransform);
+            //currEp = paaOpt.LBRAttained(iter, epsilon, currTransform);
+            /////currLBR = paaOpt.LBRAttained(iter, epsilon, currTransform);
             currBLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
-            /////pcaOpt.setLBRList(pcaOpt.getNtList(iter), currLBR);
+            /////paaOpt.setLBRList(paaOpt.getNtList(iter), currLBR);
             pcaOpt.setBLBRList(pcaOpt.getNtList(iter), currBLBR);
             pcaOpt.setTrainTimeList(pcaOpt.getNtList(iter), (double) sw.elapsed(TimeUnit.MILLISECONDS));
             log.debug("LOW {}, LBR {}, HIGH {}", currBLBR[0], currBLBR[1], currBLBR[2]);

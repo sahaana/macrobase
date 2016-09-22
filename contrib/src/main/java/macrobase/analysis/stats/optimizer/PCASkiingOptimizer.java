@@ -296,53 +296,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     }
 
 
-/*    @Override
-    public RealMatrix getK(int iter, double targetLBR) {
-        int mid;
-        double LBR;
-        RealMatrix currTransform; //= new Array2DRowRealMatrix();
-
-        int iters = 0;
-        int low = 0;
-        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
-        //System.out.println(this.M);
-
-        while (low <= high) {
-            mid = (low + high) / 2;
-            currTransform = this.transform(mid);
-            LBR = this.meanLBR(iter, currTransform);
-            if (targetLBR < LBR) {
-                currTransform = this.transform(mid - 1);
-                LBR = this.meanLBR(iter, currTransform);
-                if (targetLBR > LBR) {
-                    KItersList.put(this.NtList.get(iter), iters);
-                    return currTransform;
-                }
-                high = mid - 1;
-            } else if (targetLBR > LBR) {
-                low = mid + 1;
-            } else {
-                KItersList.put(this.NtList.get(iter), iters);
-                return currTransform;
-            }
-            iters += 1;
-        }
-        KItersList.put(this.NtList.get(iter), iters);
-        return this.transform(Math.min(this.Nproc, this.NtList.get(iter)) - 1);
-    } */
-
     public Map getKItersList(){ return KItersList; }
-        /*
-        RealMatrix currTransform = new Array2DRowRealMatrix();
-        double LBR;
-        for (int i = 5; i < Math.min(this.Nproc, this.NtList.get(iter)); i++){
-            currTransform = this.transform(i);
-            LBR = this.meanLBR(iter, currTransform);
-            if (LBR >= targetLBR){
-                System.out.println(LBR);
-                break;
-            }
-        }
-        return currTransform;
-    } */
+
 }
