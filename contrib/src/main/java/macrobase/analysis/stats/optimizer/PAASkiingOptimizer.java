@@ -69,7 +69,7 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
             CI = this.LBRCI(currTransform,M, 1.96);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
             //System.out.println(String.format("With K {}, LBR {}", i, LBR));
-            if (targetLBR < LBR) {
+            if (targetLBR <= LBR) {
                 this.feasible = true;
                 this.lastFeasible = i;
                 return currTransform;

@@ -337,7 +337,7 @@ public abstract class SkiingOptimizer {
         }
         kIndices = Arrays.copyOf(allIndices,K);
 
-        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N/this.Nproc));
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N)/Math.sqrt(this.Nproc));
         trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
         LBRs = this.calcLBRList(trueDists, transformedDists);
         for(double l: LBRs){

@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
 //import macrobase.analysis.stats.DROP;
+import macrobase.analysis.stats.FFTSkiingDROP;
 import macrobase.analysis.stats.PAASkiingDROP;
 import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
@@ -155,7 +156,9 @@ public class SkiingBatchDROP {
         List<Datum> data = ingester.getStream().drain();
 
         /////PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
-        PAASkiingDROP drop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
+        /////PAASkiingDROP drop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
+        FFTSkiingDROP drop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
+
         drop.consume(data);
 
         LBRResults = drop.getLBR();
