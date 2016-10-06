@@ -45,7 +45,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         Random rand = new Random();
         RealMatrix projectionMatrix = new Array2DRowRealMatrix(Nt,M);
         for (int i = 0; i < Nt; i++){
-            for (int j = 0; j < N; j++){
+            for (int j = 0; j < M; j++){
                 projectionMatrix.setEntry(i,j,rand.nextGaussian());
             }
         }

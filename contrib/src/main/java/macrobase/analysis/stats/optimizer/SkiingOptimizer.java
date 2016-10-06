@@ -391,6 +391,8 @@ public abstract class SkiingOptimizer {
 
     public int getM(){return M;}
 
+    public RealMatrix getDataMatrix() {return dataMatrix;}
+
     public void setKDiff(int iter, int currK){
         kDiffs[iter % numDiffs] = Math.abs(currK - prevK);
         prevK = currK;
@@ -413,6 +415,8 @@ public abstract class SkiingOptimizer {
     public Map getTrainTimeList(){ return trainTimeList; }
 
     public Map getKList(){ return KList; }
+
+    public PCA getPca() {return this.pca; }
 
 
     public abstract void fit(int Nt);

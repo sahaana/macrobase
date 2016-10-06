@@ -105,6 +105,8 @@ public class PCA {
 
     public int getM(){ return this.M; }
 
+    public RealMatrix getTransformationMatrix(){ return this.transformationMatrix; }
+
     public RealMatrix transform(RealMatrix inputData, int K){
         /*if (K > Math.min(this.N,this.M)){
           log.warn("Watch your K...K {} M {} Nproc {}", K, this.M, this.N);

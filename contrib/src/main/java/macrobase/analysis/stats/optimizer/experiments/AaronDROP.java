@@ -1,10 +1,8 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
 //import macrobase.analysis.stats.DROP;
+import macrobase.analysis.stats.AaronAlgo;
 import macrobase.analysis.stats.DROPvPowerIteration;
-import macrobase.analysis.stats.FFTSkiingDROP;
-import macrobase.analysis.stats.PAASkiingDROP;
-import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -21,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class SkiingBatchDROP {
+public class AaronDROP {
     private static Map<Integer, String> TABLE_NAMES = Stream.of(
             "1,CinC",
             "2,InlineSkate",
@@ -125,19 +123,20 @@ public class SkiingBatchDROP {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
     public static void main(String[] args) throws Exception{
         //int k = 20;
-        int maxNt = 25;
+        //int maxNt = 25;
         //int datasetID = 7;
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
-        double epsilon = Double.parseDouble(args[2]);
-        boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
+        int c = Integer.parseInt(args[2]);
+        //double epsilon = Double.parseDouble(args[2]);
+        //boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
-        System.out.println(epsilon);
+        System.out.println(c);
         //*/
-        int b = 50; //[25,50,100,200,300,400,500]
-        int s = 20; //[5,10,20,25,35,50,75,100,200]
+        //int b = 50; //[25,50,100,200,300,400,500]
+        //int s = 20; //[5,10,20,25,35,50,75,100,200]
 
 
         //int processedDim = TABLE_SIZE.get(datasetID);
@@ -146,23 +145,21 @@ public class SkiingBatchDROP {
         double epsilon = .2;
         */
 
-        Map<Integer, double[]> LBRResults;
-        Map<Integer, Double> timeResults;
-        Map<Integer, Integer> kResults;
-        Map<Integer, Integer> kIters;
+        //Map<Integer, double[]> LBRResults;
+        //Map<Integer, Double> timeResults;
+        //Map<Integer, Integer> kResults;
+        //Map<Integer, Integer> kIters;
 
         MacroBaseConf conf = new MacroBaseConf();
 
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        /////PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
-        /////PAASkiingDROP drop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
-        /////FFTSkiingDROP drop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
-        DROPvPowerIteration drop = new DROPvPowerIteration(conf, maxNt, epsilon, lbr, b, s, rpFlag);
+        AaronAlgo drop = new AaronAlgo(conf, lbr, c);
 
         drop.consume(data);
 
+        /*
         LBRResults = drop.getLBR();
         mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,maxNt,lbr,epsilon, rpFlag));
 
@@ -174,6 +171,7 @@ public class SkiingBatchDROP {
 
         kIters = drop.getKItersList();
         mapIntToCSV(kIters, kItersOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
+        */
 
     }
 
