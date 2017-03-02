@@ -17,12 +17,13 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 public class FFTSkiingOptimizer extends SkiingOptimizer {
-    private static final Logger log = LoggerFactory.getLogger(PAASkiingOptimizer.class);
+    private static final Logger log = LoggerFactory.getLogger(FFTSkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
 
     //protected RealMatrix transformedData;
     protected FastFourierTransformer transformer;
 
+    protected RealMatrix paddedInput;
     protected Complex[][] transformedData;
     protected int nextPowTwo;
     //protected int[] freqCounts;
@@ -39,7 +40,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         nextPowTwo = Math.max(2, 2 * Integer.highestOneBit(this.N - 1));
 
         transformedData = new Complex[this.M][nextPowTwo];//Array2DRowRealMatrix(this.M, nextPowTwo);
-        RealMatrix paddedInput = new Array2DRowRealMatrix(this.M, nextPowTwo);
+        paddedInput = new Array2DRowRealMatrix(this.M, nextPowTwo);
         paddedInput.setSubMatrix(this.dataMatrix.getData(), 0, 0);
 
         for (int i = 0; i < this.M; i++) {
@@ -192,6 +193,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
 
     @Override
+    //K must be even.
     public RealMatrix transform(int K) {
         assert (K % 2 == 0);
 
@@ -211,12 +213,12 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
             }
         }
         topFreqs = Arrays.copyOfRange(argSort(freqCounts, false), 0, K / 2);
-        /*
-        topFreqs = new int[K/2];
+
+        /*topFreqs = new int[K/2];
         for (int i = 0; i < K/2 ; i++){
             topFreqs[i] = i;
-        }
-        */
+        }*/
+
         for (int i = 0; i < this.M; i++) {
             curr = transformedData[i];
             tempOut = new ArrayRealVector();
@@ -296,7 +298,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
         this.Nproc = this.N*this.N;
 
-        for (int i = 2; i <= this.nextPowTwo*2; i+=16){
+        for (int i = 2; i <= this.nextPowTwo*2; i+=4){
             currTransform = this.transform(i);
             LBR  = evalK(targetLBR, currTransform);
             CI = this.LBRCI(currTransform, M, 1.96);
@@ -335,6 +337,24 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         return 0.0;
     }
 
+
+
+    public Map<Integer, Double> computeLBRs(){
+        //confidence interval based method for getting K
+        Map<Integer, Double> LBRs = new HashMap<>();
+        double[] CI = {0,0,0};
+        int interval = Math.max(2,this.N/32 + ((this.N/32) % 2)); //ensure even k always
+        RealMatrix currTransform;
+        this.Nproc = this.N*this.N;
+        for (int i = 2;((i <= this.N) && (CI[1] <= .99)); i+= interval){
+            currTransform = this.transform(i);
+            CI = this.LBRCI(currTransform, M, 1.96);
+            log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
+            LBRs.put(i, CI[1]);
+        }
+        return LBRs;
+    }
+
     @Override
     public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold){
         //int numPairs = M;
@@ -369,11 +389,11 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
             indices[i] = i; //TODO: FIXME: 9/2/16
         }
         kIndices = Arrays.copyOf(indices,K);
-        allIndices = Arrays.copyOf(indices,this.N);
+        allIndices = Arrays.copyOf(indices,this.nextPowTwo);
 
-        RealMatrix pooper = transformedData.getSubMatrix(indicesA,kIndices);
-        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N)/Math.sqrt(this.N*this.N));
-        trueDists = this.calcDistances(this.dataMatrix.getSubMatrix(indicesA,allIndices), this.dataMatrix.getSubMatrix(indicesB,allIndices));
+        // RealMatrix pooper = transformedData.getSubMatrix(indicesA,kIndices);
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(1/Math.sqrt(this.nextPowTwo));//.mapMultiply(Math.sqrt(this.N)/Math.sqrt(this.N*this.N));
+        trueDists = this.calcDistances(this.paddedInput.getSubMatrix(indicesA,allIndices), this.paddedInput.getSubMatrix(indicesB,allIndices));
 
         LBRs = this.calcLBRList(trueDists, transformedDists);
         for(double l: LBRs){

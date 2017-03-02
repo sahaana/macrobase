@@ -1,10 +1,8 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
 //import macrobase.analysis.stats.DROP;
-import macrobase.analysis.stats.DROPvPowerIteration;
-import macrobase.analysis.stats.FFTSkiingDROP;
 import macrobase.analysis.stats.PAASkiingDROP;
-import macrobase.analysis.stats.PCASkiingDROP;
+import macrobase.analysis.stats.FFTSkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -21,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class SkiingBatchDROP {
+public class BatchTechniqueComparison {
     private static Map<Integer, String> TABLE_NAMES = Stream.of(
             "1,CinC",
             "2,InlineSkate",
@@ -102,24 +100,14 @@ public class SkiingBatchDROP {
     }
 
 
-    private static String LBROutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
+    private static String LBROutFile(String dataset, int b, int s, double lbr, double ep, String tag){
+        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_%s",dataset,b, s, lbr, ep, tag);
+        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/baseline/%s.csv", output);
     }
 
-    private static String timeOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
+    private static String timeOutFile(String dataset, int b, int s, double lbr, double ep){
+        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f",dataset,b, s, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
-    }
-
-    private static String kOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/k/%s.csv", output);
-    }
-
-    private static String kItersOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s %d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
     }
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
@@ -131,7 +119,7 @@ public class SkiingBatchDROP {
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double epsilon = Double.parseDouble(args[2]);
-        boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
+        //boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
@@ -146,10 +134,10 @@ public class SkiingBatchDROP {
         double epsilon = .2;
         */
 
-        Map<Integer, double[]> LBRResults;
-        Map<Integer, Double> timeResults;
-        Map<Integer, Integer> kResults;
-        Map<Integer, Integer> kIters;
+
+        Map<Integer, Double> fftResults;
+        Map<Integer, Double> paaResults;
+        Map<Integer, Double> rpResults;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -157,23 +145,17 @@ public class SkiingBatchDROP {
         List<Datum> data = ingester.getStream().drain();
 
         /////PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
-        PAASkiingDROP drop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
-        //FFTSkiingDROP drop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s);
+        PAASkiingDROP paaDrop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
+        FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s);
         ////DROPvPowerIteration drop = new DROPvPowerIteration(conf, maxNt, epsilon, lbr, b, s, rpFlag);
 
-        drop.consume(data);
 
-        LBRResults = drop.getLBR();
-        mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,maxNt,lbr,epsilon, rpFlag));
+        paaResults = paaDrop.genBasePlots(data);
+        fftResults = fftDrop.genBasePlots(data);
 
-        timeResults = drop.getTime();
-        mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
 
-        kResults = drop.getKList();
-        mapIntToCSV(kResults, kOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
-
-        kIters = drop.getKItersList();
-        mapIntToCSV(kIters, kItersOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
+        mapDoubleToCSV(paaResults, LBROutFile(dataset,b,s,lbr,epsilon,"PAA"));
+        mapDoubleToCSV(fftResults, LBROutFile(dataset,b,s,lbr,epsilon, "FFT"));
 
     }
 

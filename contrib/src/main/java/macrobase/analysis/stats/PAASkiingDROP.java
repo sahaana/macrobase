@@ -37,11 +37,11 @@ public class PAASkiingDROP extends FeatureTransform {
     int procDim;
     double epsilon;
     double lbr;
-    int b;
-    int s;
-    boolean rpFlag;
+    //int b;
+    //int s;
+    //boolean rpFlag;
 
-    public PAASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s, boolean rpFlag){
+    public PAASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
         currNt = 0;
         paaOpt = new PAASkiingOptimizer(epsilon, b, s);
@@ -53,9 +53,9 @@ public class PAASkiingDROP extends FeatureTransform {
         this.procDim = 707; //This is an appendix
         this.epsilon = epsilon;
         this.lbr = lbr;
-        this.b = b;
-        this.s = s;
-        this.rpFlag = rpFlag;
+        //this.b = b;
+        //this.s = s;
+        //this.rpFlag = rpFlag;
 
         output = new MBStream<>();
     }
@@ -68,13 +68,13 @@ public class PAASkiingDROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         paaOpt.extractData(records);
-        log.debug("Extracted Records");
+        log.debug("Extracted {} Records of len {}", paaOpt.getM(), paaOpt.getN());
         paaOpt.shuffleData();
         log.debug("Shuffled Data");
         paaOpt.preprocess(procDim);
         log.debug("Processed Data");
         currNt = paaOpt.getNextNt(iter, currNt, maxNt);
-        log.debug("Beginning DROP");
+        log.debug("Beginning PAA DROP");
         sw.start();
         log.debug("Iteration {}, {} samples", iter, currNt);
         paaOpt.fit(currNt);
@@ -94,6 +94,22 @@ public class PAASkiingDROP extends FeatureTransform {
             RealVector transformedMetricVector = new ArrayRealVector(finalTransform[i++]);
             output.add(new Datum(d, transformedMetricVector));
         }
+    }
+
+    public Map<Integer, Double> genBasePlots(List<Datum> records) {
+        paaOpt.extractData(records);
+        log.debug("Extracted {} Records of len {}", paaOpt.getM(), paaOpt.getN());
+        paaOpt.shuffleData();
+        log.debug("Shuffled Data");
+        paaOpt.preprocess(procDim);
+        log.debug("Processed Data");
+        currNt = paaOpt.getNextNt(iter, currNt, maxNt);
+        log.debug("Beginning PAA base run");
+        paaOpt.fit(currNt);
+        //sw.start();
+        //paaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
+
+        return paaOpt.computeLBRs();
     }
 
     @Override

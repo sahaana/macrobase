@@ -150,10 +150,29 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
 
     private List<Integer> findFactors(){
         List<Integer> factors = new ArrayList<>();
+        for (int i = 1; i <= this.N; i++) {
+            if (this.N % i == 0) factors.add(i);
+        }
+        /* I don't remember why this used to be Nproc
         for (int i = 1; i < this.Nproc; i++) {
             if (Nproc % i == 0) factors.add(i);
-        }
+        } */
         return factors;
+    }
+
+    public Map<Integer, Double> computeLBRs(){
+        Map<Integer, Double> LBRs = new HashMap<>();
+        double[] CI;
+        RealMatrix currTransform; //= new Array2DRowRealMatrix();
+        for (int i: factors){
+            currTransform = this.transform(i);
+            this.Nproc = i;
+            CI = this.LBRCI(currTransform,M, 1.96);
+            log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
+            LBRs.put(i, CI[1]);
+        }
+        this.Nproc = this.N;
+        return LBRs;
     }
 
     @Override

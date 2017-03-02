@@ -3,7 +3,6 @@ package macrobase.analysis.stats;
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.stats.optimizer.FFTSkiingOptimizer;
-import macrobase.analysis.stats.optimizer.PAASkiingOptimizer;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -37,11 +36,11 @@ public class FFTSkiingDROP extends FeatureTransform {
     int procDim;
     double epsilon;
     double lbr;
-    int b;
-    int s;
-    boolean rpFlag;
+    //int b;
+    //int s;
+    //boolean rpFlag;
 
-    public FFTSkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s, boolean rpFlag){
+    public FFTSkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
         currNt = 0;
         fftOpt = new FFTSkiingOptimizer(epsilon, b, s);
@@ -52,10 +51,10 @@ public class FFTSkiingDROP extends FeatureTransform {
         this.maxNt = maxNt;
         this.procDim = 707; //This is an appendix
         this.epsilon = epsilon;
-        this.lbr = lbr;
-        this.b = b;
-        this.s = s;
-        this.rpFlag = rpFlag;
+        this.lbr = 200;//lbr;
+        //this.b = b;
+        //this.s = s;
+        //this.rpFlag = rpFlag;
 
         output = new MBStream<>();
     }
@@ -68,19 +67,19 @@ public class FFTSkiingDROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         fftOpt.extractData(records);
-        log.debug("Extracted Records");
+        log.debug("Extracted {} Records of len {}", fftOpt.getM(), fftOpt.getN());
         fftOpt.shuffleData();
         log.debug("Shuffled Data");
         fftOpt.preprocess(procDim);
         log.debug("Processed Data");
         currNt = fftOpt.getNextNt(iter, currNt, maxNt);
-        log.debug("Beginning DROP");
+        log.debug("Beginning FFT DROP");
         sw.start();
         log.debug("Iteration {}, {} samples", iter, currNt);
         fftOpt.fit(currNt);
         //fftOpt.test();
 
-        currTransform = fftOpt.getKBin(iter, lbr);
+        currTransform = fftOpt.getK(iter, lbr);
         currLBR = fftOpt.LBRCI(currTransform, fftOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
         fftOpt.setLBRList(currNt, currLBR);
         fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
@@ -98,6 +97,25 @@ public class FFTSkiingDROP extends FeatureTransform {
         }
 
     }
+
+
+    public Map<Integer, Double> genBasePlots(List<Datum> records){
+        fftOpt.extractData(records);
+        log.debug("Extracted {} Records of len {}", fftOpt.getM(), fftOpt.getN());
+        fftOpt.shuffleData();
+        log.debug("Shuffled Data");
+        fftOpt.preprocess(procDim);
+        log.debug("Processed Data");
+        currNt = fftOpt.getNextNt(iter, currNt, maxNt);
+        log.debug("Beginning FFT base run");
+        fftOpt.fit(currNt);
+        //sw.start();
+        //fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
+
+        return fftOpt.computeLBRs();
+
+    }
+
 
     @Override
     public void shutdown() throws Exception {
