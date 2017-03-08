@@ -1,7 +1,5 @@
 package macrobase.analysis.stats.optimizer;
 
-import macrobase.datamodel.Datum;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -10,7 +8,6 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
-import org.eclipse.jetty.util.ArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +63,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
                 return (ascending ? 1 : -1) * Double.compare(in[o1].abs(), in[o2].abs());
             }
         });
-        return toPrim(indices);
+        return toPrimitive(indices);
     }
 
     public int[] argSort(int[] in, boolean ascending) {
@@ -80,10 +77,10 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
                 return (ascending ? 1 : -1) * Integer.compare(in[o1], in[o2]);
             }
         });
-        return toPrim(indices);
+        return toPrimitive(indices);
     }
 
-    public int[] toPrim(Integer[] in) {
+    public int[] toPrimitive(Integer[] in) {
         int[] out = new int[in.length];
         for (int i = 0; i < in.length; i++) {
             out[i] = in[i];

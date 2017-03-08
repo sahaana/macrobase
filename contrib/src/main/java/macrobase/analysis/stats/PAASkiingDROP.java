@@ -78,6 +78,7 @@ public class PAASkiingDROP extends FeatureTransform {
         sw.start();
         log.debug("Iteration {}, {} samples", iter, currNt);
         paaOpt.fit(currNt);
+
         currTransform = paaOpt.getK(iter, lbr);
         currLBR = paaOpt.LBRCI(currTransform, paaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
         paaOpt.setLBRList(currNt, currLBR);

@@ -3,6 +3,7 @@ package macrobase.analysis.stats.optimizer.experiments;
 //import macrobase.analysis.stats.DROP;
 import macrobase.analysis.stats.PAASkiingDROP;
 import macrobase.analysis.stats.FFTSkiingDROP;
+import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -110,6 +111,9 @@ public class BatchTechniqueComparison {
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
     }
 
+
+
+
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
     public static void main(String[] args) throws Exception{
         //int k = 20;
@@ -138,6 +142,7 @@ public class BatchTechniqueComparison {
         Map<Integer, Double> fftResults;
         Map<Integer, Double> paaResults;
         Map<Integer, Double> rpResults;
+        Map<Integer, Double> pcaResults;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -147,15 +152,18 @@ public class BatchTechniqueComparison {
         /////PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s);
+        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
         ////DROPvPowerIteration drop = new DROPvPowerIteration(conf, maxNt, epsilon, lbr, b, s, rpFlag);
 
 
         paaResults = paaDrop.genBasePlots(data);
         fftResults = fftDrop.genBasePlots(data);
+        pcaResults = pcaDrop.genBasePlots(data);
 
 
-        mapDoubleToCSV(paaResults, LBROutFile(dataset,b,s,lbr,epsilon,"PAA"));
-        mapDoubleToCSV(fftResults, LBROutFile(dataset,b,s,lbr,epsilon, "FFT"));
+        //mapDoubleToCSV(paaResults, LBROutFile(dataset,b,s,lbr,epsilon,"PAA"));
+        //mapDoubleToCSV(fftResults, LBROutFile(dataset,b,s,lbr,epsilon, "FFT"));
+        //mapDoubleToCSV(pcaResults, LBROutFile(dataset,b,s,lbr,epsilon, "PCA"));
 
     }
 

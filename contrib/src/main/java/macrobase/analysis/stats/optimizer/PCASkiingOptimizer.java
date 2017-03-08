@@ -6,6 +6,8 @@ import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.Matrices;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.random.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +15,10 @@ import java.util.Random;
 
 public class PCASkiingOptimizer extends SkiingOptimizer {
 
+    private static final Logger log = LoggerFactory.getLogger(FFTSkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
     protected RealMatrix cachedTransform;
+
 
     public PCASkiingOptimizer(double epsilon, int b, int s){
         super(epsilon, b, s);
@@ -295,6 +299,21 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return 0.0;
     }
 
+
+    public Map<Integer, Double> computeLBRs(){
+        //confidence interval based method for getting K
+        Map<Integer, Double> LBRs = new HashMap<>();
+        double[] CI = {0,0,0};
+        int interval = Math.max(2,this.N/32);
+        RealMatrix currTransform;
+        for (int i = 2 ; i <= this.N ; i+= interval){
+            currTransform = this.transform(i);
+            CI = this.LBRCI(currTransform, M, 1.96);
+            log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
+            LBRs.put(i, CI[1]);
+        }
+        return LBRs;
+    }
 
     public Map getKItersList(){ return KItersList; }
 

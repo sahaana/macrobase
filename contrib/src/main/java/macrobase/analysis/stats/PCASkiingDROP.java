@@ -36,8 +36,8 @@ public class PCASkiingDROP extends FeatureTransform {
     int procDim;
     double epsilon;
     double lbr;
-    int b;
-    int s;
+    //int b;
+    //int s;
     boolean rpFlag;
 
     public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s, boolean rpFlag){
@@ -52,9 +52,28 @@ public class PCASkiingDROP extends FeatureTransform {
         this.procDim = 707; //This is an appendix
         this.epsilon = epsilon;
         this.lbr = lbr;
-        this.b = b;
-        this.s = s;
+        //this.b = b;
+        //this.s = s;
         this.rpFlag = rpFlag;
+
+        output = new MBStream<>();
+    }
+
+    public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
+        iter = 0;
+        currNt = 0;
+        pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
+        sw = Stopwatch.createUnstarted();
+
+        times = new HashMap<>();
+
+        this.maxNt = maxNt;
+        this.procDim = 707; //This is an appendix
+        this.epsilon = epsilon;
+        this.lbr = lbr;
+        //this.b = b;
+        //this.s = s;
+        //this.rpFlag = rpFlag;
 
         output = new MBStream<>();
     }
@@ -106,6 +125,22 @@ public class PCASkiingDROP extends FeatureTransform {
             RealVector transformedMetricVector = new ArrayRealVector(finalTransform[i++]);
             output.add(new Datum(d, transformedMetricVector));
         }
+    }
+
+    public Map<Integer, Double> genBasePlots(List<Datum> records){
+        pcaOpt.extractData(records);
+        log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
+        pcaOpt.shuffleData();
+        log.debug("Shuffled Data");
+        pcaOpt.preprocess(procDim);
+        log.debug("Processed Data");
+        currNt = pcaOpt.getM();//pcaOpt.getNextNt(iter, currNt, maxNt);
+        log.debug("Beginning PCA base run");
+        pcaOpt.fit(currNt);
+        //sw.start();
+        //fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
+
+        return pcaOpt.computeLBRs();
     }
 
     @Override
