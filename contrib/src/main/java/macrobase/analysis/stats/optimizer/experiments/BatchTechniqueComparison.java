@@ -161,9 +161,9 @@ public class BatchTechniqueComparison {
         pcaResults = pcaDrop.genBasePlots(data);
 
 
-        //mapDoubleToCSV(paaResults, LBROutFile(dataset,b,s,lbr,epsilon,"PAA"));
-        //mapDoubleToCSV(fftResults, LBROutFile(dataset,b,s,lbr,epsilon, "FFT"));
-        //mapDoubleToCSV(pcaResults, LBROutFile(dataset,b,s,lbr,epsilon, "PCA"));
+        mapDoubleToCSV(paaResults, LBROutFile(dataset,b,s,lbr,epsilon,"PAA"));
+        mapDoubleToCSV(fftResults, LBROutFile(dataset,b,s,lbr,epsilon, "FFT"));
+        mapDoubleToCSV(pcaResults, LBROutFile(dataset,b,s,lbr,epsilon, "PCA"));
 
     }
 

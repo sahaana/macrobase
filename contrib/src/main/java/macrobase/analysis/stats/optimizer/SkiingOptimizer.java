@@ -8,7 +8,6 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.stat.correlation.Covariance;
 
 import java.util.*;
 
@@ -90,7 +89,7 @@ public abstract class SkiingOptimizer {
         rawDataMatrix = rawDataMatrix.getSubMatrix(iA, indicesN);
     }
 
-    public void preprocess(int reducedDim){
+    public void preprocess(){
         Nproc = N;
         dataMatrix = rawDataMatrix;
     }
@@ -142,134 +141,6 @@ public abstract class SkiingOptimizer {
         return NtInterval+currNt;
     }
 
-
-    public double[] LBRAttained(int iter, RealMatrix transformedData){
-        //if (iter == 0){
-        //    return new double[] {0.0, 0.0, 0.0};
-        //}
-        int currNt = NtList.get(iter);
-        int[] allIndices = new int[N]; //bc we compare to raw data matrix
-        int K = transformedData.getColumnDimension();
-        for (int i = 0; i < N; i++){
-            allIndices[i] = i; //TODO: this is stupid
-        }
-        int[] kIndices = Arrays.copyOf(allIndices,K);
-
-        int num_pairs = (M - currNt)*((M - currNt) - 1)/2;
-        //while (num_pairs < b*s){
-        //    b -= 1;
-        //    s -= 1;
-        //}
-        int threshL = new Double((epsilon/2)*num_pairs).intValue();
-        int threshH = new Double((1 - epsilon/2)*num_pairs).intValue();
-        double lower = 0;
-        double mean = 0;
-        double upper = 0;
-        double var = 0;
-        HashMap<List<Integer>, Double> LBRs = new HashMap<>(); //pair -> LBR //change to (pair, LBR)
-        Double[][] LBRValCard = new Double[b][2]; //convert to pairs? so list of pairs
-
-        double tLower, tMean, tUpper, tvar;
-        double lbr;
-        double card;
-        double currCount;
-        int currIter;
-
-
-        Random rand = new Random();
-        int tempA, tempB, tMin, tMax;
-        int[] indicesA = new int[b];
-        int[] indicesB = new int[b];
-
-        List<Double> tempLBR;
-        RealVector transformedDists;
-        RealVector trueDists;
-        RealVector multinomialVals;
-
-        for (int i = 0; i < s; i++){
-            LBRs = new HashMap<>(); //pair -> LBR //change to (pair, LBR)
-            // sample w/out replacement from whole set, b times, so b distinct pairs
-            for (int j = 0; j < b; j++){
-                tempA = rand.nextInt(this.M);// - currNt) + currNt;
-                tempB = rand.nextInt(this.M );//- currNt) + currNt;
-                tMax = Math.max(tempA, tempB);
-                tMin = Math.min(tempA, tempB);
-                while (tempA == tempB ||
-                        LBRs.containsKey(new ArrayList<>(Arrays.asList(tMin, tMax)))){
-                    tempA = rand.nextInt(this.M);// - currNt) + currNt;
-                    tempB = rand.nextInt(this.M );//- currNt) + currNt;
-                    tMax = Math.max(tempA, tempB);
-                    tMin = Math.min(tempA, tempB);
-                }
-                indicesA[j] = tMin;
-                indicesB[j] = tMax;
-                LBRs.put(new ArrayList<>(Arrays.asList(tMin, tMax)), 0.0);
-            }
-
-            // compute lbr over those b distinct pairs.
-            // It is super ugly to do this in two separate for loops, but easier to check and stuff
-            transformedDists = calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(N/Nproc));
-            trueDists = calcDistances(rawDataMatrix.getSubMatrix(indicesA,allIndices), rawDataMatrix.getSubMatrix(indicesB,allIndices));
-            tempLBR =  calcLBRList(trueDists, transformedDists);
-            for (int j = 0; j < b; j++){
-                LBRs.put(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])), tempLBR.get(j));
-            }
-
-            // sample (n choose 2) (or num_pairs) times with replacement from b, use multinomial trick
-            multinomialVals = multinomial(num_pairs, b);
-
-            //compute bootstrap Tmean, Tlower, Tupper on b
-            tMean = 0;
-            for (int j = 0; j < b; j++){
-                lbr = LBRs.get(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])));
-                card  = multinomialVals.getEntry(j);
-                tMean += card * lbr;
-
-                LBRValCard[j][0] = lbr;
-                LBRValCard[j][1] = card;
-            }
-            tMean /= num_pairs;
-
-            //compute bootstrap variance
-            tvar = 0;
-            for (int j = 0; j < b; j++){
-                lbr = LBRs.get(new ArrayList<>(Arrays.asList(indicesA[j], indicesB[j])));
-                card = multinomialVals.getEntry(j);
-                tvar += card*(tMean-lbr)*(tMean-lbr);
-            }
-            tvar /= num_pairs;
-
-            // sort the lbr-cardinality array by lbr
-            Arrays.sort(LBRValCard, new Comparator<Double[]>() {
-                @Override
-                public int compare(Double[] d1, Double[] d2) {
-                    Double k1 = d1[0];
-                    Double k2 = d2[0];
-                    return k1.compareTo(k2);
-                }
-            });
-
-            //find %-ile via thresh
-            currIter = 0;
-            currCount = 0;
-            while (currCount < threshL){
-                currCount += LBRValCard[currIter++][1];
-            }
-            tLower = LBRValCard[currIter][0];
-            while (currCount < threshH){
-                currCount += LBRValCard[currIter++][1];
-            }
-            tUpper = LBRValCard[currIter][0];
-
-            //update all vals
-            mean += tMean/s;
-            lower += tLower/s;
-            upper += tUpper/s;
-            var += tvar/s;
-        }
-        return new double[] {lower, mean,upper, var};
-    }
-
     public double meanLBR(int iter, RealMatrix transformedData){
         int numPairs = M;
         int K = transformedData.getColumnDimension();
@@ -305,7 +176,6 @@ public abstract class SkiingOptimizer {
 
 
     public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold){
-        //int numPairs = M;
         int K = transformedData.getColumnDimension();
         //int currNt = NtList.get(iter);
 
@@ -352,9 +222,6 @@ public abstract class SkiingOptimizer {
         slop = (threshold*std)/Math.sqrt(numPairs);
         return new double[] {mean-slop, mean, mean+slop, std*std};
     }
-
-
-
 
     //TODO: this should really just call calcLBRList
     public double LBR(RealVector trueDists, RealVector transformedDists){
@@ -416,8 +283,7 @@ public abstract class SkiingOptimizer {
 
     public Map getKList(){ return KList; }
 
-    public PCA getPca() {return this.pca; }
-
+    public PCA getPCA() {return this.pca; }
 
     public abstract void fit(int Nt);
 
@@ -437,18 +303,6 @@ public abstract class SkiingOptimizer {
             distances.setEntry(i, currVec.getNorm());
         }
         return distances;
-    }
-
-    public  RealVector multinomial(int n, int k){
-        RealVector sample = new ArrayRealVector(k);
-        RealVector temp;
-        Random rand = new Random();
-        for (int i = 0; i < n; i++){
-            temp = new ArrayRealVector(k);
-            temp.setEntry(rand.nextInt(k),1.0);
-            sample = sample.add(temp);
-        }
-        return sample;
     }
 
 }

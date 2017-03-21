@@ -17,13 +17,11 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
     private static final Logger log = LoggerFactory.getLogger(FFTSkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
 
-    //protected RealMatrix transformedData;
     protected FastFourierTransformer transformer;
 
     protected RealMatrix paddedInput;
     protected Complex[][] transformedData;
     protected int nextPowTwo;
-    //protected int[] freqCounts;
 
     public FFTSkiingOptimizer(double epsilon, int b, int s) {
         super(epsilon, b, s);
@@ -33,7 +31,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
     @Override
     public void fit(int Nt) {
-        //RealVector currVec;
         nextPowTwo = Math.max(2, 2 * Integer.highestOneBit(this.N - 1));
 
         transformedData = new Complex[this.M][nextPowTwo];//Array2DRowRealMatrix(this.M, nextPowTwo);
@@ -41,12 +38,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         paddedInput.setSubMatrix(this.dataMatrix.getData(), 0, 0);
 
         for (int i = 0; i < this.M; i++) {
-            //Complex[] FFTOutput = transformer.transform(paddedInput.getRow(i), TransformType.FORWARD);
-            //currVec = new ArrayRealVector();
-            //for (Complex c : FFTOutput) {
-            //  currVec = currVec.append(c.getReal());
-            //currVec = currVec.append(c.getImaginary());
-            //}
             transformedData[i] = transformer.transform(paddedInput.getRow(i), TransformType.FORWARD);
         }
 
@@ -226,17 +217,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
             output.setRowVector(i, tempOut);
         }
         return output;
-        /*output = new Array2DRowRealMatrix(this.M, K);
-        for (int i = 0; i < this.M; i++){
-            curr = transformedData[i];
-            tempOut = new ArrayRealVector();
-            for (int j = 0; j < K /2; j++) {
-                tempOut = tempOut.append(curr[j].getReal());
-                tempOut = tempOut.append(curr[j].getImaginary());
-            }
-            output.setRowVector(i, tempOut);
-        }
-        return output;*/
     }
 
     public RealMatrix getKBin(int iter, double targetLBR) {

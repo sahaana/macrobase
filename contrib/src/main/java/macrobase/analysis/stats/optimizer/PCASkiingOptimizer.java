@@ -15,7 +15,7 @@ import java.util.Random;
 
 public class PCASkiingOptimizer extends SkiingOptimizer {
 
-    private static final Logger log = LoggerFactory.getLogger(FFTSkiingOptimizer.class);
+    private static final Logger log = LoggerFactory.getLogger(PCASkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
     protected RealMatrix cachedTransform;
 
@@ -27,41 +27,9 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     @Override
     public void fit(int Nt) {
-        RealMatrix trainMatrix = dataMatrix.getSubMatrix(0, Nt-1, 0, Nproc-1);
+        RealMatrix trainMatrix = dataMatrix.getSubMatrix(0, Nt-1, 0, N-1);
         this.pca = new PCA(trainMatrix);
     }
-
-    public void maryFit(int Nt){
-        //RealVector mean = new ArrayRealVector(Nproc);
-        //RealVector covV = new ArrayRealVector(Nproc, 1d/Nproc);
-        //RealMatrix covM = new DiagonalMatrix(covV.toArray());
-        //MultivariateNormalDistribution  mnd = new MultivariateNormalDistribution(mean.toArray(), covM.getData());
-        //mnd.reseedRandomGenerator(randomSeed);
-
-        //NormalizedRandomGenerator generator = new UniformRandomGenerator(new Well19937a());
-        /*
-        NormalizedRandomGenerator generator = new GaussianRandomGenerator(new Well19937a());
-        UncorrelatedRandomVectorGenerator gen = new UncorrelatedRandomVectorGenerator(M,generator);
-        RealMatrix projectionMatrix = new Array2DRowRealMatrix(Nt,M);
-        for (int i = 0; i < Nt; i++){
-            projectionMatrix.setRow(i,gen.nextVector());
-        } */
-        Random rand = new Random();
-        RealMatrix projectionMatrix = new Array2DRowRealMatrix(Nt,M);
-        for (int i = 0; i < Nt; i++){
-            for (int j = 0; j < M; j++){
-                projectionMatrix.setEntry(i,j,rand.nextGaussian());
-            }
-        }
-        //RealMatrix randomProjectionMatrix = new Array2DRowRealMatrix(mnd.sample(M));
-        DenseMatrix dm = new DenseMatrix(dataMatrix.getData());
-        DenseMatrix pm = new DenseMatrix(projectionMatrix.getData());
-        DenseMatrix tm = new DenseMatrix(Nt, N);
-        pm.mult(dm,tm);
-        //RealMatrix trainMatrix = projectionMatrix.multiply(dataMatrix);
-        this.pca = new PCA(new Array2DRowRealMatrix(Matrices.getArray(tm)));
-    }
-
 
     public void cacheInput(int high){
         cachedTransform = this.pca.transform(dataMatrix, high);
@@ -126,7 +94,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     public RealMatrix getK(int iter, double targetLBR) {
         //simply uses the mean LBR to do K computations with
         double LBR;
-        RealMatrix currTransform; //= new Array2DRowRealMatrix();
+        RealMatrix currTransform;
 
         int iters = 0;
         int low = 0;
@@ -175,15 +143,12 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     public RealMatrix getKCICached(int iter, double targetLBR) {
         //confidence interval based method for getting K
         double LBR;
-        RealMatrix currTransform; //= new Array2DRowRealMatrix();
-
-        //double thresh = 1.96;
-        //int numPairs = new Double(0.01*(this.M)*((this.M) - 1)/2).intValue();
+        RealMatrix currTransform;
 
         int iters = 0;
         int low = 0;
 
-        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
+        int high = Math.min(this.N, this.NtList.get(iter)) - 1;
         if (this.feasible) high = this.lastFeasible;
 
         int mid = (low + high) / 2;
@@ -191,7 +156,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         this.cacheInput(high);
 
         currTransform = this.getCachedTransform(high);
-        LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform,numPairs, thresh)[0];
+        LBR = evalK(targetLBR, currTransform);
         if (targetLBR > LBR){
             KItersList.put(this.NtList.get(iter), ++iters);
             return currTransform;
@@ -199,10 +164,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         while (low < high) {
             currTransform = this.getCachedTransform(mid);
-            LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
+            LBR = evalK(targetLBR, currTransform);
             if (targetLBR < LBR) {
                 currTransform = this.getCachedTransform(mid - 1);
-                LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
+                LBR = evalK(targetLBR, currTransform);
                 if (targetLBR > LBR) {
                     this.feasible = true;
                     this.lastFeasible = mid;
@@ -222,56 +187,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         this.lastFeasible = mid;
         KItersList.put(this.NtList.get(iter), iters);
         return this.getCachedTransform(mid);
-    }
-
-
-    public RealMatrix getKCI(int iter, double targetLBR) {
-        //confidence interval based method for getting K
-        double LBR;
-        RealMatrix currTransform; //= new Array2DRowRealMatrix();
-
-        //double thresh = 1.96;
-        //int numPairs = new Double(0.01*(this.M)*((this.M) - 1)/2).intValue();
-
-        int iters = 0;
-        int low = 0;
-        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
-        if (this.feasible) high = this.lastFeasible;
-        int mid = (low + high) / 2;
-
-        //System.out.println(this.M);
-        currTransform = this.transform(high);
-        LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform,numPairs, thresh)[0];
-        if (targetLBR > LBR){
-            KItersList.put(this.NtList.get(iter), ++iters);
-            return currTransform;
-        }
-
-        while (low < high) {
-            currTransform = this.transform(mid);
-            LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
-            if (targetLBR < LBR) {
-                currTransform = this.transform(mid - 1);
-                LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
-                if (targetLBR > LBR) {
-                    this.feasible = true;
-                    this.lastFeasible = mid;
-                    KItersList.put(this.NtList.get(iter), iters);
-                    return this.getCachedTransform(mid);
-                }
-                high = mid - 1;
-            } else if (targetLBR > LBR) {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-            iters += 1;
-            mid = (low + high) / 2;
-        }
-        this.feasible = true;
-        this.lastFeasible = mid;
-        KItersList.put(this.NtList.get(iter), iters);
-        return this.transform(mid);
     }
 
     private double evalK(double LBRThresh, RealMatrix currTransform){
@@ -306,7 +221,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         double[] CI = {0,0,0};
         int interval = Math.max(2,this.N/32);
         RealMatrix currTransform;
-        for (int i = 2 ; i <= this.N ; i+= interval){
+        for (int i = 2 ;((i <= this.N) && (CI[1] <= .9999)); i+= interval){
             currTransform = this.transform(i);
             CI = this.LBRCI(currTransform, M, 1.96);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);

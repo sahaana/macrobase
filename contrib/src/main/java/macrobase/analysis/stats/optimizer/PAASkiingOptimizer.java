@@ -26,8 +26,8 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
     }
 
     @Override
-    public void preprocess(int reducedDim) {
-        super.preprocess(reducedDim);
+    public void preprocess() {
+        super.preprocess();
         this.factors = this.findFactors();
     }
 
@@ -79,49 +79,6 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         return this.transform(this.N);
     }
 
-    public RealMatrix getKCI(int iter, double targetLBR) {
-        //same as getK, but with binary search over factor list instead
-        double LBR;
-        RealMatrix currTransform; //= new Array2DRowRealMatrix();
-
-        int iters = 0;
-        int low = 0;
-        int high = factors.size();
-        if (this.feasible) high = this.lastFeasible;
-        int mid = (low + high) / 2;
-
-        while (low < high) {
-            currTransform = this.transform(factors.get(mid));
-            this.Nproc = factors.get(mid);
-            LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
-            if (targetLBR < LBR) {
-                currTransform = this.transform(factors.get(mid - 1));
-                this.Nproc = factors.get(mid-1);
-                LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
-                if (targetLBR > LBR) {
-                    this.feasible = true;
-                    this.lastFeasible = factors.get(mid);
-                    KItersList.put(this.NtList.get(iter), iters);
-                    this.Nproc = factors.get(mid);
-                    return this.transform(factors.get(mid));
-                }
-                high = mid - 1;
-            } else if (targetLBR > LBR) {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-            iters += 1;
-            mid = (low + high) / 2;
-        }
-        this.feasible = true;
-        this.lastFeasible = factors.get(mid);
-        KItersList.put(this.NtList.get(iter), iters);
-        this.Nproc = factors.get(mid);
-        return this.transform(factors.get(mid));
-    }
-
-
 
     private double evalK(double LBRThresh, RealMatrix currTransform){
         double[] CI;
@@ -153,10 +110,6 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         for (int i = 1; i <= this.N; i++) {
             if (this.N % i == 0) factors.add(i);
         }
-        /* I don't remember why this used to be Nproc
-        for (int i = 1; i < this.Nproc; i++) {
-            if (Nproc % i == 0) factors.add(i);
-        } */
         return factors;
     }
 

@@ -36,9 +36,6 @@ public class FFTSkiingDROP extends FeatureTransform {
     int procDim;
     double epsilon;
     double lbr;
-    //int b;
-    //int s;
-    //boolean rpFlag;
 
     public FFTSkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
@@ -49,12 +46,8 @@ public class FFTSkiingDROP extends FeatureTransform {
         times = new HashMap<>();
 
         this.maxNt = maxNt;
-        this.procDim = 707; //This is an appendix
         this.epsilon = epsilon;
-        this.lbr = 200;//lbr;
-        //this.b = b;
-        //this.s = s;
-        //this.rpFlag = rpFlag;
+        this.lbr = lbr;
 
         output = new MBStream<>();
     }
@@ -66,35 +59,6 @@ public class FFTSkiingDROP extends FeatureTransform {
 
     @Override
     public void consume(List<Datum> records) throws Exception {
-        fftOpt.extractData(records);
-        log.debug("Extracted {} Records of len {}", fftOpt.getM(), fftOpt.getN());
-        fftOpt.shuffleData();
-        log.debug("Shuffled Data");
-        fftOpt.preprocess(procDim);
-        log.debug("Processed Data");
-        currNt = fftOpt.getNextNt(iter, currNt, maxNt);
-        log.debug("Beginning FFT DROP");
-        sw.start();
-        log.debug("Iteration {}, {} samples", iter, currNt);
-        fftOpt.fit(currNt);
-        //fftOpt.test();
-
-        currTransform = fftOpt.getK(iter, lbr);
-        currLBR = fftOpt.LBRCI(currTransform, fftOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
-        fftOpt.setLBRList(currNt, currLBR);
-        fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
-        fftOpt.setKList(currNt, currTransform.getColumnDimension());
-        fftOpt.setKDiff(iter, currTransform.getColumnDimension());
-        log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-        currNt = fftOpt.getNextNt(++iter, currNt, maxNt);
-
-        finalTransform = currTransform.getData();
-
-        int i = 0;
-        for (Datum d: records){
-            RealVector transformedMetricVector = new ArrayRealVector(finalTransform[i++]);
-            output.add(new Datum(d, transformedMetricVector));
-        }
 
     }
 
@@ -104,7 +68,7 @@ public class FFTSkiingDROP extends FeatureTransform {
         log.debug("Extracted {} Records of len {}", fftOpt.getM(), fftOpt.getN());
         fftOpt.shuffleData();
         log.debug("Shuffled Data");
-        fftOpt.preprocess(procDim);
+        fftOpt.preprocess();
         log.debug("Processed Data");
         currNt = fftOpt.getNextNt(iter, currNt, maxNt);
         log.debug("Beginning FFT base run");

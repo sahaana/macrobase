@@ -124,23 +124,19 @@ public class SkiingBatchDROP {
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
     public static void main(String[] args) throws Exception{
-        //int k = 20;
         int maxNt = 25;
-        //int datasetID = 7;
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double epsilon = Double.parseDouble(args[2]);
-        boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
+        boolean rpFlag = Boolean.parseBoolean(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
-        //*/
-        int b = 50; //[25,50,100,200,300,400,500]
-        int s = 20; //[5,10,20,25,35,50,75,100,200]
 
+        int b = 50;
+        int s = 20;
 
-        //int processedDim = TABLE_SIZE.get(datasetID);
         /*String dataset = "CinC";
         double lbr = .98;
         double epsilon = .2;
@@ -156,10 +152,7 @@ public class SkiingBatchDROP {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        /////PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
-        PAASkiingDROP drop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
-        //FFTSkiingDROP drop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s);
-        ////DROPvPowerIteration drop = new DROPvPowerIteration(conf, maxNt, epsilon, lbr, b, s, rpFlag);
+        PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
 
         drop.consume(data);
 

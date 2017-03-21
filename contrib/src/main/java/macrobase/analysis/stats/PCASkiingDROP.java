@@ -36,28 +36,7 @@ public class PCASkiingDROP extends FeatureTransform {
     int procDim;
     double epsilon;
     double lbr;
-    //int b;
-    //int s;
     boolean rpFlag;
-
-    public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s, boolean rpFlag){
-        iter = 0;
-        currNt = 0;
-        pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
-        sw = Stopwatch.createUnstarted();
-
-        times = new HashMap<>();
-
-        this.maxNt = maxNt;
-        this.procDim = 707; //This is an appendix
-        this.epsilon = epsilon;
-        this.lbr = lbr;
-        //this.b = b;
-        //this.s = s;
-        this.rpFlag = rpFlag;
-
-        output = new MBStream<>();
-    }
 
     public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
@@ -68,13 +47,8 @@ public class PCASkiingDROP extends FeatureTransform {
         times = new HashMap<>();
 
         this.maxNt = maxNt;
-        this.procDim = 707; //This is an appendix
         this.epsilon = epsilon;
         this.lbr = lbr;
-        //this.b = b;
-        //this.s = s;
-        //this.rpFlag = rpFlag;
-
         output = new MBStream<>();
     }
 
@@ -89,18 +63,14 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Extracted Records");
         pcaOpt.shuffleData();
         log.debug("Shuffled Data");
-        pcaOpt.preprocess(procDim);
+        pcaOpt.preprocess();
         log.debug("Processed Data");
-        //paaOpt.setKList(currNt,0); //hacky for test run of getNextNt
-        //paaOpt.addNtList(0);
         currNt = pcaOpt.getNextNt(iter, currNt, maxNt);
-        //currLBR = paaOpt.LBRAttained(iter, currTransform); //currTransform is currently null
         log.debug("Beginning DROP");
         sw.start();
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
-            if (rpFlag) pcaOpt.maryFit(currNt);
-            else  pcaOpt.fit(currNt);
+            pcaOpt.fit(currNt);
             currTransform = pcaOpt.getKCICached(iter, lbr); //function to get knee for K for this transform;
             currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
             pcaOpt.setLBRList(currNt, currLBR);
@@ -132,7 +102,7 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.shuffleData();
         log.debug("Shuffled Data");
-        pcaOpt.preprocess(procDim);
+        pcaOpt.preprocess();
         log.debug("Processed Data");
         currNt = pcaOpt.getM();//pcaOpt.getNextNt(iter, currNt, maxNt);
         log.debug("Beginning PCA base run");

@@ -75,7 +75,7 @@ public class DROPvPowerIteration extends FeatureTransform {
         log.debug("Extracted Records");
         pcaOpt.shuffleData();
         log.debug("Shuffled Data");
-        pcaOpt.preprocess(procDim);
+        pcaOpt.preprocess();
         log.debug("Processed Data");
         pwrIter = new PowerIteration(pcaOpt.getDataMatrix());
         //paaOpt.setKList(currNt,0); //hacky for test run of getNextNt
@@ -86,8 +86,7 @@ public class DROPvPowerIteration extends FeatureTransform {
         sw.start();
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
-            if (rpFlag) pcaOpt.maryFit(currNt);
-            else  pcaOpt.fit(currNt);
+            pcaOpt.fit(currNt);
             currTransform = pcaOpt.getKCICached(iter, lbr); //function to get knee for K for this transform;
             currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
             pcaOpt.setLBRList(currNt, currLBR);
