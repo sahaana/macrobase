@@ -71,7 +71,7 @@ public abstract class SkiingOptimizer {
         this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
         //RealMatrix cov = new Covariance(this.rawDataMatrix).getCovarianceMatrix();
 
-        this.NtInterval = Math.max(3, new Double(this.M*0.01).intValue()); //arbitrary 1%
+        this.NtInterval = 10; //Math.max(3, new Double(this.M*0.01).intValue()); //arbitrary 1%
     }
 
     public void shuffleData(){

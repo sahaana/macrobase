@@ -102,23 +102,23 @@ public class SkiingBatchDROP {
     }
 
 
-    private static String LBROutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
+    private static String LBROutFile(String dataset, int b, int s, double lbr, double ep){
+        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr, ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
     }
 
-    private static String timeOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
+    private static String timeOutFile(String dataset, int b, int s, double lbr, double ep){
+        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
     }
 
-    private static String kOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s%d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
+    private static String kOutFile(String dataset, int b, int s, double lbr, double ep){
+        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/k/%s.csv", output);
     }
 
-    private static String kItersOutFile(String dataset, int b, int s, int num_Nt, double lbr, double ep, boolean rpFlag){
-        String output = String.format("%s_b%d_s %d_lbr%.3f_ep%.3f_mary%b",dataset,b, s, lbr,ep, rpFlag);
+    private static String kItersOutFile(String dataset, int b, int s, double lbr, double ep){
+        String output = String.format("%s_b%d_s %d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
     }
 
@@ -129,7 +129,6 @@ public class SkiingBatchDROP {
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double epsilon = Double.parseDouble(args[2]);
-        boolean rpFlag = Boolean.parseBoolean(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
@@ -157,16 +156,16 @@ public class SkiingBatchDROP {
         drop.consume(data);
 
         LBRResults = drop.getLBR();
-        mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,maxNt,lbr,epsilon, rpFlag));
+        mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,lbr,epsilon));
 
         timeResults = drop.getTime();
-        mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
+        //mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,lbr,epsilon));
 
         kResults = drop.getKList();
-        mapIntToCSV(kResults, kOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
+        mapIntToCSV(kResults, kOutFile(dataset,b,s,lbr,epsilon));
 
         kIters = drop.getKItersList();
-        mapIntToCSV(kIters, kItersOutFile(dataset,b,s,maxNt,lbr,epsilon,rpFlag));
+        //mapIntToCSV(kIters, kItersOutFile(dataset,b,s,lbr,epsilon));
 
     }
 

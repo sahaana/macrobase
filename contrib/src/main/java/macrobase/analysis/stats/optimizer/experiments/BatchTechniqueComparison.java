@@ -123,7 +123,6 @@ public class BatchTechniqueComparison {
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double epsilon = Double.parseDouble(args[2]);
-        //boolean rpFlag = Boolean.parseBoolean(args[3]);//Integer.parseInt(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
@@ -149,7 +148,6 @@ public class BatchTechniqueComparison {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        /////PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s, rpFlag);
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, maxNt, epsilon, lbr, b, s);
         PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
