@@ -4,14 +4,19 @@ package macrobase.analysis.stats.optimizer;
 import macrobase.analysis.stats.optimizer.util.PCA;
 import macrobase.datamodel.Datum;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.fitting.PolynomialCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public abstract class SkiingOptimizer {
+    private static final Logger log = LoggerFactory.getLogger(SkiingOptimizer.class);
     protected int N; //original data dimension
     protected int Nproc; //processed data dimension (PAA, Mary, etc)
     protected int M; //original number of training samples
@@ -25,6 +30,8 @@ public abstract class SkiingOptimizer {
     protected Map<Integer, Integer> KList;
     protected Map<Integer, double[]> LBRList;
     protected Map<Integer, Double> trainTimeList;
+    protected Map<Integer, Integer> kPredList;
+
 
     protected double epsilon;
     protected int s;
@@ -38,6 +45,11 @@ public abstract class SkiingOptimizer {
     protected boolean feasible;
     protected int lastFeasible;
 
+    protected int degree;
+    protected int kScaling;
+    protected PolynomialCurveFitter fitter;
+    protected WeightedObservedPoints MDruntimes;
+
     public SkiingOptimizer(double epsilon, int b, int s){
         this.numDiffs = 3;
         this.epsilon = epsilon;
@@ -48,12 +60,19 @@ public abstract class SkiingOptimizer {
         this.LBRList = new HashMap<>();
         this.KList = new HashMap<>();
         this.trainTimeList = new HashMap<>();
+        this.kPredList = new HashMap<>();
         this.kDiffs = new int[this.numDiffs]; //TODO: 3 to change to general param
 
         this.prevK = 0;
 
         this.feasible = false;
         this.lastFeasible = 0;
+
+        this.kScaling = 1;
+        this.degree = 3;
+        this.MDruntimes = new WeightedObservedPoints();
+        MDruntimes.add(0,0);
+        this.fitter = PolynomialCurveFitter.create(degree);
     }
 
     public void extractData(List<Datum> records){
@@ -100,19 +119,45 @@ public abstract class SkiingOptimizer {
         //int K =  KList.get(currNt);
         int[] Nts = {10, 20,30,40,50,60,70,80,90,100,110,125,150,175,200};
         if (iter >= Nts.length || NtList.size() >= maxNt) {
-            NtList.add(2000000);
+        //    NtList.add(2000000);
             return 2000000;
         }
-        NtList.add(Nts[iter]);
+        //NtList.add(Nts[iter]);
         return Nts[iter];
     }
 
-    public int getNextNt(int iter, int currNt, int maxNt){
-        //int interval = new Double(M*0.01).intValue(); //arbitrary 1%
+    public int getNextNtIncreaseOnly(int iter, int currNt, int maxNt){
         double avgDiff = 0;
 
         if (iter == 0) {
-            NtList.add(NtInterval);
+         //   NtList.add(NtInterval);
+            return NtInterval;
+        }
+
+        for (double i: kDiffs){
+            avgDiff += i/numDiffs;
+        }
+
+        //double the interval if it's choking
+        if (avgDiff == NtInterval){
+            NtInterval = NtInterval*2;
+        }
+
+        //THIS IS FOR TESTING WITHOUT FULL MIC DROP FUNCTIONALITY
+        if (currNt >= 1100){
+        //    NtList.add(M+1);
+            return M+1;
+        }
+
+        //NtList.add(NtInterval + currNt);
+        return NtInterval+currNt;
+    }
+
+    public int getNextNtBasicDoubling(int iter, int currNt, int maxNt){
+        double avgDiff = 0;
+
+        if (iter == 0) {
+        //    NtList.add(NtInterval);
             return NtInterval;
         }
 
@@ -121,25 +166,79 @@ public abstract class SkiingOptimizer {
         }
 
         //if things haven't changed much on average, you can stop
-        if (avgDiff < .5){
-            NtList.add(M+1);
+        if (avgDiff <= 1){
+        //    NtList.add(M+1);
             return M+1;
         }
 
-        //double the interval if it's choking
+        //double the interval if it's choking and is increasing by the interval each time
         if (avgDiff == NtInterval){
             NtInterval = NtInterval*2;
         }
 
         //halve the interval if it's aight. overshoots tho. lbr-based?
-       // if (LBRList.get(currNt) >= )
+        // if (LBRList.get(currNt) >= )
         if (avgDiff < NtInterval/2){
             NtInterval = new Double(NtInterval/2).intValue();
         }
 
-        NtList.add(NtInterval + currNt);
+        //NtList.add(NtInterval + currNt);
         return NtInterval+currNt;
     }
+
+    public int getNextNt(int iter, int currNt, int maxNt){
+        int nextNt =  getNextNtIncreaseOnly(iter, currNt, maxNt);
+        NtList.add(nextNt);
+        return nextNt;
+    }
+
+    public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
+        double kTimeGuess = Math.pow(this.kPredList.get(currNt),kScaling);
+        double[] MDtimeCoeffs = fitter.fit(this.MDruntimes.toList());
+        double NtTimeGuess = 0;
+        int nextNt = getNextNtBasicDoubling(iter,currNt,maxNt);
+        double objective;
+
+        for (int i = 0; i < this.degree; i++){
+            NtTimeGuess += MDtimeCoeffs[i]*Math.pow(nextNt, i);
+        }
+
+        objective = NtTimeGuess + kTimeGuess;
+        if (objective <= objective){
+            return nextNt;
+        }
+        return M+1;
+    }
+
+    public int getNextNtPE(int iter, int currNt, int maxNt, boolean attainedLBR){
+        int nextNt;
+        if (!attainedLBR){
+            nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt);
+            NtList.add(nextNt);
+            return nextNt;
+        }
+        nextNt = getNextNtObjectiveFunc(iter, currNt, maxNt);
+        NtList.add(nextNt);
+        return nextNt;
+    }
+
+    //predicting K for the "next" iteration and Nt
+    public void predictK(int iter, int currNt){
+        if (iter == 1){
+            int guess = kDiffs[(iter-1) % numDiffs] + prevK;
+            this.kPredList.put(currNt, guess);
+            return;
+        }
+        double ratio = kDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
+        int guess = (int) Math.round(ratio*(currNt - NtList.get(iter-1)));
+        this.kPredList.put(currNt, guess + prevK);
+        return;
+    }
+
+    public void updateMDRuntime(int currNt, double MDtime){
+        MDruntimes.add(currNt, MDtime);
+    }
+
 
     public double meanLBR(int iter, RealMatrix transformedData){
         int numPairs = M;
@@ -261,7 +360,7 @@ public abstract class SkiingOptimizer {
     public RealMatrix getDataMatrix() {return dataMatrix;}
 
     public void setKDiff(int iter, int currK){
-        kDiffs[iter % numDiffs] = Math.abs(currK - prevK);
+        kDiffs[iter % numDiffs] = currK - prevK;
         prevK = currK;
     }
 
@@ -277,11 +376,15 @@ public abstract class SkiingOptimizer {
         trainTimeList.put(k, v);
     }
 
+    public int getNtList(int iter){ return NtList.get(iter); }
+
     public Map getLBRList(){ return LBRList; }
 
     public Map getTrainTimeList(){ return trainTimeList; }
 
     public Map getKList(){ return KList; }
+
+    public Map getKPredList(){ return kPredList; }
 
     public PCA getPCA() {return this.pca; }
 

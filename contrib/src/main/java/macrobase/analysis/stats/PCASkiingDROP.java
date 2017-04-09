@@ -25,10 +25,12 @@ public class PCASkiingDROP extends FeatureTransform {
     double[] currLBR;
     int currNt;
     int iter;
+    boolean attainedLBR;
 
     RealMatrix currTransform;
     PCASkiingOptimizer pcaOpt;
     Stopwatch sw;
+    Stopwatch MD;
 
     Map<String, Long> times;
 
@@ -41,8 +43,10 @@ public class PCASkiingDROP extends FeatureTransform {
     public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
         currNt = 0;
+        attainedLBR = false;
         pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
         sw = Stopwatch.createUnstarted();
+        MD = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
@@ -65,23 +69,33 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = pcaOpt.getNextNt(iter, currNt, maxNt);
+        currNt = pcaOpt.getNextNtPE(iter, currNt, maxNt, attainedLBR);
         log.debug("Beginning DROP");
         sw.start();
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
+            MD.reset();
+            MD.start();
             pcaOpt.fit(currNt);
             currTransform = pcaOpt.getKCICached(iter, lbr); //function to get knee for K for this transform;
+            MD.stop();
+            pcaOpt.updateMDRuntime(currNt, (double) MD.elapsed(TimeUnit.MILLISECONDS));
             currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
+            attainedLBR = (currLBR[0] >= lbr);
+
             pcaOpt.setLBRList(currNt, currLBR);
             pcaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-            currNt = pcaOpt.getNextNt(++iter, currNt, maxNt);
-        } while (currNt < pcaOpt.getM() && currLBR[0] < lbr);
 
-        log.debug("MIC DROP COMPLETE");
+            //CurrNt, iter has been updated to next iterations
+            currNt = pcaOpt.getNextNtPE(++iter, currNt, maxNt, attainedLBR);
+            pcaOpt.predictK(iter, currNt); //Decided to predict k here, after first k has been found
+        } while (currNt < pcaOpt.getM());
+
+        log.debug("MICDROP 'COMPLETE'");
+        log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
         finalTransform = currTransform.getData();
 
         log.debug("Computing Full Transform");
@@ -137,4 +151,5 @@ public class PCASkiingDROP extends FeatureTransform {
         return pcaOpt.getKItersList();
     }
 
+    public Map<Integer, Integer> getKPred() { return pcaOpt.getKPredList(); }
 }

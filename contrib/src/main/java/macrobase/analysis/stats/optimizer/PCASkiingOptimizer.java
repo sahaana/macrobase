@@ -196,6 +196,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int numPairs = (this.M)*((this.M) - 1)/2;
         int currPairs = 100;//Math.max(5, this.M);//new Double(0.005*numPairs).intValue());
         while (currPairs < numPairs){
+            log.debug("num pairs {}", currPairs);
             CI = this.LBRCI(currTransform,currPairs, q);
             if (CI[0] > LBRThresh){
                 return LBRThresh;

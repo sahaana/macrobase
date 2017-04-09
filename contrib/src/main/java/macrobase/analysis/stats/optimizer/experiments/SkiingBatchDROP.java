@@ -8,6 +8,8 @@ import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
+import org.apache.commons.math3.fitting.PolynomialCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -117,6 +119,11 @@ public class SkiingBatchDROP {
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/k/%s.csv", output);
     }
 
+    private static String kPredOutFile(String dataset, int b, int s, double lbr, double ep){
+        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
+        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kPred/%s.csv", output);
+    }
+
     private static String kItersOutFile(String dataset, int b, int s, double lbr, double ep){
         String output = String.format("%s_b%d_s %d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
@@ -145,6 +152,7 @@ public class SkiingBatchDROP {
         Map<Integer, Double> timeResults;
         Map<Integer, Integer> kResults;
         Map<Integer, Integer> kIters;
+        Map<Integer, Integer> kPred;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -163,6 +171,9 @@ public class SkiingBatchDROP {
 
         kResults = drop.getKList();
         mapIntToCSV(kResults, kOutFile(dataset,b,s,lbr,epsilon));
+
+        kPred = drop.getKPred();
+        mapIntToCSV(kPred, kPredOutFile(dataset,b,s,lbr,epsilon));
 
         kIters = drop.getKItersList();
         //mapIntToCSV(kIters, kItersOutFile(dataset,b,s,lbr,epsilon));
