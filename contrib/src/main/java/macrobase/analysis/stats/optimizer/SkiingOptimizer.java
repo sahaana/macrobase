@@ -23,6 +23,7 @@ public abstract class SkiingOptimizer {
 
     protected int[] kDiffs;
     protected int prevK;
+    protected double[] currKCI;
     protected int numDiffs;
     protected int NtInterval;
 
@@ -30,6 +31,7 @@ public abstract class SkiingOptimizer {
     protected Map<Integer, Integer> KList;
     protected Map<Integer, double[]> LBRList;
     protected Map<Integer, Double> trainTimeList;
+    protected Map<Integer, Double> predictedTrainTimeList;
     protected Map<Integer, Integer> kPredList;
 
 
@@ -45,7 +47,7 @@ public abstract class SkiingOptimizer {
     protected boolean feasible;
     protected int lastFeasible;
 
-    protected int degree;
+    protected int Ntdegree;
     protected int kScaling;
     protected PolynomialCurveFitter fitter;
     protected WeightedObservedPoints MDruntimes;
@@ -60,19 +62,21 @@ public abstract class SkiingOptimizer {
         this.LBRList = new HashMap<>();
         this.KList = new HashMap<>();
         this.trainTimeList = new HashMap<>();
+        this.predictedTrainTimeList = new HashMap<>();
         this.kPredList = new HashMap<>();
         this.kDiffs = new int[this.numDiffs]; //TODO: 3 to change to general param
 
         this.prevK = 0;
+        this.currKCI = new double[] {0, 0, 0};
 
         this.feasible = false;
         this.lastFeasible = 0;
 
         this.kScaling = 1;
-        this.degree = 3;
+        this.Ntdegree = 2;
         this.MDruntimes = new WeightedObservedPoints();
         MDruntimes.add(0,0);
-        this.fitter = PolynomialCurveFitter.create(degree);
+        this.fitter = PolynomialCurveFitter.create(Ntdegree);
     }
 
     public void extractData(List<Datum> records){
@@ -193,18 +197,20 @@ public abstract class SkiingOptimizer {
     }
 
     public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
+        double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
         double kTimeGuess = Math.pow(this.kPredList.get(currNt),kScaling);
         double[] MDtimeCoeffs = fitter.fit(this.MDruntimes.toList());
         double NtTimeGuess = 0;
-        int nextNt = getNextNtBasicDoubling(iter,currNt,maxNt);
-        double objective;
+        int nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
+        double currObjective;
 
-        for (int i = 0; i < this.degree; i++){
+        for (int i = 0; i <= this.Ntdegree; i++){
             NtTimeGuess += MDtimeCoeffs[i]*Math.pow(nextNt, i);
         }
+        this.predictedTrainTimeList.put(nextNt, NtTimeGuess);
+        currObjective = NtTimeGuess + kTimeGuess;
 
-        objective = NtTimeGuess + kTimeGuess;
-        if (objective <= objective){
+        if (currObjective <= prevObjective){//nextNt <= 1000){
             return nextNt;
         }
         return M+1;
@@ -218,6 +224,7 @@ public abstract class SkiingOptimizer {
             return nextNt;
         }
         nextNt = getNextNtObjectiveFunc(iter, currNt, maxNt);
+        log.debug("NextNt {}", nextNt);
         NtList.add(nextNt);
         return nextNt;
     }
@@ -237,6 +244,7 @@ public abstract class SkiingOptimizer {
 
     public void updateMDRuntime(int currNt, double MDtime){
         MDruntimes.add(currNt, MDtime);
+        trainTimeList.put(currNt, MDtime);
     }
 
 
@@ -376,11 +384,15 @@ public abstract class SkiingOptimizer {
         trainTimeList.put(k, v);
     }
 
+    public double[] getCurrKCI(){ return currKCI; }
+
     public int getNtList(int iter){ return NtList.get(iter); }
 
     public Map getLBRList(){ return LBRList; }
 
     public Map getTrainTimeList(){ return trainTimeList; }
+
+    public Map getPredictedTrainTimeList(){ return predictedTrainTimeList; }
 
     public Map getKList(){ return KList; }
 

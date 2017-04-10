@@ -109,8 +109,8 @@ public class SkiingBatchDROP {
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
     }
 
-    private static String timeOutFile(String dataset, int b, int s, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String timeOutFile(String dataset, int b, int s, double lbr, double ep, String tag){
+        String output = String.format("%s_%s_b%d_s%d_lbr%.4f_ep%.3f",dataset, tag, b, s, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
     }
 
@@ -150,6 +150,7 @@ public class SkiingBatchDROP {
 
         Map<Integer, double[]> LBRResults;
         Map<Integer, Double> timeResults;
+        Map<Integer, Double> predTimeResults;
         Map<Integer, Integer> kResults;
         Map<Integer, Integer> kIters;
         Map<Integer, Integer> kPred;
@@ -167,7 +168,10 @@ public class SkiingBatchDROP {
         mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,lbr,epsilon));
 
         timeResults = drop.getTime();
-        //mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,lbr,epsilon));
+        mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,lbr,epsilon,"Actual"));
+
+        predTimeResults = drop.getPredTime();
+        mapDoubleToCSV(predTimeResults, timeOutFile(dataset,b,s,lbr,epsilon, "Predicted"));
 
         kResults = drop.getKList();
         mapIntToCSV(kResults, kOutFile(dataset,b,s,lbr,epsilon));

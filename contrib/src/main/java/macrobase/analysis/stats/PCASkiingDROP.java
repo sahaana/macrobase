@@ -45,7 +45,6 @@ public class PCASkiingDROP extends FeatureTransform {
         currNt = 0;
         attainedLBR = false;
         pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
-        sw = Stopwatch.createUnstarted();
         MD = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
@@ -71,7 +70,6 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Processed Data");
         currNt = pcaOpt.getNextNtPE(iter, currNt, maxNt, attainedLBR);
         log.debug("Beginning DROP");
-        sw.start();
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
             MD.reset();
@@ -80,11 +78,10 @@ public class PCASkiingDROP extends FeatureTransform {
             currTransform = pcaOpt.getKCICached(iter, lbr); //function to get knee for K for this transform;
             MD.stop();
             pcaOpt.updateMDRuntime(currNt, (double) MD.elapsed(TimeUnit.MILLISECONDS));
-            currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform); //TODO: this is repetitive. Refactor the getKI things to spit out
-            attainedLBR = (currLBR[0] >= lbr);
+            currLBR = pcaOpt.getCurrKCI();
+            if (!attainedLBR) attainedLBR = (currLBR[0] >= lbr);
 
             pcaOpt.setLBRList(currNt, currLBR);
-            pcaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
@@ -152,4 +149,7 @@ public class PCASkiingDROP extends FeatureTransform {
     }
 
     public Map<Integer, Integer> getKPred() { return pcaOpt.getKPredList(); }
+
+    public Map<Integer, Double> getPredTime() { return pcaOpt.getPredictedTrainTimeList(); }
+
 }
