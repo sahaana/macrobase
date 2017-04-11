@@ -42,8 +42,6 @@ public abstract class SkiingOptimizer {
     protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
 
-    protected PCA pca;
-
     protected boolean feasible;
     protected int lastFeasible;
 
@@ -330,6 +328,11 @@ public abstract class SkiingOptimizer {
         return new double[] {mean-slop, mean, mean+slop, std*std};
     }
 
+
+
+
+
+
     //TODO: this should really just call calcLBRList
     public double LBR(RealVector trueDists, RealVector transformedDists){
         int num_entries = trueDists.getDimension();
@@ -397,9 +400,7 @@ public abstract class SkiingOptimizer {
     public Map getKList(){ return KList; }
 
     public Map getKPredList(){ return kPredList; }
-
-    public PCA getPCA() {return this.pca; }
-
+    
     public abstract void fit(int Nt);
 
     public abstract RealMatrix transform(int K);

@@ -9,15 +9,15 @@ import org.apache.commons.math3.random.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class PCASkiingOptimizer extends SkiingOptimizer {
 
     private static final Logger log = LoggerFactory.getLogger(PCASkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
     protected RealMatrix cachedTransform;
+
+    protected PCA pca;
 
 
     public PCASkiingOptimizer(double epsilon, int b, int s){
@@ -59,6 +59,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int mid = (low + high) / 2;
 
         this.cacheInput(high);
+
         currTransform = this.getCachedTransform(high);
         LBR = evalK(targetLBR, currTransform);//this.meanLBR(iter, currTransform);
         if (targetLBR > LBR[2]){
@@ -91,6 +92,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return this.getCachedTransform(mid);
     }
 
+    //This is deprecated, but hasn't been cut yet
     @Override
     public RealMatrix getK(int iter, double targetLBR) {
         //simply uses the mean LBR to do K computations with
@@ -203,6 +205,83 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             }
         }
         return CI;
+    }
+
+
+    public double[] LBRCI(int K, int numPairs, double threshold){
+        int c = 0;
+        int maxIndex = 0;
+
+        int[] allIndices = new int[this.N];
+        int[] indicesA = new int[numPairs];
+        int[] indicesB = new int[numPairs];
+        int[] tIndicesA = new int[numPairs];
+        int[] tIndicesB = new int[numPairs];
+        int[] jointIndices;
+        int[] jointIndexMapping;
+        int[] kIndices;
+
+        Set<Integer> jIndices = new HashSet<>();
+        Random rand = new Random();
+
+        RealMatrix transformedData;
+        RealVector transformedDists;
+        RealVector trueDists;
+
+        List<Double> LBRs;
+        double mean = 0;
+        double std = 0;
+        double slop;
+
+        for (int i = 0; i < N; i++){
+            allIndices[i] = i;
+        }
+        kIndices = Arrays.copyOf(allIndices,K);
+
+        for (int i = 0; i < numPairs; i++){
+            indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
+            indicesB[i] = rand.nextInt(M);//- currNt) + currNt;
+            while(indicesA[i] == indicesB[i]){
+                indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
+            }
+            //calculating indices union of A and B and the max index
+            jIndices.add(indicesA[i]);
+            jIndices.add(indicesB[i]);
+            if (Math.max(indicesA[i], indicesB[i]) > maxIndex) {
+                maxIndex = Math.max(indicesA[i], indicesB[i]);
+            }
+        }
+
+        //computing a mapping between these indices and indexA/A
+        jointIndices = new int[jIndices.size()];
+        jointIndexMapping = new int[maxIndex + 1]; //TODO: if this becomes too big, move to hashmap to save on space lol
+        for (Object val: jIndices.toArray()) {
+            jointIndexMapping[((Integer) val).intValue()] = c; //mapping from original index to new index
+            jointIndices[c++] = ((Integer) val).intValue(); //mapping from new index to original index; basically primitive version of jIndices
+        }
+
+        for (int i = 0 ; i < numPairs; i++){
+            tIndicesA[i] = jointIndexMapping[indicesA[i]];
+            tIndicesB[i] = jointIndexMapping[indicesB[i]];
+        }
+
+        transformedData = rawDataMatrix.getSubMatrix(jointIndices,allIndices); //get a matrix with only indices that are used
+        transformedData = this.pca.transform(transformedData,K);
+
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(tIndicesA,kIndices), transformedData.getSubMatrix(tIndicesB, kIndices)).mapMultiply(Math.sqrt(this.N)/Math.sqrt(this.Nproc));
+        trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
+        LBRs = this.calcLBRList(trueDists, transformedDists);
+        for(double l: LBRs){
+            mean += l;
+        }
+        mean /= numPairs;
+
+        for(double l: LBRs){
+            std += (l - mean)*(l - mean);
+        }
+        std = Math.sqrt(std/numPairs);
+        slop = (threshold*std)/Math.sqrt(numPairs);
+        return new double[] {mean-slop, mean, mean+slop, std*std};
     }
 
 
