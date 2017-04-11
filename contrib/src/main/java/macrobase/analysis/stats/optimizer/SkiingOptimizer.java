@@ -196,6 +196,9 @@ public abstract class SkiingOptimizer {
 
     public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
         double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
+
+        //TODO: if predicted train time decreased over a time interval, cut/pretend it didn't happen or fit linear thing over that period
+        //TODO: implement basic 1-step gradient, maybe add a predict Nt method like predictK
         double kTimeGuess = Math.pow(this.kPredList.get(currNt),kScaling);
         double[] MDtimeCoeffs = fitter.fit(this.MDruntimes.toList());
         double NtTimeGuess = 0;
@@ -208,7 +211,7 @@ public abstract class SkiingOptimizer {
         this.predictedTrainTimeList.put(nextNt, NtTimeGuess);
         currObjective = NtTimeGuess + kTimeGuess;
 
-        if (currObjective <= prevObjective){//nextNt <= 1000){
+        if (nextNt <= 1000){ //(currObjective <= prevObjective){
             return nextNt;
         }
         return M+1;
@@ -329,10 +332,6 @@ public abstract class SkiingOptimizer {
     }
 
 
-
-
-
-
     //TODO: this should really just call calcLBRList
     public double LBR(RealVector trueDists, RealVector transformedDists){
         int num_entries = trueDists.getDimension();
@@ -400,7 +399,7 @@ public abstract class SkiingOptimizer {
     public Map getKList(){ return KList; }
 
     public Map getKPredList(){ return kPredList; }
-    
+
     public abstract void fit(int Nt);
 
     public abstract RealMatrix transform(int K);

@@ -146,9 +146,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     public RealMatrix getKCICached(int iter, double targetLBR) {
         //confidence interval based method for getting K
         double[] LBR;
-        double[] tempLBR;
         RealMatrix currTransform;
-        RealMatrix tempTransform;
 
         int iters = 0;
         int low = 0;
@@ -186,6 +184,45 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return this.getCachedTransform(mid);
     }
 
+
+    public RealMatrix getKCI(int iter, double targetLBR) {
+        //confidence interval based method for getting K
+        double[] LBR;
+        RealMatrix currTransform;
+
+        int iters = 0;
+        int low = 0;
+
+        int high = Math.min(this.N, this.NtList.get(iter)) - 1;
+        if (this.feasible) high = this.lastFeasible + 5; //TODO: arbitrary buffer room
+        targetLBR += 0.002; //TODO: arbitrary buffer room
+        int mid = (low + high) / 2;
+
+        LBR = evalK(targetLBR, high);
+        if (targetLBR > LBR[0]){
+            KItersList.put(this.NtList.get(iter), ++iters);
+            currKCI = LBR;
+            currTransform = this.transform(high);
+            return currTransform;
+        }
+
+        while (low != high) {
+            LBR = evalK(targetLBR, mid);
+            if (LBR[0] <= targetLBR) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+            iters +=1;
+            mid = (low + high)/2;
+        }
+        this.feasible = true;
+        this.lastFeasible = mid;
+        KItersList.put(this.NtList.get(iter), iters);
+        currKCI = LBR;
+        return this.transform(mid);
+    }
+
     private double[] evalK(double LBRThresh, RealMatrix currTransform){
         double[] CI = new double[] {0,0,0};
         double q = 1.96;
@@ -195,6 +232,27 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         while (currPairs < numPairs){
             //log.debug("num pairs {}", currPairs);
             CI = this.LBRCI(currTransform,currPairs, q);
+            //all stopping conditions here
+            if ((CI[0] > LBRThresh) || (CI[2] < LBRThresh) || (Math.abs(CI[1]-prevMean) < .01)) {
+                return CI;//LBRThresh;
+            }
+            else {
+                currPairs *= 2;
+                prevMean = CI[1];
+            }
+        }
+        return CI;
+    }
+
+    private double[] evalK(double LBRThresh, int K){
+        double[] CI = new double[] {0,0,0};
+        double q = 1.96;
+        double prevMean = 0;
+        int numPairs = (this.M)*((this.M) - 1)/2;
+        int currPairs = 100;//Math.max(5, this.M);//new Double(0.005*numPairs).intValue());
+        while (currPairs < numPairs){
+            //log.debug("num pairs {}", currPairs);
+            CI = this.LBRCI(K,currPairs, q);
             //all stopping conditions here
             if ((CI[0] > LBRThresh) || (CI[2] < LBRThresh) || (Math.abs(CI[1]-prevMean) < .01)) {
                 return CI;//LBRThresh;

@@ -75,7 +75,7 @@ public class PCASkiingDROP extends FeatureTransform {
             MD.reset();
             MD.start();
             pcaOpt.fit(currNt);
-            currTransform = pcaOpt.getKCICached(iter, lbr); //function to get knee for K for this transform;
+            currTransform = pcaOpt.getKCI(iter, lbr); //function to get knee for K for this transform;
             MD.stop();
             pcaOpt.updateMDRuntime(currNt, (double) MD.elapsed(TimeUnit.MILLISECONDS));
             currLBR = pcaOpt.getCurrKCI();
