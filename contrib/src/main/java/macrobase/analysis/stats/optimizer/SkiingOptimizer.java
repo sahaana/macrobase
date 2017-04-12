@@ -1,7 +1,6 @@
 package macrobase.analysis.stats.optimizer;
 
 
-import macrobase.analysis.stats.optimizer.util.PCA;
 import macrobase.datamodel.Datum;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
@@ -22,7 +21,9 @@ public abstract class SkiingOptimizer {
     protected int M; //original number of training samples
 
     protected int[] kDiffs;
+    protected double[] MDDiffs;
     protected int prevK;
+    protected double prevMDTime;
     protected double[] currKCI;
     protected int numDiffs;
     protected int NtInterval;
@@ -63,8 +64,10 @@ public abstract class SkiingOptimizer {
         this.predictedTrainTimeList = new HashMap<>();
         this.kPredList = new HashMap<>();
         this.kDiffs = new int[this.numDiffs]; //TODO: 3 to change to general param
+        this.MDDiffs = new double[this.numDiffs];
 
         this.prevK = 0;
+        this.prevMDTime = 0;
         this.currKCI = new double[] {0, 0, 0};
 
         this.feasible = false;
@@ -194,21 +197,44 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
-    public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
-        double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
-
-        //TODO: if predicted train time decreased over a time interval, cut/pretend it didn't happen or fit linear thing over that period
-        //TODO: implement basic 1-step gradient, maybe add a predict Nt method like predictK
-        double kTimeGuess = Math.pow(this.kPredList.get(currNt),kScaling);
+    public int NtTimeGuessFitPoly(int iter, int currNt, int maxNt){
         double[] MDtimeCoeffs = fitter.fit(this.MDruntimes.toList());
         double NtTimeGuess = 0;
         int nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
-        double currObjective;
 
         for (int i = 0; i <= this.Ntdegree; i++){
             NtTimeGuess += MDtimeCoeffs[i]*Math.pow(nextNt, i);
         }
         this.predictedTrainTimeList.put(nextNt, NtTimeGuess);
+        return nextNt;
+    }
+
+    //TODO: check indices here
+    public int NtTimeGuessOneStepGradient(int iter, int currNt, int maxNt){
+        int nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
+        if (iter == 1){
+            double guess = MDDiffs[(iter-1) % numDiffs] + prevMDTime;
+            this.predictedTrainTimeList.put(nextNt, guess);
+            return nextNt;
+        }
+        double ratio = MDDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
+        int guess = (int) Math.round(ratio*(currNt - NtList.get(iter-1)));
+        this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
+        return nextNt;
+    }
+
+
+    public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
+        double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
+        double currObjective;
+        int nextNt =  NtTimeGuessFitPoly(iter, currNt, maxNt);
+        double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
+
+
+        //TODO: if predicted train time decreased over a time interval, cut/pretend it didn't happen or fit linear thing over that period
+        //TODO: implement basic 1-step gradient, maybe add a predict Nt method like predictK
+        double kTimeGuess = Math.pow(this.kPredList.get(currNt),kScaling);
+
         currObjective = NtTimeGuess + kTimeGuess;
 
         if (nextNt <= 1000){ //(currObjective <= prevObjective){
@@ -243,9 +269,12 @@ public abstract class SkiingOptimizer {
         return;
     }
 
-    public void updateMDRuntime(int currNt, double MDtime){
+    public void updateMDRuntime(int iter, int currNt, double MDtime){
         MDruntimes.add(currNt, MDtime);
         trainTimeList.put(currNt, MDtime);
+
+        MDDiffs[iter % numDiffs] = MDtime - prevMDTime;
+        prevMDTime = MDtime;
     }
 
 
