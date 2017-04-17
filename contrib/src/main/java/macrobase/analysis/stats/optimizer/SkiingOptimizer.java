@@ -44,6 +44,7 @@ public abstract class SkiingOptimizer {
     protected RealMatrix dataMatrix;
 
     protected boolean feasible;
+    protected boolean firstKDrop;
     protected int lastFeasible;
 
     protected int Ntdegree;
@@ -71,9 +72,10 @@ public abstract class SkiingOptimizer {
         this.currKCI = new double[] {0, 0, 0};
 
         this.feasible = false;
+        this.firstKDrop = true;
         this.lastFeasible = 0;
 
-        this.kScaling = 1;
+        this.kScaling = 2;
         this.Ntdegree = 2;
         this.MDruntimes = new WeightedObservedPoints();
         MDruntimes.add(0,0);
@@ -218,26 +220,25 @@ public abstract class SkiingOptimizer {
             return nextNt;
         }
         double ratio = MDDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
-        int guess = (int) Math.round(ratio*(currNt - NtList.get(iter-1)));
+        int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
         this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
         return nextNt;
     }
 
-
+    //TODO: scale of Nt vs K is off. must normalize
     public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
         double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
         double currObjective;
-        int nextNt =  NtTimeGuessFitPoly(iter, currNt, maxNt);
+        int nextNt =  NtTimeGuessOneStepGradient(iter, currNt, maxNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
+        int kGuess = predictK(iter, nextNt);
+        double kTimeGuess = Math.pow(kGuess,kScaling);
 
-        //TODO: if predicted train time decreased over a time interval, cut/pretend it didn't happen or fit linear thing over that period
-        //TODO: implement basic 1-step gradient, maybe add a predict Nt method like predictK
-        double kTimeGuess = Math.pow(this.kPredList.get(currNt),kScaling);
+        currObjective = NtTimeGuess*(1./1) + kTimeGuess;
 
-        currObjective = NtTimeGuess + kTimeGuess;
-
-        if (nextNt <= 1000){ //(currObjective <= prevObjective){
+        // giving it a 10% wiggle and first feasible bump
+        if ((currObjective <= (1.0)*prevObjective) || (firstKDrop)){ //(nextNt <= 1000){ //
             return nextNt;
         }
         return M+1;
@@ -256,17 +257,18 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
+    //TODO: is the indexed here even right? Also for equivalent basic 1-step
     //predicting K for the "next" iteration and Nt
-    public void predictK(int iter, int currNt){
+    public int predictK(int iter, int currNt){
         if (iter == 1){
             int guess = kDiffs[(iter-1) % numDiffs] + prevK;
             this.kPredList.put(currNt, guess);
-            return;
+            return guess;
         }
-        double ratio = kDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
+        double ratio = (double) kDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
         int guess = (int) Math.round(ratio*(currNt - NtList.get(iter-1)));
         this.kPredList.put(currNt, guess + prevK);
-        return;
+        return guess + prevK;
     }
 
     public void updateMDRuntime(int iter, int currNt, double MDtime){
@@ -398,8 +400,12 @@ public abstract class SkiingOptimizer {
 
     public RealMatrix getDataMatrix() {return dataMatrix;}
 
+    ///toDO: furst drop
     public void setKDiff(int iter, int currK){
         kDiffs[iter % numDiffs] = currK - prevK;
+        if ((currK - prevK) < 0){
+            this.firstKDrop = false;
+        }
         prevK = currK;
     }
 

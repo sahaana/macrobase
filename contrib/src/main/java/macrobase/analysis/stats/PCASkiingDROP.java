@@ -88,7 +88,7 @@ public class PCASkiingDROP extends FeatureTransform {
 
             //CurrNt, iter has been updated to next iterations
             currNt = pcaOpt.getNextNtPE(++iter, currNt, maxNt, attainedLBR);
-            pcaOpt.predictK(iter, currNt); //Decided to predict k here, after first k has been found
+            //pcaOpt.predictK(iter, currNt); //Decided to predict k here, after first k has been found
         } while (currNt < pcaOpt.getM());
 
         log.debug("MICDROP 'COMPLETE'");
