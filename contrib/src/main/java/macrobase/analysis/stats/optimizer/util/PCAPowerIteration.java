@@ -10,15 +10,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 
-public class PowerIteration {
-    private static final Logger log = LoggerFactory.getLogger(PowerIteration.class);
+public class PCAPowerIteration {
+    private static final Logger log = LoggerFactory.getLogger(PCAPowerIteration.class);
     private RealMatrix dataMatrix;
     private RealMatrix centeredDataMatrix;
     private RealVector columnMeans;
     private int M;
     private int N;
 
-    public PowerIteration(RealMatrix rawDataMatrix){
+    public PCAPowerIteration(RealMatrix rawDataMatrix){
         this.dataMatrix = rawDataMatrix;
         this.M = rawDataMatrix.getRowDimension();
         this.N = rawDataMatrix.getColumnDimension();
@@ -40,28 +40,32 @@ public class PowerIteration {
         }
     }
 
-    public RealMatrix computeEigs(int Nt, int N, int K) {
-        DenseMatrix A = new DenseMatrix(N,N);
-        DenseMatrix tempData;
+    public int getN(){
+        return this.N;
+    }
 
-        DenseMatrix V = (DenseMatrix) Matrices.random(N,K);//new DenseMatrix(N,N);
+    public int getM(){ return this.M; }
+
+    public RealMatrix computeEigs(int Nt, int K, RealMatrix initV) {
+        //DenseMatrix A = new DenseMatrix(N,N);
+        DenseMatrix temp = new DenseMatrix(M, K);
+        DenseMatrix centered;
+        DenseMatrix centeredT = new DenseMatrix(N, M);
+
+        DenseMatrix V = new DenseMatrix(initV.getSubMatrix(0,N-1,0,K-1).getData());
         DenseMatrix W = new DenseMatrix(N,K);
         DenseMatrix currQ;
         DenseMatrix prevQ;
         UpperTriangDenseMatrix currR;
         UpperTriangDenseMatrix prevR;
 
-        DenseMatrix checkConverge = new DenseMatrix(N,N);
-        DenseMatrix eye = Matrices.identity(N);
-
         int iters = 0;
 
         QR qr = new QR(N, K);
 
-        Random rand = new Random();
-
-        tempData = new DenseMatrix(centeredDataMatrix.getSubMatrix(0, Nt-1, 0, N-1).getData());
-        tempData.transAmult(tempData,A); //TODO: don't compute this at once
+        centered = new DenseMatrix(centeredDataMatrix.getSubMatrix(0, Nt-1, 0, N-1).getData());
+        centered.transpose(centeredT);
+        //centered.transAmult(centered,A); // A = mlX'*mlX
 
         qr.factor(V);
         currQ = qr.getQ();
@@ -71,23 +75,33 @@ public class PowerIteration {
             prevQ = currQ.copy();
             prevR = currR.copy();
 
-            A.mult(prevQ, W);
+            centered.mult(prevQ,temp); // mlX*prevQ = temp
+            centeredT.mult(temp, W); // mlX'*temp = mlX'*mlX*prevQ = W
+
+            //A.mult(prevQ, W); // mlX'*mlX*prevQ = W
             qr.factor(W);
             currQ = qr.getQ();
             currR = qr.getR();
-
-            //currQ.transAmult(prevQ, checkConverge);
-            //checkConverge.add(-1, eye);
-            //log.debug("Checking Convergence {}",checkConverge(prevQ, currQ, N, K));
-            iters++;
-
-        } while (checkConverge(prevQ, currQ, N, K) > 0.001 && iters < 3000);
+        } while (iters++ < 3000 && checkConverge(prevQ, currQ, N, K) > 0.001);
         log.debug("Iterations: {}", iters);
         return new Array2DRowRealMatrix(Matrices.getArray(currQ));
 
     }
 
-    //TODO: not stable. order not guaranteed
+
+    public RealMatrix computeEigs(int Nt, int K) {
+        double[][] randV = new double[N][K];
+        for (int i = 0; i < N; i++){
+            for (int j = 0; j < K; j++){
+                randV[i][j] = Math.random();
+            }
+        }
+        RealMatrix V = new Array2DRowRealMatrix(randV);
+        return computeEigs(Nt, K, V);
+
+    }
+
+    //TODO: not stable as order not guaranteed in theory
     private double checkConverge(DenseMatrix prevQ, DenseMatrix currQ, int N, int K) {
         DenseMatrix check = new DenseMatrix(K,K);
         DenseMatrix eye = Matrices.identity(K);

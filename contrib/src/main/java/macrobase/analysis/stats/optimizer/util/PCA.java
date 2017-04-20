@@ -14,7 +14,7 @@ public class PCA {
     private RealMatrix centeredDataMatrix; // X
     private RealMatrix transformationMatrix; // V
     private RealVector columnMeans;
-    private SVD svd; //gives X = UDV', U=mxp D=pxp V = pxn
+    private SVD svd; //gives X = UDV', U=mxp D=pxp V' = pxn
     private int N;
     private int M;
     private int P;
@@ -48,7 +48,7 @@ public class PCA {
             DenseMatrix tm = svd.getVt();
             tm.transpose();
             transformationMatrix = new Array2DRowRealMatrix(Matrices.getArray(tm));
-            P = transformationMatrix.getRowDimension();//numRows();
+            P = transformationMatrix.getColumnDimension(); //TODO: remember this used to be rowdim
         } catch (NotConvergedException ie) {
             ie.printStackTrace();
         }
@@ -68,7 +68,7 @@ public class PCA {
         }
         K = Math.min(Math.min(K, this.N), this.M);
         RealMatrix centeredInput = new Array2DRowRealMatrix(inputData.getData());
-        RealMatrix transformation = this.transformationMatrix.getSubMatrix(0,this.P-1,0,K-1);
+        RealMatrix transformation = this.transformationMatrix.getSubMatrix(0,this.N-1,0,K-1); //TODO: remember this used to be P-1, not N-1
         DenseMatrix ci;
         DenseMatrix transformedData = new DenseMatrix(inputData.getRowDimension(),K);
         DenseMatrix t = new DenseMatrix(transformation.getData());
