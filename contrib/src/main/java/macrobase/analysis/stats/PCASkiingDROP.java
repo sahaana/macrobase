@@ -3,6 +3,7 @@ package macrobase.analysis.stats;
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
+import macrobase.analysis.stats.optimizer.util.PowerIteration;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -40,11 +41,16 @@ public class PCASkiingDROP extends FeatureTransform {
     double lbr;
     boolean rpFlag;
 
+    PowerIteration pwrIter;
+    RealMatrix pwrEigs;
+    RealMatrix transMatrix;
+
     public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
         pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
+
         MD = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
@@ -68,6 +74,7 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
+        pwrIter = new PowerIteration(pcaOpt.getDataMatrix());
         currNt = pcaOpt.getNextNtPE(iter, currNt, maxNt, attainedLBR);
         log.debug("Beginning DROP");
         do {
@@ -85,7 +92,8 @@ public class PCASkiingDROP extends FeatureTransform {
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-
+            pwrEigs = pwrIter.computeEigs(currNt, pcaOpt.getN(), Math.max(10, currTransform.getColumnDimension()));
+            transMatrix = this.pcaOpt.getTransformation();
             //CurrNt, iter has been updated to next iterations
             currNt = pcaOpt.getNextNtPE(++iter, currNt, maxNt, attainedLBR);
             //pcaOpt.predictK(iter, currNt); //Decided to predict k here, after first k has been found

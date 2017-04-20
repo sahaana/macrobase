@@ -257,6 +257,11 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
+    public int getNextNtDebug(int iter, int currNt, int maxNt, boolean attainedLBR){
+        NtList.add(M);
+        return M;
+    }
+
     //TODO: is the indexed here even right? Also for equivalent basic 1-step
     //predicting K for the "next" iteration and Nt
     public int predictK(int iter, int currNt){

@@ -1,10 +1,10 @@
 package macrobase.analysis.stats.optimizer.util;
 
-import macrobase.analysis.stats.optimizer.PAASkiingOptimizer;
 import no.uib.cipr.matrix.*;
-import org.apache.commons.math3.analysis.function.Power;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,14 +13,34 @@ import java.util.Random;
 public class PowerIteration {
     private static final Logger log = LoggerFactory.getLogger(PowerIteration.class);
     private RealMatrix dataMatrix;
+    private RealMatrix centeredDataMatrix;
+    private RealVector columnMeans;
+    private int M;
+    private int N;
 
-    public PowerIteration(RealMatrix dataMatrix){
-        this.dataMatrix = dataMatrix;
+    public PowerIteration(RealMatrix rawDataMatrix){
+        this.dataMatrix = rawDataMatrix;
+        this.M = rawDataMatrix.getRowDimension();
+        this.N = rawDataMatrix.getColumnDimension();
+        this.centeredDataMatrix = new Array2DRowRealMatrix(M,N);
+        this.columnMeans = new ArrayRealVector(N);
+        double mean;
+        RealVector currVec;
+
+        for (int i = 0; i < N; i++){
+            currVec = this.dataMatrix.getColumnVector(i);
+            mean = 0;
+            for (double entry: currVec.toArray()){
+                mean += entry;
+            }
+            mean /= M;
+            columnMeans.setEntry(i, mean);
+            currVec.mapSubtractToSelf(mean);
+            centeredDataMatrix.setColumnVector(i, currVec);
+        }
     }
 
     public RealMatrix computeEigs(int Nt, int N, int K) {
-        //N = 3;
-        //K = 2;
         DenseMatrix A = new DenseMatrix(N,N);
         DenseMatrix tempData;
 
@@ -40,18 +60,8 @@ public class PowerIteration {
 
         Random rand = new Random();
 
-        tempData = new DenseMatrix(dataMatrix.getSubMatrix(0, Nt-1, 0, N-1).getData());
-        tempData.transAmult(tempData,A);
-
-        //A = new DenseMatrix(new double[][]{{1, 3, 4}, {3, 1, 5}, {4, 5, 5}});
-        //N = 3;
-
-        /*for (int i = 0; i < N; i++){
-            for (int j = 0; j < N; j++) {
-                V.set(i,j,rand.nextGaussian());
-            }
-        } */
-        //V = Matrices.identity(N);
+        tempData = new DenseMatrix(centeredDataMatrix.getSubMatrix(0, Nt-1, 0, N-1).getData());
+        tempData.transAmult(tempData,A); //TODO: don't compute this at once
 
         qr.factor(V);
         currQ = qr.getQ();
@@ -71,12 +81,13 @@ public class PowerIteration {
             //log.debug("Checking Convergence {}",checkConverge(prevQ, currQ, N, K));
             iters++;
 
-        } while (checkConverge(prevQ, currQ, N, K) > 0.001 && iters < 1000);
+        } while (checkConverge(prevQ, currQ, N, K) > 0.001 && iters < 3000);
         log.debug("Iterations: {}", iters);
-        return new Array2DRowRealMatrix(currQ.getData());
+        return new Array2DRowRealMatrix(Matrices.getArray(currQ));
 
     }
 
+    //TODO: not stable. order not guaranteed
     private double checkConverge(DenseMatrix prevQ, DenseMatrix currQ, int N, int K) {
         DenseMatrix check = new DenseMatrix(K,K);
         DenseMatrix eye = Matrices.identity(K);

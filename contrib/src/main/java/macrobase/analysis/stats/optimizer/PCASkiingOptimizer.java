@@ -360,4 +360,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     public Map getKItersList(){ return KItersList; }
 
+    public RealMatrix getTransformation(){return this.pca.getTransformationMatrix();}
+
 }
