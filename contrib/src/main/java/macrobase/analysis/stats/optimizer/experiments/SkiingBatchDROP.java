@@ -4,6 +4,7 @@ package macrobase.analysis.stats.optimizer.experiments;
 import macrobase.analysis.stats.FFTSkiingDROP;
 import macrobase.analysis.stats.PAASkiingDROP;
 import macrobase.analysis.stats.PCASkiingDROP;
+import macrobase.analysis.stats.PIPCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -161,9 +162,9 @@ public class SkiingBatchDROP {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
+        //PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
+        PIPCASkiingDROP drop = new PIPCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
 
-        drop.checkPwrIter(data);
         drop.consume(data);
 
         LBRResults = drop.getLBR();

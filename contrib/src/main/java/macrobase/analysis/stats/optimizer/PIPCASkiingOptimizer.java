@@ -1,23 +1,28 @@
 package macrobase.analysis.stats.optimizer;
 
+import macrobase.analysis.stats.optimizer.util.PCA;
 import macrobase.analysis.stats.optimizer.util.PCASVD;
-//import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
-import org.apache.commons.math3.linear.*;
+import macrobase.analysis.stats.optimizer.util.PCAPowerIteration;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class PCASkiingOptimizer extends SkiingOptimizer {
 
-    private static final Logger log = LoggerFactory.getLogger(PCASkiingOptimizer.class);
+public class PIPCASkiingOptimizer extends SkiingOptimizer {
+
+    private static final Logger log = LoggerFactory.getLogger(PIPCASkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
     protected RealMatrix cachedTransform;
 
-    protected PCASVD pca;
+    protected PCA pca;
+
+    boolean PI; //TODO: this should be a check separate from attainedLBR. For now, same, done in getNt.
 
 
-    public PCASkiingOptimizer(double epsilon, int b, int s) {
+    public PIPCASkiingOptimizer(double epsilon, int b, int s) {
         super(epsilon, b, s);
         this.KItersList = new HashMap<>();
     }
@@ -25,6 +30,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     @Override
     public void fit(int Nt) {
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(0, Nt - 1, 0, N - 1);
+        if (PI) {
+            this.pca = new PCAPowerIteration(trainMatrix);
+            return;
+        }
         this.pca = new PCASVD(trainMatrix);
     }
 
@@ -36,12 +45,26 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return cachedTransform.getSubMatrix(0, this.M - 1, 0, K - 1);
     }
 
-
     @Override
     public RealMatrix transform(int K) {
         return this.pca.transform(dataMatrix, K);
     }
 
+
+    @Override
+    public int getNextNtPE(int iter, int currNt, int maxNt, boolean attainedLBR){
+        int nextNt;
+        if (!attainedLBR){
+            nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt);
+            NtList.add(nextNt);
+            return nextNt;
+        }
+        PI = true;
+        nextNt = getNextNtObjectiveFunc(iter, currNt, maxNt);
+        log.debug("NextNt {}", nextNt);
+        NtList.add(nextNt);
+        return nextNt;
+    }
 
     public RealMatrix getKFull(double targetLBR) {
         // computes the best K for a complete transformation using all the data
@@ -49,7 +72,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
 
         int iters = 0;
-        int iter = 8008;
         int low = 0;
         int high = Math.min(this.M, this.Nproc) - 1;
         if (this.feasible) high = this.lastFeasible;

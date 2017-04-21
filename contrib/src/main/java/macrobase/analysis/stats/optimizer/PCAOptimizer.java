@@ -1,7 +1,6 @@
 package macrobase.analysis.stats.optimizer;
 
-import macrobase.analysis.stats.optimizer.util.PCA;
-import no.uib.cipr.matrix.NotConvergedException;
+import macrobase.analysis.stats.optimizer.util.PCASVD;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -49,7 +48,7 @@ public class PCAOptimizer extends Optimizer {
     @Override
     public RealMatrix transform(int K, int Nt) {
         RealMatrix trainMatrix = this.dataMatrix.getSubMatrix(0, Nt-1, 0, this.Nproc - 1);
-        PCA pca = new PCA(trainMatrix);
+        PCASVD pca = new PCASVD(trainMatrix);
 
         RealMatrix retVal = pca.transform(this.dataMatrix,K);
         return retVal;
@@ -217,7 +216,7 @@ public class PCAOptimizer extends Optimizer {
         /*
         int interval = this.M/num_Nt;
         if (iter == 0){
-            this.NtList.add(Math.max(K+1,interval)); //this is to make sure we have at least K+1 samples for PCA, +1 for edge effects
+            this.NtList.add(Math.max(K+1,interval)); //this is to make sure we have at least K+1 samples for PCASVD, +1 for edge effects
             return Math.max(K+1,interval);
         }
         this.NtList.add(interval + this.NtList.get(iter-1));

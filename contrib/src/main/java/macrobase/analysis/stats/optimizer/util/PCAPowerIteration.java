@@ -8,9 +8,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Random;
-
-public class PCAPowerIteration {
+public class PCAPowerIteration implements PCA{
     private static final Logger log = LoggerFactory.getLogger(PCAPowerIteration.class);
 
     private RealMatrix dataMatrix;
@@ -51,7 +49,7 @@ public class PCAPowerIteration {
 
     public int getM(){ return this.M; }
 
-    public RealMatrix getLargestTransform(){ return this.largestTransform; }
+    public RealMatrix getTransformationMatrix(){ return this.largestTransform; }
 
     public RealMatrix transform(RealMatrix inputData, int K){
         if (K > Math.min(this.N,this.M)){
@@ -84,7 +82,7 @@ public class PCAPowerIteration {
             this.largestTransform = this.computeEigs(K, transformation);
         }
 
-        transformation = this.largestTransform.getSubMatrix(0,this.N-1,0,K-1); // Remember this came from PCA and was P-1
+        transformation = this.largestTransform.getSubMatrix(0,this.N-1,0,K-1); // Remember this came from PCASVD and was P-1
         t = new DenseMatrix(transformation.getData());
         transformedData = new DenseMatrix(inputData.getRowDimension(),K);
 
@@ -98,7 +96,7 @@ public class PCAPowerIteration {
         return new Array2DRowRealMatrix(Matrices.getArray(transformedData));
     }
 
-    public RealMatrix computeEigs(int K, RealMatrix initV) {
+    private RealMatrix computeEigs(int K, RealMatrix initV) {
         //DenseMatrix A = new DenseMatrix(N,N);
         DenseMatrix temp = new DenseMatrix(M, K);
         DenseMatrix centered;
@@ -140,8 +138,7 @@ public class PCAPowerIteration {
 
     }
 
-
-    public RealMatrix computeEigs(int K) {
+    private RealMatrix computeEigs(int K) {
         double[][] randV = new double[N][K];
         for (int i = 0; i < N; i++){
             for (int j = 0; j < K; j++){

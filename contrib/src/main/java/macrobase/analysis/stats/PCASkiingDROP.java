@@ -78,7 +78,7 @@ public class PCASkiingDROP extends FeatureTransform {
         pwrIter = new PCAPowerIteration(pcaOpt.getDataMatrix());
 
         transMatrix = this.pcaOpt.getTransformation();
-        pwrEigs = pwrIter.computeEigs(40);
+        pwrEigs = pwrIter.transform(pcaOpt.getDataMatrix(),40);
 
         for(int i = 0; i < pcaOpt.getN(); i++){
             for (int j = 0; j < 40; j++){
@@ -98,7 +98,6 @@ public class PCASkiingDROP extends FeatureTransform {
                 }
             }
         }
-        testTransform = currTransform;
     }
 
     @Override
@@ -128,7 +127,7 @@ public class PCASkiingDROP extends FeatureTransform {
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
             //CurrNt, iter has been updated to next iterations
             currNt = pcaOpt.getNextNtPE(++iter, currNt, maxNt, attainedLBR);
-            //pcaOpt.predictK(iter, currNt); //Decided to predict k here, after first k has been found
+            //pipcaOpt.predictK(iter, currNt); //Moved inside get next Nt. Decided to predict k here, after first k has been found
         } while (currNt < pcaOpt.getM());
 
         log.debug("MICDROP 'COMPLETE'");
@@ -139,7 +138,7 @@ public class PCASkiingDROP extends FeatureTransform {
         pcaOpt.fit(pcaOpt.getM());
         currTransform = pcaOpt.getKFull(lbr);
         currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform);
-        log.debug("For full PCA, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
+        log.debug("For full PCASVD, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
 
         int i = 0;
         for (Datum d: records){
@@ -155,8 +154,8 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = pcaOpt.getM();//pcaOpt.getNextNt(iter, currNt, maxNt);
-        log.debug("Beginning PCA base run");
+        currNt = pcaOpt.getM();//pipcaOpt.getNextNt(iter, currNt, maxNt);
+        log.debug("Beginning PCASVD base run");
         pcaOpt.fit(currNt);
         //sw.start();
         //fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
