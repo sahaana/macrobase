@@ -1,13 +1,13 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
 //import macrobase.analysis.stats.DROP;
-import macrobase.analysis.stats.DROPvPowerIteration;
 import macrobase.analysis.stats.FFTSkiingDROP;
 import macrobase.analysis.stats.PAASkiingDROP;
 import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
+import no.uib.cipr.matrix.DenseMatrix;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -163,6 +163,7 @@ public class SkiingBatchDROP {
 
         PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
 
+        drop.checkPwrIter(data);
         drop.consume(data);
 
         LBRResults = drop.getLBR();

@@ -39,9 +39,10 @@ public class PCASkiingDROP extends FeatureTransform {
     double epsilon;
     double lbr;
 
-    //PCAPowerIteration pwrIter;
-    //RealMatrix pwrEigs;
-    //RealMatrix transMatrix;
+    PCAPowerIteration pwrIter;
+    RealMatrix pwrEigs;
+    RealMatrix transMatrix;
+    RealMatrix testTransform;
 
     public PCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
         iter = 0;
@@ -64,15 +65,50 @@ public class PCASkiingDROP extends FeatureTransform {
 
     }
 
+    public void checkPwrIter(List<Datum> records){
+        pcaOpt.extractData(records);
+        log.debug("Extracted Records");
+        pcaOpt.preprocess();
+        log.debug("Processed Data");
+
+        currNt = pcaOpt.getM(); //hardcoded for coffee.txt
+        log.debug("Beginning DROP");
+
+        pcaOpt.fit(currNt);
+        pwrIter = new PCAPowerIteration(pcaOpt.getDataMatrix());
+
+        transMatrix = this.pcaOpt.getTransformation();
+        pwrEigs = pwrIter.computeEigs(40);
+
+        for(int i = 0; i < pcaOpt.getN(); i++){
+            for (int j = 0; j < 40; j++){
+                if (Math.abs(transMatrix.getEntry(i,j)) - Math.abs(pwrEigs.getEntry(i,j)) > .001){
+                    log.debug("{} {} {} {}", i, j, transMatrix.getEntry(i,j), pwrEigs.getEntry(i,j));
+                }
+            }
+        }
+
+        currTransform = this.pcaOpt.transform(30);
+        testTransform =  pwrIter.transform(pcaOpt.getDataMatrix(),30);
+
+        for(int i = 0; i < 56; i++){
+            for (int j = 0; j < 30; j++){
+                if (Math.abs(currTransform.getEntry(i,j)) - Math.abs(testTransform.getEntry(i,j)) > .001){
+                   log.debug("{} {} {} {}", i, j, currTransform.getEntry(i,j), testTransform.getEntry(i,j));
+                }
+            }
+        }
+        testTransform = currTransform;
+    }
+
     @Override
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
         log.debug("Extracted Records");
-        //pcaOpt.shuffleData();
-        //log.debug("Shuffled Data");
+        pcaOpt.shuffleData();
+        log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
-        //pwrIter = new PCAPowerIteration(pcaOpt.getDataMatrix());
         currNt = pcaOpt.getNextNtPE(iter, currNt, maxNt, attainedLBR);
         log.debug("Beginning DROP");
         do {
@@ -90,8 +126,6 @@ public class PCASkiingDROP extends FeatureTransform {
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-            //transMatrix = this.pcaOpt.getTransformation();
-            //pwrEigs = pwrIter.computeEigs(currNt, Math.max(10, currTransform.getColumnDimension()), transMatrix);
             //CurrNt, iter has been updated to next iterations
             currNt = pcaOpt.getNextNtPE(++iter, currNt, maxNt, attainedLBR);
             //pcaOpt.predictK(iter, currNt); //Decided to predict k here, after first k has been found
