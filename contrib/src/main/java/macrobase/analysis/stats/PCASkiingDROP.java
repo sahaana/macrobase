@@ -79,7 +79,9 @@ public class PCASkiingDROP extends FeatureTransform {
 
         transMatrix = this.pcaOpt.getTransformation();
         pwrEigs = pwrIter.transform(pcaOpt.getDataMatrix(),40);
-
+        pwrEigs = pwrIter.getTransformationMatrix();
+        log.debug("N {} K {}", transMatrix.getRowDimension(), transMatrix.getColumnDimension());
+        log.debug("N {} K {}", pwrEigs.getRowDimension(), pwrEigs.getColumnDimension());
         for(int i = 0; i < pcaOpt.getN(); i++){
             for (int j = 0; j < 40; j++){
                 if (Math.abs(transMatrix.getEntry(i,j)) - Math.abs(pwrEigs.getEntry(i,j)) > .001){

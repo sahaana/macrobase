@@ -164,8 +164,8 @@ public class SkiingBatchDROP {
 
         //PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
         PIPCASkiingDROP drop = new PIPCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
-
-        drop.consume(data);
+        drop.checkPwrIterCaching(data);
+        //drop.consume(data);
 
         LBRResults = drop.getLBR();
         mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,lbr,epsilon));

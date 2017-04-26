@@ -56,8 +56,7 @@ public class PCAPowerIteration implements PCA{
             log.warn("Watch your K...K {} M {} Nproc {}", K, this.M, this.N);
         }
         K = Math.min(Math.min(K, this.N), this.M);
-
-        RealMatrix transformation = new Array2DRowRealMatrix(N, K);
+        RealMatrix transformation = new Array2DRowRealMatrix(this.N, K);
         RealVector currVec;
         DenseMatrix t;
         DenseMatrix ci;
@@ -67,20 +66,31 @@ public class PCAPowerIteration implements PCA{
         //if you've never transformed anything with PI before, compute from scratch
         if (init){
             init = false;
+            log.debug("computed {}", K);
             this.largestTransform = this.computeEigs(K);
         }
-
+        log.debug("largest so far {} {}", largestTransform.getRowDimension(), largestTransform.getColumnDimension() );
+        log.debug("transformation size to be {} {}", transformation.getRowDimension(), transformation.getColumnDimension());
         // if the largest transformation you've done is not big enough, pad with random and compute the difference
         int randomPadding = K - this.largestTransform.getColumnDimension();
         if (randomPadding > 0){
             transformation.setSubMatrix(this.largestTransform.getData(),0,0);
-            for(int i = 0; i < randomPadding; i++){
-                for(int j = 0; j < N; j++){
+            for(int i = 0; i < N; i++){
+                for(int j = this.largestTransform.getColumnDimension(); j < K; j++){
                     transformation.setEntry(i,j,Math.random());
                 }
             }
+            log.debug("computedd {}", K);
             this.largestTransform = this.computeEigs(K, transformation);
+
         }
+        else { //if not, just refine what you have
+            transformation = this.largestTransform.getSubMatrix(0,this.N-1,0,K-1); // Remember this came from PCASVD and was P-1
+            log.debug("computeddd {}", K);
+            this.largestTransform.setSubMatrix(this.computeEigs(K, transformation).getData(),0,0);
+
+        }
+
 
         transformation = this.largestTransform.getSubMatrix(0,this.N-1,0,K-1); // Remember this came from PCASVD and was P-1
         t = new DenseMatrix(transformation.getData());
