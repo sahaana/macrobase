@@ -35,21 +35,19 @@ public class PIPCASkiingDROP extends FeatureTransform {
 
     Map<String, Long> times;
 
-    int maxNt;
     double epsilon;
     double lbr;
 
-    public PIPCASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
+    public PIPCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
-        pipcaOpt = new PIPCASkiingOptimizer(epsilon, b, s);
+        pipcaOpt = new PIPCASkiingOptimizer(epsilon);
 
         MD = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
-        this.maxNt = maxNt;
         this.epsilon = epsilon;
         this.lbr = lbr;
         output = new MBStream<>();
@@ -60,91 +58,6 @@ public class PIPCASkiingDROP extends FeatureTransform {
 
     }
 
-    public void checkPwrIter(List<Datum> records) {
-        pipcaOpt.extractData(records);
-        log.debug("Extracted Records");
-        pipcaOpt.preprocess();
-        log.debug("Processed Data");
-
-        currNt = pipcaOpt.getM(); //hardcoded for coffee.txt
-        log.debug("Beginning DROP");
-
-        pipcaOpt.fit(currNt);
-        PCAPowerIteration pwrIter = new PCAPowerIteration(pipcaOpt.getDataMatrix());
-
-        RealMatrix transMatrix = this.pipcaOpt.getTransformation();
-        RealMatrix pwrEigs = pwrIter.transform(pipcaOpt.getDataMatrix(), 40);
-        pwrEigs = pwrIter.getTransformationMatrix();
-        log.debug("N {} K {}", transMatrix.getRowDimension(), transMatrix.getColumnDimension());
-        log.debug("N {} K {}", pwrEigs.getRowDimension(), pwrEigs.getColumnDimension());
-        for (int i = 0; i < pipcaOpt.getN(); i++) {
-            for (int j = 0; j < 40; j++) {
-                if (Math.abs(transMatrix.getEntry(i, j)) - Math.abs(pwrEigs.getEntry(i, j)) > .001) {
-                    log.debug("{} {} {} {}", i, j, transMatrix.getEntry(i, j), pwrEigs.getEntry(i, j));
-                }
-            }
-        }
-        currTransform = this.pipcaOpt.transform(30);
-        RealMatrix testTransform =  pwrIter.transform(pipcaOpt.getDataMatrix(),30);
-
-        log.debug("next");
-        for(int i = 0; i < 56; i++){
-            for (int j = 0; j < 30; j++){
-                if (Math.abs(currTransform.getEntry(i,j)) - Math.abs(testTransform.getEntry(i,j)) > .001){
-                    log.debug("{} {} {} {}", i, j, currTransform.getEntry(i,j), testTransform.getEntry(i,j));
-                }
-            }
-        }
-    }
-
-    public void checkPwrIterCaching(List<Datum> records) {
-        pipcaOpt.extractData(records);
-        log.debug("Extracted Records");
-        pipcaOpt.preprocess();
-        log.debug("Processed Data");
-
-        currNt = pipcaOpt.getM(); //hardcoded for coffee.txt
-        log.debug("Beginning DROP");
-
-        pipcaOpt.fit(currNt);
-        PCAPowerIteration pwrIter = new PCAPowerIteration(pipcaOpt.getDataMatrix());
-
-        RealMatrix transMatrix = this.pipcaOpt.getTransformation();
-        RealMatrix pwrEigs = pwrIter.transform(pipcaOpt.getDataMatrix(), 10);
-        pwrEigs = pwrIter.getTransformationMatrix();
-
-        currTransform = this.pipcaOpt.transform(35);
-        RealMatrix testTransform =  pwrIter.transform(pipcaOpt.getDataMatrix(),30);
-
-        currTransform = this.pipcaOpt.transform(45);
-        testTransform =  pwrIter.transform(pipcaOpt.getDataMatrix(),45);
-
-        /*
-        log.debug("next");
-        for(int i = 0; i < 56; i++){
-            for (int j = 0; j < 45; j++){
-                if (Math.abs(currTransform.getEntry(i,j)) - Math.abs(testTransform.getEntry(i,j)) > .001){
-                    log.debug("{} {} {} {}", i, j, currTransform.getEntry(i,j), testTransform.getEntry(i,j));
-                }
-            }
-        }
-        */
-
-        pwrIter = new PCAPowerIteration(pipcaOpt.getDataMatrix());
-        testTransform =  pwrIter.transform(pipcaOpt.getDataMatrix(),45);
-
-        /*
-        log.debug("next");
-        for(int i = 0; i < 56; i++){
-            for (int j = 0; j < 45; j++){
-                if (Math.abs(currTransform.getEntry(i,j)) - Math.abs(testTransform.getEntry(i,j)) > .001){
-                    log.debug("{} {} {} {}", i, j, currTransform.getEntry(i,j), testTransform.getEntry(i,j));
-                }
-            }
-        }
-        */
-    }
-
     @Override
     public void consume(List<Datum> records) throws Exception {
         pipcaOpt.extractData(records);
@@ -153,7 +66,7 @@ public class PIPCASkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         pipcaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = pipcaOpt.getNextNtPE(iter, currNt, maxNt, attainedLBR);
+        currNt = pipcaOpt.getNextNtPE(iter, currNt, attainedLBR);
         log.debug("Beginning DROP");
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
@@ -171,7 +84,7 @@ public class PIPCASkiingDROP extends FeatureTransform {
             pipcaOpt.setKDiff(iter, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
             //CurrNt, iter has been updated to next iterations
-            currNt = pipcaOpt.getNextNtPE(++iter, currNt, maxNt, attainedLBR);
+            currNt = pipcaOpt.getNextNtPE(++iter, currNt, attainedLBR);
             //pipcaOpt.predictK(iter, currNt); //Moved inside get next Nt. Decided to predict k here, after first k has been found
         } while (currNt < pipcaOpt.getM());
 

@@ -23,8 +23,8 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
     protected Complex[][] transformedData;
     protected int nextPowTwo;
 
-    public FFTSkiingOptimizer(double epsilon, int b, int s) {
-        super(epsilon, b, s);
+    public FFTSkiingOptimizer(double epsilon) {
+        super(epsilon);
         this.KItersList = new HashMap<>();
         transformer = new FastFourierTransformer(DftNormalization.STANDARD);
     }
@@ -387,7 +387,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
     }
 
     @Override
-    public int getNextNt(int iter, int currNt, int maxNt) {
+    public int getNextNt(int iter, int currNt) {
         return this.M;
     }
 

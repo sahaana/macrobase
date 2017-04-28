@@ -25,19 +25,17 @@ public class PAASkiingDROP extends FeatureTransform {
 
     Map<String, Long> times;
 
-    int maxNt;
     double epsilon;
     double lbr;
 
-    public PAASkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
+    public PAASkiingDROP(MacroBaseConf conf, double epsilon, double lbr){
         iter = 0;
         currNt = 0;
-        paaOpt = new PAASkiingOptimizer(epsilon, b, s);
+        paaOpt = new PAASkiingOptimizer(epsilon);
         sw = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
-        this.maxNt = maxNt;
         this.epsilon = epsilon;
         this.lbr = lbr;
 
@@ -60,7 +58,7 @@ public class PAASkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         paaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = paaOpt.getNextNt(iter, currNt, maxNt);
+        currNt = paaOpt.getNextNt(iter, currNt);
         log.debug("Beginning PAA base run");
         paaOpt.fit(currNt);
         //sw.start();

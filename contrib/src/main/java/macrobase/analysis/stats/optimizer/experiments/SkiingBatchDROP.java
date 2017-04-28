@@ -1,18 +1,11 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
 //import macrobase.analysis.stats.DROP;
-import macrobase.analysis.stats.FFTSkiingDROP;
-import macrobase.analysis.stats.PAASkiingDROP;
-import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.analysis.stats.PIPCASkiingDROP;
+import macrobase.analysis.stats.SVDPCASkiingDROP;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
-import no.uib.cipr.matrix.DenseMatrix;
-import org.apache.commons.math3.fitting.PolynomialCurveFitter;
-import org.apache.commons.math3.fitting.WeightedObservedPoints;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,37 +18,6 @@ import java.util.stream.Stream;
  * Created by meep_me on 9/1/16.
  */
 public class SkiingBatchDROP {
-    private static Map<Integer, String> TABLE_NAMES = Stream.of(
-            "1,CinC",
-            "2,InlineSkate",
-            "3,HandOutlines",
-            "4,Haptics",
-            "5,MALLAT",
-            "6,StarLightCurves",
-            "7,Phoneme",
-            "8,ElectricDevices",
-            "9,CinC-PAA"
-    ).collect(Collectors.toMap(k -> Integer.parseInt(k.split(",")[0]), v -> v.split(",")[1]));
-
-    private static Map<Integer, Integer> TABLE_SIZE = Stream.of(
-            "1,1500",
-            "2,1500",
-            "3,2500",
-            "4,1000",
-            "5,1000",
-            "6,1000",
-            "7,1000",
-            "8,50",
-            "9,25"
-    ).collect(Collectors.toMap(k -> Integer.parseInt(k.split(",")[0]), v -> Integer.parseInt(v.split(",")[1])));
-
-    private static ArrayList<String> getMetrics(int datasetID){
-        ArrayList<String> metrics = new ArrayList<>();
-        for (int i = 0; i < TABLE_SIZE.get(datasetID); i++){
-            metrics.add(Integer.toString(i));
-        }
-        return metrics;
-    }
 
     private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
         String eol =  System.getProperty("line.separator");
@@ -105,35 +67,33 @@ public class SkiingBatchDROP {
     }
 
 
-    private static String LBROutFile(String dataset, int b, int s, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr, ep);
+    private static String LBROutFile(String dataset, double lbr, double ep){
+        String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr, ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
     }
 
-    private static String timeOutFile(String dataset, int b, int s, double lbr, double ep, String tag){
-        String output = String.format("%s_%s_b%d_s%d_lbr%.4f_ep%.3f",dataset, tag, b, s, lbr,ep);
+    private static String timeOutFile(String dataset, double lbr, double ep, String tag){
+        String output = String.format("%s_%s_lbr%.4f_ep%.3f",dataset, tag, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
     }
 
-    private static String kOutFile(String dataset, int b, int s, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String kOutFile(String dataset, double lbr, double ep){
+        String output = String.format("%s_lbr%.4f_ep%.3f",dataset,lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/k/%s.csv", output);
     }
 
-    private static String kPredOutFile(String dataset, int b, int s, double lbr, double ep){
-        String output = String.format("%s_b%d_s%d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String kPredOutFile(String dataset, double lbr, double ep){
+        String output = String.format("%s_lbr%.4f_ep%.3f",dataset,lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kPred/%s.csv", output);
     }
 
-    private static String kItersOutFile(String dataset, int b, int s, double lbr, double ep){
-        String output = String.format("%s_b%d_s %d_lbr%.4f_ep%.3f",dataset,b, s, lbr,ep);
+    private static String kItersOutFile(String dataset, double lbr, double ep){
+        String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr,ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
     }
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
     public static void main(String[] args) throws Exception{
-
-        int maxNt = 25;
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
@@ -141,9 +101,6 @@ public class SkiingBatchDROP {
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
-
-        int b = 50;
-        int s = 20;
 
         /*String dataset = "CinC";
         double lbr = .98;
@@ -162,25 +119,24 @@ public class SkiingBatchDROP {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        //PCASkiingDROP drop = new PCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
-        PIPCASkiingDROP drop = new PIPCASkiingDROP(conf, maxNt, epsilon, lbr, b, s);
-        drop.checkPwrIterCaching(data);
-        //drop.consume(data);
+        SVDPCASkiingDROP drop = new SVDPCASkiingDROP(conf, epsilon, lbr);
+        //PIPCASkiingDROP drop = new PIPCASkiingDROP(conf, epsilon, lbr);
+        drop.consume(data);
 
         LBRResults = drop.getLBR();
-        mapArrayToCSV(LBRResults, LBROutFile(dataset,b,s,lbr,epsilon));
+        mapArrayToCSV(LBRResults, LBROutFile(dataset,lbr,epsilon));
 
         timeResults = drop.getTime();
-        mapDoubleToCSV(timeResults, timeOutFile(dataset,b,s,lbr,epsilon,"Actual"));
+        mapDoubleToCSV(timeResults, timeOutFile(dataset,lbr,epsilon,"Actual"));
 
         predTimeResults = drop.getPredTime();
-        mapDoubleToCSV(predTimeResults, timeOutFile(dataset,b,s,lbr,epsilon, "Predicted"));
+        mapDoubleToCSV(predTimeResults, timeOutFile(dataset,lbr,epsilon, "Predicted"));
 
         kResults = drop.getKList();
-        mapIntToCSV(kResults, kOutFile(dataset,b,s,lbr,epsilon));
+        mapIntToCSV(kResults, kOutFile(dataset,lbr,epsilon));
 
         kPred = drop.getKPred();
-        mapIntToCSV(kPred, kPredOutFile(dataset,b,s,lbr,epsilon));
+        mapIntToCSV(kPred, kPredOutFile(dataset,lbr,epsilon));
 
         kIters = drop.getKItersList();
         //mapIntToCSV(kIters, kItersOutFile(dataset,b,s,lbr,epsilon));

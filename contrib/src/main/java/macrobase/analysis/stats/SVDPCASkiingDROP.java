@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class PCASkiingDROP extends FeatureTransform {
-    private static final Logger log = LoggerFactory.getLogger(PCASkiingDROP.class);
+public class SVDPCASkiingDROP extends FeatureTransform {
+    private static final Logger log = LoggerFactory.getLogger(SVDPCASkiingDROP.class);
 
     private final MBStream<Datum> output;
     double[][] finalTransform;
@@ -30,7 +30,7 @@ public class PCASkiingDROP extends FeatureTransform {
     boolean attainedLBR;
 
     RealMatrix currTransform;
-    PCASkiingOptimizer pcaOpt;
+    SVDPCASkiingOptimizer pcaOpt;
     Stopwatch sw;
     Stopwatch MD;
 
@@ -39,12 +39,16 @@ public class PCASkiingDROP extends FeatureTransform {
     double epsilon;
     double lbr;
 
+    PCAPowerIteration pwrIter;
+    RealMatrix pwrEigs;
+    RealMatrix transMatrix;
+    RealMatrix testTransform;
 
-    public PCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr){
+    public SVDPCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
-        pcaOpt = new PCASkiingOptimizer(epsilon, PCASkiingOptimizer.PCAAlgo.FAST);
+        pcaOpt = new SVDPCASkiingOptimizer(epsilon);
 
         MD = Stopwatch.createUnstarted();
 
@@ -58,6 +62,43 @@ public class PCASkiingDROP extends FeatureTransform {
     @Override
     public void initialize() throws Exception {
 
+    }
+
+    public void checkPwrIter(List<Datum> records){
+        pcaOpt.extractData(records);
+        log.debug("Extracted Records");
+        pcaOpt.preprocess();
+        log.debug("Processed Data");
+
+        currNt = pcaOpt.getM(); //hardcoded for coffee.txt
+        log.debug("Beginning DROP");
+
+        pcaOpt.fit(currNt);
+        pwrIter = new PCAPowerIteration(pcaOpt.getDataMatrix());
+
+        transMatrix = this.pcaOpt.getTransformation();
+        pwrEigs = pwrIter.transform(pcaOpt.getDataMatrix(),40);
+        pwrEigs = pwrIter.getTransformationMatrix();
+        log.debug("N {} K {}", transMatrix.getRowDimension(), transMatrix.getColumnDimension());
+        log.debug("N {} K {}", pwrEigs.getRowDimension(), pwrEigs.getColumnDimension());
+        for(int i = 0; i < pcaOpt.getN(); i++){
+            for (int j = 0; j < 40; j++){
+                if (Math.abs(transMatrix.getEntry(i,j)) - Math.abs(pwrEigs.getEntry(i,j)) > .001){
+                    log.debug("{} {} {} {}", i, j, transMatrix.getEntry(i,j), pwrEigs.getEntry(i,j));
+                }
+            }
+        }
+
+        currTransform = this.pcaOpt.transform(30);
+        testTransform =  pwrIter.transform(pcaOpt.getDataMatrix(),30);
+
+        for(int i = 0; i < 56; i++){
+            for (int j = 0; j < 30; j++){
+                if (Math.abs(currTransform.getEntry(i,j)) - Math.abs(testTransform.getEntry(i,j)) > .001){
+                   log.debug("{} {} {} {}", i, j, currTransform.getEntry(i,j), testTransform.getEntry(i,j));
+                }
+            }
+        }
     }
 
     @Override

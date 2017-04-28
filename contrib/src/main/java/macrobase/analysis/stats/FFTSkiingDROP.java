@@ -32,20 +32,18 @@ public class FFTSkiingDROP extends FeatureTransform {
 
     Map<String, Long> times;
 
-    int maxNt;
     int procDim;
     double epsilon;
     double lbr;
 
-    public FFTSkiingDROP(MacroBaseConf conf, int maxNt, double epsilon, double lbr, int b, int s){
+    public FFTSkiingDROP(MacroBaseConf conf,  double epsilon, double lbr){
         iter = 0;
         currNt = 0;
-        fftOpt = new FFTSkiingOptimizer(epsilon, b, s);
+        fftOpt = new FFTSkiingOptimizer(epsilon);
         sw = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
-        this.maxNt = maxNt;
         this.epsilon = epsilon;
         this.lbr = lbr;
 
@@ -70,7 +68,7 @@ public class FFTSkiingDROP extends FeatureTransform {
         log.debug("Shuffled Data");
         fftOpt.preprocess();
         log.debug("Processed Data");
-        currNt = fftOpt.getNextNt(iter, currNt, maxNt);
+        currNt = fftOpt.getNextNt(iter, currNt);
         log.debug("Beginning FFT base run");
         fftOpt.fit(currNt);
         //sw.start();

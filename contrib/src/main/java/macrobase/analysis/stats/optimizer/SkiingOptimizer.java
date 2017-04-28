@@ -37,8 +37,6 @@ public abstract class SkiingOptimizer {
 
 
     protected double epsilon;
-    protected int s;
-    protected int b;
 
     protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
@@ -52,11 +50,9 @@ public abstract class SkiingOptimizer {
     protected PolynomialCurveFitter fitter;
     protected WeightedObservedPoints MDruntimes;
 
-    public SkiingOptimizer(double epsilon, int b, int s){
+    public SkiingOptimizer(double epsilon) {
         this.numDiffs = 3;
         this.epsilon = epsilon;
-        this.s = s;
-        this.b = b;
 
         this.NtList = new ArrayList<>();
         this.LBRList = new HashMap<>();
@@ -69,7 +65,7 @@ public abstract class SkiingOptimizer {
 
         this.prevK = 0;
         this.prevMDTime = 0;
-        this.currKCI = new double[] {0, 0, 0};
+        this.currKCI = new double[]{0, 0, 0};
 
         this.feasible = false;
         this.firstKDrop = true;
@@ -78,7 +74,7 @@ public abstract class SkiingOptimizer {
         this.kScaling = 2;
         this.Ntdegree = 2;
         this.MDruntimes = new WeightedObservedPoints();
-        MDruntimes.add(0,0);
+        MDruntimes.add(0, 0);
         this.fitter = PolynomialCurveFitter.create(Ntdegree);
     }
 
@@ -120,20 +116,8 @@ public abstract class SkiingOptimizer {
         dataMatrix = rawDataMatrix;
     }
 
-    public int getNextNtFromList(int iter, int currNt, int maxNt){
-        //int[] Nts = {11,12,13,14,15,16,17,18,19,20,21,22,23,25,30,35,40,45,50,55,60, 65,70,80,90,100,110,125,150,175,200,300,400,500,600};
-        //if (iter == 0){ return 0; }
-        //int K =  KList.get(currNt);
-        int[] Nts = {10, 20,30,40,50,60,70,80,90,100,110,125,150,175,200};
-        if (iter >= Nts.length || NtList.size() >= maxNt) {
-        //    NtList.add(2000000);
-            return 2000000;
-        }
-        //NtList.add(Nts[iter]);
-        return Nts[iter];
-    }
 
-    public int getNextNtIncreaseOnly(int iter, int currNt, int maxNt){
+    public int getNextNtIncreaseOnly(int iter, int currNt){
         double avgDiff = 0;
 
         if (iter == 0) {
@@ -160,7 +144,7 @@ public abstract class SkiingOptimizer {
         return NtInterval+currNt;
     }
 
-    public int getNextNtBasicDoubling(int iter, int currNt, int maxNt){
+    public int getNextNtBasicDoubling(int iter, int currNt){
         double avgDiff = 0;
 
         if (iter == 0) {
@@ -193,16 +177,16 @@ public abstract class SkiingOptimizer {
         return NtInterval+currNt;
     }
 
-    public int getNextNt(int iter, int currNt, int maxNt){
-        int nextNt =  getNextNtIncreaseOnly(iter, currNt, maxNt);
+    public int getNextNt(int iter, int currNt){
+        int nextNt =  getNextNtIncreaseOnly(iter, currNt);
         NtList.add(nextNt);
         return nextNt;
     }
 
-    public int NtTimeGuessFitPoly(int iter, int currNt, int maxNt){
+    public int NtTimeGuessFitPoly(int iter, int currNt){
         double[] MDtimeCoeffs = fitter.fit(this.MDruntimes.toList());
         double NtTimeGuess = 0;
-        int nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
+        int nextNt = getNextNtIncreaseOnly(iter, currNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
 
         for (int i = 0; i <= this.Ntdegree; i++){
             NtTimeGuess += MDtimeCoeffs[i]*Math.pow(nextNt, i);
@@ -212,8 +196,8 @@ public abstract class SkiingOptimizer {
     }
 
     //TODO: check indices here
-    public int NtTimeGuessOneStepGradient(int iter, int currNt, int maxNt){
-        int nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
+    public int NtTimeGuessOneStepGradient(int iter, int currNt){
+        int nextNt = getNextNtIncreaseOnly(iter, currNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
         if (iter == 1){
             double guess = MDDiffs[(iter-1) % numDiffs] + prevMDTime;
             this.predictedTrainTimeList.put(nextNt, guess);
@@ -226,10 +210,10 @@ public abstract class SkiingOptimizer {
     }
 
     //TODO: scale of Nt vs K is off. must normalize
-    public int getNextNtObjectiveFunc(int iter, int currNt, int maxNt){
+    public int getNextNtObjectiveFunc(int iter, int currNt){
         double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
         double currObjective;
-        int nextNt =  NtTimeGuessOneStepGradient(iter, currNt, maxNt);
+        int nextNt =  NtTimeGuessOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
         int kGuess = predictK(iter, nextNt);
@@ -244,20 +228,20 @@ public abstract class SkiingOptimizer {
         return M+1;
     }
 
-    public int getNextNtPE(int iter, int currNt, int maxNt, boolean attainedLBR){
+    public int getNextNtPE(int iter, int currNt, boolean attainedLBR){
         int nextNt;
         if (!attainedLBR){
-            nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt);
+            nextNt = getNextNtIncreaseOnly(iter, currNt);
             NtList.add(nextNt);
             return nextNt;
         }
-        nextNt = getNextNtObjectiveFunc(iter, currNt, maxNt);
+        nextNt = getNextNtObjectiveFunc(iter, currNt);
         log.debug("NextNt {}", nextNt);
         NtList.add(nextNt);
         return nextNt;
     }
 
-    public int getNextNtDebug(int iter, int currNt, int maxNt, boolean attainedLBR){
+    public int getNextNtDebug(int iter, int currNt, boolean attainedLBR){
         NtList.add(M);
         return M;
     }

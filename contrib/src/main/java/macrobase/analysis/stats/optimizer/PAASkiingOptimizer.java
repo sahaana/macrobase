@@ -16,8 +16,8 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
     protected Map<Integer, Integer> KItersList;
     protected List<Integer> factors;
 
-    public PAASkiingOptimizer(double epsilon, int b, int s){
-        super(epsilon, b, s);
+    public PAASkiingOptimizer(double epsilon){
+        super(epsilon);
         this.KItersList = new HashMap<>();
     }
 
@@ -129,7 +129,7 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
     }
 
     @Override
-    public int getNextNt(int iter, int currNt, int maxNt) {
+    public int getNextNt(int iter, int currNt) {
         return this.M;
     }
 

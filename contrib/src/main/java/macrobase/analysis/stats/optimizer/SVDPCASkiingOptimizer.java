@@ -17,8 +17,8 @@ public class SVDPCASkiingOptimizer extends SkiingOptimizer {
     protected PCASVD pca;
 
 
-    public SVDPCASkiingOptimizer(double epsilon, int b, int s) {
-        super(epsilon, b, s);
+    public SVDPCASkiingOptimizer(double epsilon) {
+        super(epsilon);
         this.KItersList = new HashMap<>();
     }
 

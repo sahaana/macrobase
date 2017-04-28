@@ -22,8 +22,8 @@ public class PIPCASkiingOptimizer extends SkiingOptimizer {
     boolean PI; //TODO: this should be a check separate from attainedLBR. For now, same, done in getNt.
 
 
-    public PIPCASkiingOptimizer(double epsilon, int b, int s) {
-        super(epsilon, b, s);
+    public PIPCASkiingOptimizer(double epsilon) {
+        super(epsilon);
         this.KItersList = new HashMap<>();
     }
 
@@ -52,15 +52,15 @@ public class PIPCASkiingOptimizer extends SkiingOptimizer {
 
 
     @Override
-    public int getNextNtPE(int iter, int currNt, int maxNt, boolean attainedLBR){
+    public int getNextNtPE(int iter, int currNt, boolean attainedLBR){
         int nextNt;
         if (!attainedLBR){
-            nextNt = getNextNtIncreaseOnly(iter, currNt, maxNt);
+            nextNt = getNextNtIncreaseOnly(iter, currNt);
             NtList.add(nextNt);
             return nextNt;
         }
         PI = true;
-        nextNt = getNextNtObjectiveFunc(iter, currNt, maxNt);
+        nextNt = getNextNtObjectiveFunc(iter, currNt);
         log.debug("NextNt {}", nextNt);
         NtList.add(nextNt);
         return nextNt;

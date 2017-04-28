@@ -1,6 +1,6 @@
 package macrobase.analysis.stats.optimizer;
 
-import macrobase.analysis.stats.optimizer.util.PCASVD;
+import macrobase.analysis.stats.optimizer.util.*;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -16,18 +16,41 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     protected Map<Integer, Integer> KItersList;
     protected RealMatrix cachedTransform;
 
-    protected PCASVD pca;
+    protected PCA pca;
+    protected PCAAlgo algo;
+
+    public enum PCAAlgo{
+        SVD, PI, TROPP, FAST;
+    }
 
 
-    public PCASkiingOptimizer(double epsilon, int b, int s) {
-        super(epsilon, b, s);
+    public PCASkiingOptimizer(double epsilon, PCAAlgo algo) {
+        super(epsilon);
         this.KItersList = new HashMap<>();
+        this.algo = algo;
+
     }
 
     @Override
     public void fit(int Nt) {
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(0, Nt - 1, 0, N - 1);
-        this.pca = new PCASVD(trainMatrix);
+        switch (algo){
+            case PI:
+                this.pca = new PCAPowerIteration(trainMatrix);
+                break;
+
+            case TROPP:
+                this.pca = new PCATropp(trainMatrix);
+                break;
+
+            case FAST:
+                this.pca = new PCAFast(trainMatrix);
+                break;
+
+            default:
+                this.pca = new PCASVD(trainMatrix);
+                break;
+        }
     }
 
     public void cacheInput(int high) {
