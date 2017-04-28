@@ -40,11 +40,11 @@ public class PCASkiingDROP extends FeatureTransform {
     double lbr;
 
 
-    public PCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr){
+    public PCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr, PCASkiingOptimizer.PCAAlgo algo){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
-        pcaOpt = new PCASkiingOptimizer(epsilon, PCASkiingOptimizer.PCAAlgo.FAST);
+        pcaOpt = new PCASkiingOptimizer(epsilon, algo);
 
         MD = Stopwatch.createUnstarted();
 
@@ -63,12 +63,12 @@ public class PCASkiingDROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
-        log.debug("Extracted Records");
+        log.debug("Extracted {} Records of dim {}", pcaOpt.getM(),pcaOpt.getN());
         pcaOpt.shuffleData();
         log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = pcaOpt.getNextNtPE(iter, currNt, attainedLBR);
+        currNt = pcaOpt.getNextNtPE(iter, currNt);
         log.debug("Beginning DROP");
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
@@ -77,17 +77,17 @@ public class PCASkiingDROP extends FeatureTransform {
             pcaOpt.fit(currNt);
             currTransform = pcaOpt.getKCI(iter, lbr); //function to get knee for K for this transform;
             MD.stop();
+            //store how long (MD) this currNt took, diff between last and this, and store this as prevMD
             pcaOpt.updateMDRuntime(iter, currNt, (double) MD.elapsed(TimeUnit.MILLISECONDS));
+            //returns the LBR CI from getKCI and then store it
             currLBR = pcaOpt.getCurrKCI();
-            if (!attainedLBR) attainedLBR = (currLBR[0] >= lbr);
-
             pcaOpt.setLBRList(currNt, currLBR);
+            //store the K obtained and the diff in K from this currNt
             pcaOpt.setKList(currNt, currTransform.getColumnDimension());
             pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
             log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
-            //CurrNt, iter has been updated to next iterations
-            currNt = pcaOpt.getNextNtPE(++iter, currNt, attainedLBR);
-            //pipcaOpt.predictK(iter, currNt); //Moved inside get next Nt. Decided to predict k here, after first k has been found
+            //CurrNt, iter has been updated to next iterations. Pass in next iter (so ++iter) to this function
+            currNt = pcaOpt.getNextNtPE(++iter, currNt);
         } while (currNt < pcaOpt.getM());
 
         log.debug("MICDROP 'COMPLETE'");
@@ -95,7 +95,13 @@ public class PCASkiingDROP extends FeatureTransform {
         finalTransform = currTransform.getData();
 
         log.debug("Computing Full Transform");
-        pcaOpt.fit(pcaOpt.getM());
+        pcaOpt = new PCASkiingOptimizer(epsilon, PCASkiingOptimizer.PCAAlgo.SVD);
+        pcaOpt.extractData(records);
+        pcaOpt.shuffleData();
+        pcaOpt.preprocess();
+        currNt = pcaOpt.getNextNtFull(0,currNt);
+        log.debug("Running SVD");
+        pcaOpt.fit(currNt);
         currTransform = pcaOpt.getKFull(lbr);
         currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform);
         log.debug("For full PCASVD, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
@@ -107,7 +113,8 @@ public class PCASkiingDROP extends FeatureTransform {
         }
     }
 
-    public Map<Integer, Double> genBasePlots(List<Datum> records){
+    public Map<Integer, Double> genBasePlots(List<Datum> records, PCASkiingOptimizer.PCAAlgo algo){
+        pcaOpt = new PCASkiingOptimizer(epsilon, algo);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.shuffleData();

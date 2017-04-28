@@ -1,8 +1,10 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
 //import macrobase.analysis.stats.DROP;
+import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.analysis.stats.PIPCASkiingDROP;
 import macrobase.analysis.stats.SVDPCASkiingDROP;
+import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -98,9 +100,11 @@ public class SkiingBatchDROP {
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double epsilon = Double.parseDouble(args[2]);
+        PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.valueOf(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(epsilon);
+        System.out.println(algo);
 
         /*String dataset = "CinC";
         double lbr = .98;
@@ -119,7 +123,7 @@ public class SkiingBatchDROP {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        SVDPCASkiingDROP drop = new SVDPCASkiingDROP(conf, epsilon, lbr);
+        PCASkiingDROP drop = new PCASkiingDROP(conf, epsilon, lbr, algo);
         //PIPCASkiingDROP drop = new PIPCASkiingDROP(conf, epsilon, lbr);
         drop.consume(data);
 

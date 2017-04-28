@@ -47,7 +47,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 this.pca = new PCAFast(trainMatrix);
                 break;
 
-            default:
+            case SVD:
                 this.pca = new PCASVD(trainMatrix);
                 break;
         }
@@ -216,10 +216,12 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int low = 0;
 
         int high = Math.min(this.N, this.NtList.get(iter)) - 1;
+        //if you weren't feasible, then the high remains. Else max is last feasible pt
         if (this.feasible) high = this.lastFeasible + 5; //TODO: arbitrary buffer room
         targetLBR += 0.002; //TODO: arbitrary buffer room
         int mid = (low + high) / 2;
 
+        //If the max isn't feasible, just return it
         LBR = evalK(targetLBR, high);
         if (targetLBR > LBR[0]) {
             KItersList.put(this.NtList.get(iter), ++iters);
@@ -228,6 +230,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             return currTransform;
         }
 
+        //Binary search for lowest K that achieves LBR
         while (low != high) {
             LBR = evalK(targetLBR, mid);
             if (LBR[0] <= targetLBR) {
@@ -274,8 +277,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         while (currPairs < numPairs) {
             //log.debug("num pairs {}", currPairs);
             CI = this.LBRCI(K, currPairs, q);
-            //all stopping conditions here
-            if ((CI[0] > LBRThresh) || (CI[2] < LBRThresh) || (Math.abs(CI[1] - prevMean) < .01)) {
+            //all stopping conditions here:  LB > wanted; UB < wanted; mean didn't change much from last time
+            if ((CI[0] > LBRThresh) || (CI[2] < LBRThresh) || (Math.abs(CI[1] - prevMean) < .001)) {
                 return CI;//LBRThresh;
             } else {
                 currPairs *= 2;
@@ -291,15 +294,15 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int maxIndex = 0;
 
         int[] allIndices = new int[this.N];
-        int[] indicesA = new int[numPairs];
-        int[] indicesB = new int[numPairs];
-        int[] tIndicesA = new int[numPairs];
-        int[] tIndicesB = new int[numPairs];
+        int[] indicesA = new int[numPairs];      // first point of pair
+        int[] indicesB = new int[numPairs];      // second point of pair
+        int[] tIndicesA = new int[numPairs];     // indices to pull from
+        int[] tIndicesB = new int[numPairs];     //
         int[] jointIndices;
         int[] jointIndexMapping;
         int[] kIndices;
 
-        Set<Integer> jIndices = new HashSet<>();
+        Set<Integer> jIndices = new HashSet<>(); //set of all datapoints needed
         Random rand = new Random();
 
         RealMatrix transformedData;
@@ -311,10 +314,11 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         double std = 0;
         double slop;
 
+        // Generate list to get entire dimension
         for (int i = 0; i < N; i++) {
             allIndices[i] = i;
         }
-        kIndices = Arrays.copyOf(allIndices, K);
+        kIndices = Arrays.copyOf(allIndices, K); //list to get up to k
 
         for (int i = 0; i < numPairs; i++) {
             indicesA[i] = rand.nextInt(M);
@@ -330,7 +334,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             }
         }
 
-        //computing a mapping between these indices and indexA/A
+        //computing a mapping between these indices and indexA/B
         jointIndices = new int[jIndices.size()];
         jointIndexMapping = new int[maxIndex + 1]; //TODO: if this becomes too big, move to hashmap to save on space lol
         for (Object val : jIndices.toArray()) {
@@ -343,7 +347,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             tIndicesB[i] = jointIndexMapping[indicesB[i]];
         }
 
-        transformedData = rawDataMatrix.getSubMatrix(jointIndices, allIndices); //get a matrix with only indices that are used
+        //get and transform a single matrix with only indices that are used
+        transformedData = rawDataMatrix.getSubMatrix(jointIndices, allIndices);
         transformedData = this.pca.transform(transformedData, K);
 
         transformedDists = this.calcDistances(transformedData.getSubMatrix(tIndicesA, kIndices), transformedData.getSubMatrix(tIndicesB, kIndices)).mapMultiply(Math.sqrt(this.N) / Math.sqrt(this.Nproc));

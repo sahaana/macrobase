@@ -93,7 +93,7 @@ public abstract class SkiingOptimizer {
         this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
         //RealMatrix cov = new Covariance(this.rawDataMatrix).getCovarianceMatrix();
 
-        this.NtInterval = 10; //Math.max(3, new Double(this.M*0.01).intValue()); //arbitrary 1%
+        this.NtInterval = Math.max(10, new Double(this.M*0.1).intValue()); //arbitrary 1%
     }
 
     public void shuffleData(){
@@ -103,7 +103,7 @@ public abstract class SkiingOptimizer {
             indicesN[i] = i;
         }
         for (int i = 0; i < M; i++){
-            indicesM.add(i); //TODO: this is stupid
+            indicesM.add(i);
         }
         Collections.shuffle(indicesM);
         int[] iA = ArrayUtils.toPrimitive(indicesM.toArray(new Integer[M]));
@@ -114,6 +114,13 @@ public abstract class SkiingOptimizer {
     public void preprocess(){
         Nproc = N;
         dataMatrix = rawDataMatrix;
+    }
+
+    public int getNextNtFixedInterval(int iter, int currNt){
+        if (iter == 0) {
+            return NtInterval;
+        }
+        return NtInterval + currNt;
     }
 
 
@@ -241,10 +248,65 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
-    public int getNextNtDebug(int iter, int currNt, boolean attainedLBR){
+    public int getNextNtFull(int iter, int currNt){
         NtList.add(M);
         return M;
     }
+
+
+
+    // this is always called before anything else happens that iter
+    public int getNextNtPE(int iter, int currNt){
+        // tentative next Nt is this Nt + max{10, 1% data}
+        int nextNt = getNextNtFixedInterval(iter, currNt);
+
+        //iter 0 is special because currNt has not been run yet, so no #s exist
+        if (iter == 0){
+            NtList.add(nextNt);
+            return nextNt;
+        }
+
+        //for all other iters, MD has been run with currNt
+        nextNt = getNextNtObjective(iter, currNt);
+        NtList.add(nextNt);
+        return nextNt;
+    }
+
+    public int getNextNtObjective(int iter, int currNt){
+        //lastk^scaling + MDtime(currNt)
+        double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
+        double currObjective;
+        int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
+        double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
+
+        int kGuess = predictK(iter, nextNt);
+        double kTimeGuess = Math.pow(kGuess,kScaling);
+
+        currObjective = NtTimeGuess*(1./1) + kTimeGuess;
+
+        // giving it a 10% wiggle and first feasible bump
+        if ((currObjective <= (1.0)*prevObjective) || (firstKDrop)){ //(nextNt <= 1000){ //
+            return nextNt;
+        }
+        return M+1;
+    }
+
+    //TODO: check indices here
+    //Computes and stores the predicted nextNt and time it'll take. Returns nextNt
+    public int NtTimePredictOneStepGradient(int iter, int currNt){
+        int nextNt = getNextNtFixedInterval(iter, currNt);
+        if (iter == 1){
+            double guess = MDDiffs[(iter-1) % numDiffs] + prevMDTime;
+            this.predictedTrainTimeList.put(nextNt, guess);
+            return nextNt;
+        }
+        double ratio = MDDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
+        int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
+        this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
+        return nextNt;
+    }
+
+
 
     //TODO: is the indexed here even right? Also for equivalent basic 1-step
     //predicting K for the "next" iteration and Nt
@@ -389,7 +451,7 @@ public abstract class SkiingOptimizer {
 
     public RealMatrix getDataMatrix() {return dataMatrix;}
 
-    ///toDO: furst drop
+    ///toDO: do somethiing with the first drop information. Maybe just move this to PCAskiing and do this.feasible. Right now this only auto quits with objective function if you didn't improve
     public void setKDiff(int iter, int currK){
         kDiffs[iter % numDiffs] = currK - prevK;
         if ((currK - prevK) < 0){

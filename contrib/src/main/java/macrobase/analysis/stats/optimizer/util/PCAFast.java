@@ -19,7 +19,7 @@ public class PCAFast implements PCA{
     private RealMatrix transformation;
     private int M;
     private int N;
-    private boolean init; //flag to see if this has not been used to transform already
+    private int highestK; //highest thing transformed so far
 
     public PCAFast(RealMatrix rawDataMatrix){
         this.dataMatrix = rawDataMatrix;
@@ -27,7 +27,7 @@ public class PCAFast implements PCA{
         this.N = rawDataMatrix.getColumnDimension();
         this.centeredDataMatrix = new Array2DRowRealMatrix(M,N);
         this.columnMeans = new ArrayRealVector(N);
-        this.init = true;
+        this.highestK = 0;
 
         double mean;
         RealVector currVec;
@@ -59,46 +59,52 @@ public class PCAFast implements PCA{
         }
         K = Math.min(Math.min(K, this.N), this.M);
 
-        transformation = new Array2DRowRealMatrix(this.N, K);
-        RealMatrix centeredInput = new Array2DRowRealMatrix(inputData.getData());
-
+        RealMatrix centeredOutput = new Array2DRowRealMatrix(inputData.getData());
         RealVector currVec;
+        DenseMatrix co; //centered output
+        DenseMatrix tm; //transformation matrix
+        DenseMatrix transformedData = new DenseMatrix(inputData.getRowDimension(), K);
 
-        DenseMatrix ci; //centeredInput
-        DenseMatrix omega = new DenseMatrix(N, K); //random initializer matrix
-        DenseMatrix Y1 = new DenseMatrix(M, K); //intermediate matrix
-        DenseMatrix Y2 = new DenseMatrix(N, K);
-        DenseMatrix transformedData = new DenseMatrix(M, K);
-        DenseMatrix tm;
+        //if the K you want is higher than what you've seen compute transform from scratch
+        if (K > highestK) {
+            highestK = K;
+            transformation = new Array2DRowRealMatrix(this.N, K);
 
-        Random rand = new Random();
+            DenseMatrix ci; //centeredInput
+            DenseMatrix omega = new DenseMatrix(N, K); //random initializer matrix
+            DenseMatrix Y1 = new DenseMatrix(M, K); //intermediate matrix
+            DenseMatrix Y2 = new DenseMatrix(N, K);
 
-        QR qr = new QR(N, K);
+            Random rand = new Random();
 
-        //generate gaussian random initialization matrix
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < K; j++)
-                omega.set(i, j, rand.nextGaussian());
+            QR qr = new QR(N, K);
+
+            //generate gaussian random initialization matrix
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < K; j++)
+                    omega.set(i, j, rand.nextGaussian());
+            }
+
+            //run one step power iteration
+            ci = new DenseMatrix(centeredDataMatrix.getData());
+            ci.mult(omega, Y1);
+            ci.transAmult(Y1, Y2);
+            qr.factor(Y2);
+            tm = qr.getQ();
+            transformation = new Array2DRowRealMatrix(Matrices.getArray(tm)).getSubMatrix(0, N-1, 0, K-1);
+
         }
 
-        //center input data
+        //center, transform input data and return
         for (int i = 0; i < this.N; i++) {
             currVec = inputData.getColumnVector(i);
             currVec.mapSubtractToSelf(this.columnMeans.getEntry(i));
-            centeredInput.setColumn(i, currVec.toArray());
+            centeredOutput.setColumn(i, currVec.toArray());
         }
-        ci = new DenseMatrix(centeredInput.getData());
+        co = new DenseMatrix(centeredOutput.getData());
 
-        //run one step power iteration
-        ci.mult(omega, Y1);
-        ci.transAmult(Y1, Y2);
-        qr.factor(Y2);
-        tm = qr.getQ();
-
-        transformation = new Array2DRowRealMatrix(Matrices.getArray(tm));
-
-        //transform input data and return
-        ci.mult(tm, transformedData);
+        tm =  new DenseMatrix(transformation.getSubMatrix(0, N-1, 0, K-1).getData());
+        co.mult(tm, transformedData);
 
         return new Array2DRowRealMatrix(Matrices.getArray(transformedData));
     }
