@@ -1,25 +1,23 @@
 package macrobase.analysis.stats.optimizer;
 
 import macrobase.analysis.stats.optimizer.util.PCASVD;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+//import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.linear.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-//import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+public class SVDPCASkiingOptimizer extends SkiingOptimizer {
 
-public class PCASkiingOptimizer extends SkiingOptimizer {
-
-    private static final Logger log = LoggerFactory.getLogger(PCASkiingOptimizer.class);
+    private static final Logger log = LoggerFactory.getLogger(SVDPCASkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
     protected RealMatrix cachedTransform;
 
     protected PCASVD pca;
 
 
-    public PCASkiingOptimizer(double epsilon, int b, int s) {
+    public SVDPCASkiingOptimizer(double epsilon, int b, int s) {
         super(epsilon, b, s);
         this.KItersList = new HashMap<>();
     }

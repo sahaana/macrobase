@@ -2,7 +2,7 @@ package macrobase.analysis.stats;
 
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.pipeline.stream.MBStream;
-import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
+import macrobase.analysis.stats.optimizer.SVDPCASkiingOptimizer;
 import macrobase.analysis.stats.optimizer.util.PCAPowerIteration;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
@@ -29,7 +29,7 @@ public class PCASkiingDROP extends FeatureTransform {
     boolean attainedLBR;
 
     RealMatrix currTransform;
-    PCASkiingOptimizer pcaOpt;
+    SVDPCASkiingOptimizer pcaOpt;
     Stopwatch sw;
     Stopwatch MD;
 
@@ -48,7 +48,7 @@ public class PCASkiingDROP extends FeatureTransform {
         iter = 0;
         currNt = 0;
         attainedLBR = false;
-        pcaOpt = new PCASkiingOptimizer(epsilon, b, s);
+        pcaOpt = new SVDPCASkiingOptimizer(epsilon, b, s);
 
         MD = Stopwatch.createUnstarted();
 
