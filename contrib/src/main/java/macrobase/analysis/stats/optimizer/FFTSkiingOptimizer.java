@@ -8,6 +8,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.jtransforms.fft.DoubleFFT_1D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +20,11 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
     protected FastFourierTransformer transformer;
 
+    protected DoubleFFT_1D t;
+
     protected RealMatrix paddedInput;
     protected Complex[][] transformedData;
+    protected double[][] NtransformedData;
     protected int nextPowTwo;
 
     public FFTSkiingOptimizer(double epsilon) {
@@ -31,6 +35,19 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
     @Override
     public void fit(int Nt) {
+        //transformedData = new double[this.M][nextPowTwo];//Array2DRowRealMatrix(this.M, nextPowTwo);
+        paddedInput = new Array2DRowRealMatrix(this.M, 2*N);
+        paddedInput.setSubMatrix(this.dataMatrix.getData(), 0, 0);
+        double[][] data = paddedInput.getData();
+        t  = new DoubleFFT_1D(N);
+
+        for (int i = 0; i < this.M; i++) {
+            t.realForwardFull(data[i]);
+        }
+    }
+
+
+    public void commonsFit(int Nt) {
         nextPowTwo = Math.max(2, 2 * Integer.highestOneBit(this.N - 1));
 
         transformedData = new Complex[this.M][nextPowTwo];//Array2DRowRealMatrix(this.M, nextPowTwo);
@@ -40,7 +57,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         for (int i = 0; i < this.M; i++) {
             transformedData[i] = transformer.transform(paddedInput.getRow(i), TransformType.FORWARD);
         }
-
     }
 
     public void test() {
@@ -176,53 +192,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
             output.setRowVector(i, tempOut);
         }
         return output;
-    }
-
-    public RealMatrix getKBin(int iter, double targetLBR) {
-        //confidence interval based method for getting K
-        double LBR;
-        RealMatrix currTransform;
-        double[] CI;
-
-        int iters = 0;
-        int low = 0;
-        int high = this.nextPowTwo; //TODO: how high should this go?
-        if (this.feasible) high = this.lastFeasible;
-        int mid = (low + high) / 2;
-
-        this.Nproc = this.N*this.N; //TODO: what should this be?
-        while (low < high) {
-            currTransform = this.transform(2*mid);
-            LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
-            CI = this.LBRCI(currTransform, M, 1.96);
-            log.debug("With K {}, LBR {} {} {}", mid*2, CI[0], CI[1],CI[2]);
-            if (targetLBR < LBR) {
-                currTransform = this.transform(2*(mid - 1));
-                LBR = evalK(targetLBR, currTransform);//this.LBRCI(currTransform, numPairs, thresh)[0];
-                CI = this.LBRCI(currTransform, M, 1.96);
-                log.debug("With K {}, LBR {} {} {}", 2*mid, CI[0], CI[1],CI[2]);
-                if (targetLBR > LBR) {
-                    this.feasible = true;
-                    this.lastFeasible = 2*mid;
-                    KItersList.put(this.NtList.get(iter), iters);
-                    return this.transform(2*mid);
-                }
-                high = mid - 1;
-            } else if (targetLBR > LBR) {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
-            iters += 1;
-            mid = (low + high) / 2;
-        }
-        this.feasible = true;
-        this.lastFeasible = 2*mid;
-        KItersList.put(this.M, iters);
-        currTransform = this.transform(2 * mid);
-        CI = this.LBRCI(currTransform, M, 1.96);
-        log.debug("With K {}, LBR {} {} {}", 2 * mid, CI[0], CI[1], CI[2]);
-        return currTransform;
     }
 
     @Override

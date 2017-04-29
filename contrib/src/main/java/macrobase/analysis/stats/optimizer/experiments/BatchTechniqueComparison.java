@@ -110,7 +110,6 @@ public class BatchTechniqueComparison {
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, epsilon, lbr);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, epsilon, lbr);
         SVDPCASkiingDROP pcaDrop = new SVDPCASkiingDROP(conf, epsilon, lbr);
-        ////DROPvPowerIteration drop = new DROPvPowerIteration(conf, maxNt, epsilon, lbr, b, s, rpFlag);
 
 
         paaResults = paaDrop.genBasePlots(data);
