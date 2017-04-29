@@ -19,6 +19,8 @@ public abstract class SkiingOptimizer {
     protected int N; //original data dimension
     protected int Nproc; //processed data dimension (PAA, Mary, etc)
     protected int M; //original number of training samples
+    protected List<Integer> trainList;
+    protected List<Integer> testList;
 
     protected int[] kDiffs;
     protected double[] MDDiffs;
@@ -50,6 +52,9 @@ public abstract class SkiingOptimizer {
     protected PolynomialCurveFitter fitter;
     protected WeightedObservedPoints MDruntimes;
 
+    protected int[] allIndicesN;
+    protected int[] allIndicesM;
+
     public SkiingOptimizer(double epsilon) {
         this.numDiffs = 3;
         this.epsilon = epsilon;
@@ -76,6 +81,8 @@ public abstract class SkiingOptimizer {
         this.MDruntimes = new WeightedObservedPoints();
         MDruntimes.add(0, 0);
         this.fitter = PolynomialCurveFitter.create(Ntdegree);
+
+
     }
 
     public void extractData(List<Datum> records){
@@ -86,13 +93,22 @@ public abstract class SkiingOptimizer {
         this.M = metrics.size();
         this.N = metrics.get(0).length;
 
+
+        this.trainList = new ArrayList<>();
+        this.testList = new ArrayList<>();
+        this.allIndicesN = new int[N];
+        this.allIndicesM = new int[M];
         double[][] metricArray = new double[M][];
         for (int i = 0; i < M; i++){
             metricArray[i] = metrics.get(i);
+            this.testList.add(i, i);
+            this.allIndicesM[i] = i;
         }
-        this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
-        //RealMatrix cov = new Covariance(this.rawDataMatrix).getCovarianceMatrix();
+        for (int i = 0; i < N; i++){
+            this.allIndicesN[i] = i;
+        }
 
+        this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
         this.NtInterval = Math.max(10, new Double(this.M*0.1).intValue()); //arbitrary 1%
     }
 

@@ -64,8 +64,6 @@ public class PCASkiingDROP extends FeatureTransform {
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of dim {}", pcaOpt.getM(),pcaOpt.getN());
-        pcaOpt.shuffleData();
-        log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
         currNt = pcaOpt.getNextNtPE(iter, currNt);

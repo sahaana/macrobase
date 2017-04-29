@@ -31,9 +31,24 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     }
 
+    public int[] ListtoPrimitive(List<Integer> in) {
+        int[] out = new int[in.size()];
+        for (int i = 0; i < in.size(); i++) {
+            out[i] = in.get(i).intValue();
+        }
+        return out;
+    }
+
     @Override
     public void fit(int Nt) {
-        RealMatrix trainMatrix = dataMatrix.getSubMatrix(0, Nt - 1, 0, N - 1);
+        Random rand = new Random();
+        int j;
+        for (int i = 0; i < Nt - trainList.size(); i++){
+            j = rand.nextInt(testList.size());
+            trainList.add(testList.get(j));
+            testList.remove(j);
+        }
+        RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
         switch (algo){
             case PI:
                 this.pca = new PCAPowerIteration(trainMatrix);
@@ -293,7 +308,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int c = 0;
         int maxIndex = 0;
 
-        int[] allIndices = new int[this.N];
+        int[] allIndices = this.allIndicesN;
         int[] indicesA = new int[numPairs];      // first point of pair
         int[] indicesB = new int[numPairs];      // second point of pair
         int[] tIndicesA = new int[numPairs];     // indices to pull from
@@ -315,9 +330,9 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         double slop;
 
         // Generate list to get entire dimension
-        for (int i = 0; i < N; i++) {
-            allIndices[i] = i;
-        }
+        //for (int i = 0; i < N; i++) {
+        //    allIndices[i] = i;
+        //}
         kIndices = Arrays.copyOf(allIndices, K); //list to get up to k
 
         for (int i = 0; i < numPairs; i++) {
