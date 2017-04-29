@@ -3,6 +3,7 @@ package macrobase.analysis.stats.optimizer;
 
 import macrobase.datamodel.Datum;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
@@ -52,8 +53,15 @@ public abstract class SkiingOptimizer {
     protected PolynomialCurveFitter fitter;
     protected WeightedObservedPoints MDruntimes;
 
+    //general indices that go 0 to M/N
     protected int[] allIndicesN;
     protected int[] allIndicesM;
+
+    //indices for maintaining lists of last LBR, and corresponding indices in pairs
+    protected double reusePercent;
+    protected int[] lastIndicesA;
+    protected int[] lastIndicesB;
+    protected List<Double> lastLBRs;
 
     public SkiingOptimizer(double epsilon) {
         this.numDiffs = 3;
@@ -76,11 +84,13 @@ public abstract class SkiingOptimizer {
         this.firstKDrop = true;
         this.lastFeasible = 0;
 
-        this.kScaling = 2;
+        this.kScaling = 3;
         this.Ntdegree = 2;
         this.MDruntimes = new WeightedObservedPoints();
         MDruntimes.add(0, 0);
         this.fitter = PolynomialCurveFitter.create(Ntdegree);
+
+        this.reusePercent = .025;
 
 
     }
@@ -520,6 +530,57 @@ public abstract class SkiingOptimizer {
             distances.setEntry(i, currVec.getNorm());
         }
         return distances;
+    }
+
+
+    public int[] complexArgSort(Complex[] in, boolean ascending) {
+        Integer[] indices = new Integer[in.length];
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = i;
+        }
+        Arrays.sort(indices, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return (ascending ? 1 : -1) * Double.compare(in[o1].abs(), in[o2].abs());
+            }
+        });
+        return toPrimitive(indices);
+    }
+
+    public int[] argSort(int[] in, boolean ascending) {
+        Integer[] indices = new Integer[in.length];
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = i;
+        }
+        Arrays.sort(indices, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return (ascending ? 1 : -1) * Integer.compare(in[o1], in[o2]);
+            }
+        });
+        return toPrimitive(indices);
+    }
+
+    public int[] toPrimitive(Integer[] in) {
+        int[] out = new int[in.length];
+        for (int i = 0; i < in.length; i++) {
+            out[i] = in[i];
+        }
+        return out;
+    }
+
+    public int[] argSort(Double[] in, boolean ascending) {
+        Integer[] indices = new Integer[in.length];
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = i;
+        }
+        Arrays.sort(indices, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return (ascending ? 1 : -1) * Double.compare(in[o1], in[o2]);
+            }
+        });
+        return toPrimitive(indices);
     }
 
 }

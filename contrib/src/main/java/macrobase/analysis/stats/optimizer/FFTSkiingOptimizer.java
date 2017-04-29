@@ -43,42 +43,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
     }
 
-    public int[] complexArgSort(Complex[] in, boolean ascending) {
-        Integer[] indices = new Integer[in.length];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = i;
-        }
-        Arrays.sort(indices, new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return (ascending ? 1 : -1) * Double.compare(in[o1].abs(), in[o2].abs());
-            }
-        });
-        return toPrimitive(indices);
-    }
-
-    public int[] argSort(int[] in, boolean ascending) {
-        Integer[] indices = new Integer[in.length];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = i;
-        }
-        Arrays.sort(indices, new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return (ascending ? 1 : -1) * Integer.compare(in[o1], in[o2]);
-            }
-        });
-        return toPrimitive(indices);
-    }
-
-    public int[] toPrimitive(Integer[] in) {
-        int[] out = new int[in.length];
-        for (int i = 0; i < in.length; i++) {
-            out[i] = in[i];
-        }
-        return out;
-    }
-
     public void test() {
         int i = 891;
         int j = 1879;
@@ -201,11 +165,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
             }
         }
         topFreqs = Arrays.copyOfRange(argSort(freqCounts, false), 0, K / 2);
-
-        /*topFreqs = new int[K/2];
-        for (int i = 0; i < K/2 ; i++){
-            topFreqs[i] = i;
-        }*/
 
         for (int i = 0; i < this.M; i++) {
             curr = transformedData[i];

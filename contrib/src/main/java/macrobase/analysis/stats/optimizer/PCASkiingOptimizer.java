@@ -41,10 +41,11 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     @Override
     public void fit(int Nt) {
+        //get Nt points from train and move to test
         Random rand = new Random();
-        int j;
-        for (int i = 0; i < Nt - trainList.size(); i++){
-            j = rand.nextInt(testList.size());
+        int currTrain = trainList.size();
+        for (int i = 0; i < Nt - currTrain; i++){
+            int j = rand.nextInt(testList.size());
             trainList.add(testList.get(j));
             testList.remove(j);
         }
@@ -221,6 +222,17 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return this.getCachedTransform(mid);
     }
 
+    public void updateTrainWorkReuse(){
+        Double[] primLBRs = lastLBRs.toArray(new Double[lastLBRs.size()]);
+        int numPoints = (int) Math.round(reusePercent*lastLBRs.size());
+        int[] sortedLBRs = Arrays.copyOfRange(argSort(primLBRs, true),0,numPoints);
+        for (int i: sortedLBRs){
+            trainList.add(lastIndicesA[i]);
+            trainList.add(lastIndicesB[i]);
+            testList.remove((Object) lastIndicesA[i]);
+            testList.remove((Object) lastIndicesB[i]);
+        }
+    }
 
     public RealMatrix getKCI(int iter, double targetLBR) {
         //confidence interval based method for getting K
@@ -242,6 +254,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             KItersList.put(this.NtList.get(iter), ++iters);
             currKCI = LBR;
             currTransform = this.transform(high);
+            updateTrainWorkReuse();
             return currTransform;
         }
 
@@ -260,6 +273,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         this.lastFeasible = mid;
         KItersList.put(this.NtList.get(iter), iters);
         currKCI = LBR;
+        updateTrainWorkReuse();
         return this.transform(mid);
     }
 
@@ -336,10 +350,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         kIndices = Arrays.copyOf(allIndices, K); //list to get up to k
 
         for (int i = 0; i < numPairs; i++) {
-            indicesA[i] = rand.nextInt(M);
-            indicesB[i] = rand.nextInt(M);
+            indicesA[i] = testList.get(rand.nextInt(testList.size()));
+            indicesB[i] = testList.get(rand.nextInt(testList.size()));
             while (indicesA[i] == indicesB[i]) {
-                indicesA[i] = rand.nextInt(M);
+                indicesA[i] = testList.get(rand.nextInt(testList.size()));
             }
             //calculating indices union of A and B and the max index
             jIndices.add(indicesA[i]);
@@ -369,6 +383,12 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         transformedDists = this.calcDistances(transformedData.getSubMatrix(tIndicesA, kIndices), transformedData.getSubMatrix(tIndicesB, kIndices)).mapMultiply(Math.sqrt(this.N) / Math.sqrt(this.Nproc));
         trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA, allIndices), this.rawDataMatrix.getSubMatrix(indicesB, allIndices));
         LBRs = this.calcLBRList(trueDists, transformedDists);
+
+        //storing last values for work reuse
+        lastLBRs = LBRs;
+        lastIndicesA = indicesA;
+        lastIndicesB = indicesB;
+
         for (double l : LBRs) {
             mean += l;
         }
