@@ -10,6 +10,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,6 @@ import java.util.*;
 public abstract class SkiingOptimizer {
     private static final Logger log = LoggerFactory.getLogger(SkiingOptimizer.class);
     protected int N; //original data dimension
-    protected int Nproc; //processed data dimension (PAA, Mary, etc)
     protected int M; //original number of training samples
     protected List<Integer> trainList;
     protected List<Integer> testList;
@@ -41,7 +41,6 @@ public abstract class SkiingOptimizer {
 
     protected double epsilon;
 
-    protected RealMatrix rawDataMatrix;
     protected RealMatrix dataMatrix;
 
     protected boolean feasible;
@@ -91,8 +90,6 @@ public abstract class SkiingOptimizer {
         this.fitter = PolynomialCurveFitter.create(Ntdegree);
 
         this.reusePercent = .025;
-
-
     }
 
     public void extractData(List<Datum> records){
@@ -118,7 +115,7 @@ public abstract class SkiingOptimizer {
             this.allIndicesN[i] = i;
         }
 
-        this.rawDataMatrix = new Array2DRowRealMatrix(metricArray);
+        this.dataMatrix = new Array2DRowRealMatrix(metricArray);
         this.NtInterval = Math.max(10, new Double(this.M*0.1).intValue()); //arbitrary 1%
     }
 
@@ -134,12 +131,10 @@ public abstract class SkiingOptimizer {
         Collections.shuffle(indicesM);
         int[] iA = ArrayUtils.toPrimitive(indicesM.toArray(new Integer[M]));
 
-        rawDataMatrix = rawDataMatrix.getSubMatrix(iA, indicesN);
+        dataMatrix = dataMatrix.getSubMatrix(iA, indicesN);
     }
 
     public void preprocess(){
-        Nproc = N;
-        dataMatrix = rawDataMatrix;
     }
 
     public int getNextNtFixedInterval(int iter, int currNt){
@@ -279,8 +274,6 @@ public abstract class SkiingOptimizer {
         return M;
     }
 
-
-
     // this is always called before anything else happens that iter
     public int getNextNtPE(int iter, int currNt){
         // tentative next Nt is this Nt + max{10, 1% data}
@@ -332,8 +325,6 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
-
-
     //TODO: is the indexed here even right? Also for equivalent basic 1-step
     //predicting K for the "next" iteration and Nt
     public int predictK(int iter, int currNt){
@@ -356,46 +347,10 @@ public abstract class SkiingOptimizer {
         prevMDTime = MDtime;
     }
 
-
-    public double meanLBR(int iter, RealMatrix transformedData){
-        int numPairs = M;
+    public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold, double constant) {
         int K = transformedData.getColumnDimension();
         //int currNt = NtList.get(iter);
 
-        int[] allIndices = new int[this.N];
-        int[] indicesA = new int[numPairs];
-        int[] indicesB = new int[numPairs];
-        int[] kIndices;
-
-        Random rand = new Random();
-
-        RealVector transformedDists;
-        RealVector trueDists;
-
-        for (int i = 0; i < numPairs; i++){
-            indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
-            indicesB[i] = rand.nextInt(M );//- currNt) + currNt;
-            while(indicesA[i] == indicesB[i]){
-                indicesA[i] = rand.nextInt(M);// - currNt) + currNt;
-            }
-        }
-
-        for (int i = 0; i < N; i++){
-            allIndices[i] = i; //TODO: // FIXME: 9/2/16
-        }
-        kIndices = Arrays.copyOf(allIndices,K);
-
-        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N/this.Nproc));
-        trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
-        return this.LBR(trueDists, transformedDists);
-    }
-
-
-    public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold){
-        int K = transformedData.getColumnDimension();
-        //int currNt = NtList.get(iter);
-
-        int[] allIndices = new int[this.N];
         int[] indicesA = new int[numPairs];
         int[] indicesB = new int[numPairs];
         int[] kIndices;
@@ -418,13 +373,10 @@ public abstract class SkiingOptimizer {
             }
         }
 
-        for (int i = 0; i < N; i++){
-            allIndices[i] = i; //TODO: FIXME: 9/2/16
-        }
-        kIndices = Arrays.copyOf(allIndices,K);
+        kIndices = Arrays.copyOf(allIndicesN,K);
 
-        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(this.N)/Math.sqrt(this.Nproc));
-        trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA,allIndices), this.rawDataMatrix.getSubMatrix(indicesB,allIndices));
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(indicesA,kIndices), transformedData.getSubMatrix(indicesB, kIndices)).mapMultiply(Math.sqrt(constant));
+        trueDists = this.calcDistances(this.dataMatrix.getSubMatrix(indicesA,allIndicesN), this.dataMatrix.getSubMatrix(indicesB,allIndicesN));
         LBRs = this.calcLBRList(trueDists, transformedDists);
         for(double l: LBRs){
             mean += l;
@@ -437,6 +389,10 @@ public abstract class SkiingOptimizer {
         std = Math.sqrt(std/numPairs);
         slop = (threshold*std)/Math.sqrt(numPairs);
         return new double[] {mean-slop, mean, mean+slop, std*std};
+    }
+
+    public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold){
+       return LBRCI(transformedData, numPairs, threshold, 1.0);
     }
 
 
@@ -468,8 +424,6 @@ public abstract class SkiingOptimizer {
         }
         return lbr;
     }
-
-    public int getNproc(){return Nproc;}
 
     public int getN(){ return N;}
 
@@ -516,8 +470,6 @@ public abstract class SkiingOptimizer {
 
     public abstract RealMatrix transform(int K);
 
-    public abstract RealMatrix getK(int iter, double targetLBR);
-
    //TODO: rest are util funcs that should probably just be moved
 
     public RealVector calcDistances(RealMatrix dataA, RealMatrix dataB){
@@ -546,6 +498,41 @@ public abstract class SkiingOptimizer {
         });
         return toPrimitive(indices);
     }
+
+    //input must be even length array in [re[0], im[0],...,re[k], im[k]]
+    public int[] complexArgSort(double[] in, boolean ascending) {
+        Integer[] indices = new Integer[in.length/2];
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = i;
+        }
+        Arrays.sort(indices, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return (ascending ? 1 : -1) * Double.compare(abs(in[2*o1],in[2*o1+1]), abs(in[2*o2],in[2*o2+1]));
+            }
+        });
+        return toPrimitive(indices);
+    }
+
+
+    public double abs(double real, double imaginary) {
+        double q;
+        if(FastMath.abs(real) < FastMath.abs(imaginary)) {
+            if(imaginary == 0.0D) {
+                return FastMath.abs(real);
+            } else {
+                q = real / imaginary;
+                return FastMath.abs(imaginary) * FastMath.sqrt(1.0D + q * q);
+            }
+        } else if(real == 0.0D) {
+            return FastMath.abs(imaginary);
+        } else {
+            q = imaginary / real;
+            return FastMath.abs(real) * FastMath.sqrt(1.0D + q * q);
+        }
+    }
+
+
 
     public int[] argSort(int[] in, boolean ascending) {
         Integer[] indices = new Integer[in.length];

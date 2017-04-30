@@ -101,7 +101,7 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Running SVD");
         pcaOpt.fit(currNt);
         currTransform = pcaOpt.getKFull(lbr);
-        currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);//paaOpt.LBRAttained(iter, currTransform);
+        currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);
         log.debug("For full PCASVD, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
 
         int i = 0;
@@ -115,8 +115,6 @@ public class PCASkiingDROP extends FeatureTransform {
         pcaOpt = new PCASkiingOptimizer(epsilon, algo);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
-        pcaOpt.shuffleData();
-        log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
         currNt = pcaOpt.getM();//pipcaOpt.getNextNt(iter, currNt, maxNt);

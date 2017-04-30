@@ -57,53 +57,6 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         return output;
     }
 
-    @Override
-    public RealMatrix getK(int iter, double targetLBR) {
-        double LBR;
-        double[] CI;
-        RealMatrix currTransform; //= new Array2DRowRealMatrix();
-        for (int i: factors){
-            currTransform = this.transform(i);
-            this.Nproc = i;
-            LBR = evalK(targetLBR, currTransform);
-            CI = this.LBRCI(currTransform,M, 1.96);
-            log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
-            //System.out.println(String.format("With K {}, LBR {}", i, LBR));
-            if (targetLBR <= LBR) {
-                this.feasible = true;
-                this.lastFeasible = i;
-                return currTransform;
-            }
-        }
-        this.Nproc = this.N;
-        return this.transform(this.N);
-    }
-
-
-    private double evalK(double LBRThresh, RealMatrix currTransform){
-        double[] CI;
-        double q = 1.96;
-        double prevMean = 0;
-        int numPairs = (this.M)*((this.M) - 1)/2;
-        int currPairs = 100;//Math.max(5, this.M);//new Double(0.005*numPairs).intValue());
-        while (currPairs < numPairs){
-            CI = this.LBRCI(currTransform,currPairs, q);
-            if (CI[0] > LBRThresh){
-                return LBRThresh;
-            }
-            else if (CI[2] < LBRThresh){
-                return 0.0;
-            }
-            else if (Math.abs(CI[1]-prevMean) < .02){
-                return 0.0;
-            }
-            else {
-                currPairs *= 2;
-                prevMean = CI[1];
-            }
-        }
-        return 0.0;
-    }
 
     private List<Integer> findFactors(){
         List<Integer> factors = new ArrayList<>();
@@ -119,12 +72,10 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
         for (int i: factors){
             currTransform = this.transform(i);
-            this.Nproc = i;
-            CI = this.LBRCI(currTransform,M, 1.96);
+            CI = this.LBRCI(currTransform,M, 1.96, ((double) N) /i);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
             LBRs.put(i, CI[1]);
         }
-        this.Nproc = this.N;
         return LBRs;
     }
 

@@ -51,7 +51,7 @@ public class SVDPCASkiingOptimizer extends SkiingOptimizer {
         int iters = 0;
         int iter = 8008;
         int low = 0;
-        int high = Math.min(this.M, this.Nproc) - 1;
+        int high = Math.min(this.M, this.N) - 1;
         if (this.feasible) high = this.lastFeasible;
         int mid = (low + high) / 2;
 
@@ -88,57 +88,6 @@ public class SVDPCASkiingOptimizer extends SkiingOptimizer {
         currKCI = LBR;
         return this.getCachedTransform(mid);
     }
-
-    //This is deprecated, but hasn't been cut yet
-    @Override
-    public RealMatrix getK(int iter, double targetLBR) {
-        //simply uses the mean LBR to do K computations with
-        double LBR;
-        RealMatrix currTransform;
-
-        int iters = 0;
-        int low = 0;
-        int high = Math.min(this.Nproc, this.NtList.get(iter)) - 1;
-        if (this.feasible) high = this.lastFeasible;
-        int mid = (low + high) / 2;
-
-        //System.out.println(this.M);
-        currTransform = this.transform(high);
-        LBR = this.meanLBR(iter, currTransform);
-        if (targetLBR > LBR) {
-            KItersList.put(this.NtList.get(iter), ++iters);
-            return currTransform;
-        }
-
-        while (low < high) {
-            currTransform = this.transform(mid);
-            LBR = this.meanLBR(iter, currTransform);
-            if (targetLBR < LBR) {
-                currTransform = this.transform(mid - 1);
-                LBR = this.meanLBR(iter, currTransform);
-                if (targetLBR > LBR) {
-                    this.feasible = true;
-                    this.lastFeasible = mid;
-                    KItersList.put(this.NtList.get(iter), iters);
-                    return this.getCachedTransform(mid);
-                }
-                high = mid - 1;
-            } else if (targetLBR > LBR) {
-                low = mid + 1;
-            } else {
-                high = mid;
-                //KItersList.put(this.NtList.get(iter), iters);
-                //return currTransform;
-            }
-            iters += 1;
-            mid = (low + high) / 2;
-        }
-        this.feasible = true;
-        this.lastFeasible = mid;
-        KItersList.put(this.NtList.get(iter), iters);
-        return this.transform(mid);
-    }
-
 
     public RealMatrix getKCICached(int iter, double targetLBR) {
         //confidence interval based method for getting K
@@ -318,11 +267,11 @@ public class SVDPCASkiingOptimizer extends SkiingOptimizer {
             tIndicesB[i] = jointIndexMapping[indicesB[i]];
         }
 
-        transformedData = rawDataMatrix.getSubMatrix(jointIndices, allIndices); //get a matrix with only indices that are used
+        transformedData = dataMatrix.getSubMatrix(jointIndices, allIndices); //get a matrix with only indices that are used
         transformedData = this.pca.transform(transformedData, K);
 
-        transformedDists = this.calcDistances(transformedData.getSubMatrix(tIndicesA, kIndices), transformedData.getSubMatrix(tIndicesB, kIndices)).mapMultiply(Math.sqrt(this.N) / Math.sqrt(this.Nproc));
-        trueDists = this.calcDistances(this.rawDataMatrix.getSubMatrix(indicesA, allIndices), this.rawDataMatrix.getSubMatrix(indicesB, allIndices));
+        transformedDists = this.calcDistances(transformedData.getSubMatrix(tIndicesA, kIndices), transformedData.getSubMatrix(tIndicesB, kIndices));
+        trueDists = this.calcDistances(this.dataMatrix.getSubMatrix(indicesA, allIndices), this.dataMatrix.getSubMatrix(indicesB, allIndices));
         LBRs = this.calcLBRList(trueDists, transformedDists);
         for (double l : LBRs) {
             mean += l;

@@ -54,8 +54,6 @@ public class PAASkiingDROP extends FeatureTransform {
     public Map<Integer, Double> genBasePlots(List<Datum> records) {
         paaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", paaOpt.getM(), paaOpt.getN());
-        paaOpt.shuffleData();
-        log.debug("Shuffled Data");
         paaOpt.preprocess();
         log.debug("Processed Data");
         currNt = paaOpt.getNextNt(iter, currNt);

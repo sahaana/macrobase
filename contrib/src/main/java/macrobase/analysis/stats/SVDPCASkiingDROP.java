@@ -151,8 +151,6 @@ public class SVDPCASkiingDROP extends FeatureTransform {
     public Map<Integer, Double> genBasePlots(List<Datum> records){
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
-        pcaOpt.shuffleData();
-        log.debug("Shuffled Data");
         pcaOpt.preprocess();
         log.debug("Processed Data");
         currNt = pcaOpt.getM();//pipcaOpt.getNextNt(iter, currNt, maxNt);

@@ -1,9 +1,6 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
-//import macrobase.analysis.stats.DROP;
 import macrobase.analysis.stats.PCASkiingDROP;
-import macrobase.analysis.stats.PIPCASkiingDROP;
-import macrobase.analysis.stats.SVDPCASkiingDROP;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -13,8 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by meep_me on 9/1/16.
@@ -124,7 +119,6 @@ public class SkiingBatchDROP {
         List<Datum> data = ingester.getStream().drain();
 
         PCASkiingDROP drop = new PCASkiingDROP(conf, epsilon, lbr, algo);
-        //PIPCASkiingDROP drop = new PIPCASkiingDROP(conf, epsilon, lbr);
         drop.consume(data);
 
         LBRResults = drop.getLBR();
