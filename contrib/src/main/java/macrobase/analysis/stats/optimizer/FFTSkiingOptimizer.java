@@ -47,8 +47,8 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
     public Map<Integer, Double> computeLBRs(){
         //confidence interval based method for getting K
         Map<Integer, Double> LBRs = new HashMap<>();
-        double[] CI = {0,0,0};
-        int interval = Math.max(2,this.N/10 + ((this.N/10) % 2)); //ensure even k always
+        double[] CI;
+        int interval = Math.max(2,this.N/20 + ((this.N/20) % 2)); //ensure even k always
         RealMatrix currTransform;
         for (int i = 2;i <= N; i+= interval){
             currTransform = this.transform(i);
