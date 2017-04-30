@@ -1,5 +1,6 @@
 package macrobase.analysis.stats.optimizer;
 
+import com.google.common.base.Stopwatch;
 import macrobase.analysis.stats.optimizer.util.*;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class PCASkiingOptimizer extends SkiingOptimizer {
 
@@ -302,19 +304,38 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return new double[]{mean - slop, mean, mean + slop, std * std};
     }
 
-    public Map<Integer, Double> computeLBRs() {
+    public Map<String,Map<Integer, Double>> computeLBRs(){
         //confidence interval based method for getting K
         Map<Integer, Double> LBRs = new HashMap<>();
-        double[] CI = {0, 0, 0};
+        Map<Integer, Double> times = new HashMap<>();
+        Map<String, Map<Integer, Double>> results = new HashMap<>();
+
+        Stopwatch sw =  Stopwatch.createUnstarted();
+
+        sw.start();
+        this.fit(M);
+        int max = Math.min(N, M);
+        this.cacheInput(max);
+        sw.stop();
+        times.put(0, (double) sw.elapsed(TimeUnit.MILLISECONDS));
+
+        double[] CI;
         int interval = Math.max(2, Math.min(N, M)/15);
         RealMatrix currTransform;
-        for (int i = 2; i <= Math.min(N, M); i += interval) {
-            currTransform = this.transform(i);
+        for (int i = 2; i <= max; i += interval) {
+            sw.reset();
+            sw.start();
+            currTransform = this.getCachedTransform(i);
+            sw.stop();
+
             CI = this.LBRCI(currTransform, M, qThresh);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1], CI[2]);
             LBRs.put(i, CI[1]);
+            times.put(i, (double) sw.elapsed(TimeUnit.MILLISECONDS));
         }
-        return LBRs;
+        results.put("LBR", LBRs);
+        results.put("time", times);
+        return results;
     }
 
     public Map getKItersList() {

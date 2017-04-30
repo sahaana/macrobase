@@ -78,13 +78,13 @@ public class BatchTechniqueComparison {
     }
 
 
-    private static String LBROutFile(String dataset, double lbr, double qThresh, String tag, Date date){
-        String output = String.format("%s_%s_lbr%.3f_q%.3f_%s",minute.format(date),dataset,lbr, qThresh, tag);
+    private static String LBROutFile(String dataset, double qThresh, String tag, Date date){
+        String output = String.format("%s_%s_q%.3f_%s",minute.format(date),dataset,qThresh, tag);
         return String.format(baseString + day.format(date) + "/KvLBR/%s.csv", output);
     }
 
-    private static String timeOutFile(String dataset, double lbr, double qThresh, String tag, Date date){
-        String output = String.format("%s_%s_lbr%.3f_q%.3f_%s", minute.format(date), dataset,lbr,qThresh, tag);
+    private static String timeOutFile(String dataset, double qThresh, String tag, Date date){
+        String output = String.format("%s_%s_q%.3f_%s", minute.format(date), dataset,qThresh, tag);
         return String.format(baseString + day.format(date) + "/KvTime/%s.csv", output);
     }
 
@@ -99,10 +99,10 @@ public class BatchTechniqueComparison {
         System.out.println(lbr);
         System.out.println(qThresh);
 
-        Map<Integer, Double> fftResults;
-        Map<Integer, Double> paaResults;
-        Map<Integer, Double> rpResults;
-        Map<Integer, Double> pcaResults;
+        Map<String,Map<Integer, Double>> fftResults;
+        Map<String,Map<Integer, Double>> paaResults;
+        Map<String,Map<Integer, Double>> rpResults;
+        Map<String,Map<Integer, Double>> pcaResults;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -119,10 +119,15 @@ public class BatchTechniqueComparison {
         pcaResults = pcaDrop.genBasePlots(data);
         rpResults = rpSkiingDROP.genBasePlots(data);
 
-        mapDoubleToCSV(paaResults, LBROutFile(dataset,lbr,qThresh,"PAA", date));
-        mapDoubleToCSV(fftResults, LBROutFile(dataset,lbr,qThresh, "FFT", date));
-        mapDoubleToCSV(rpResults, LBROutFile(dataset,lbr,qThresh, "RP", date));
-        mapDoubleToCSV(pcaResults, LBROutFile(dataset,lbr,qThresh, "PCASVD", date));
+        mapDoubleToCSV(paaResults.get("LBR"), LBROutFile(dataset,qThresh,"PAA", date));
+        mapDoubleToCSV(fftResults.get("LBR"), LBROutFile(dataset,qThresh, "FFT", date));
+        mapDoubleToCSV(rpResults.get("LBR"),  LBROutFile(dataset,qThresh, "RP", date));
+        mapDoubleToCSV(pcaResults.get("LBR"), LBROutFile(dataset,qThresh, "PCASVD", date));
+
+        mapDoubleToCSV(paaResults.get("time"), timeOutFile(dataset,qThresh,"PAA", date));
+        mapDoubleToCSV(fftResults.get("time"), timeOutFile(dataset,qThresh, "FFT", date));
+        mapDoubleToCSV(rpResults.get("time"),  timeOutFile(dataset,qThresh, "RP", date));
+        mapDoubleToCSV(pcaResults.get("time"), timeOutFile(dataset,qThresh, "PCASVD", date));
 
     }
 

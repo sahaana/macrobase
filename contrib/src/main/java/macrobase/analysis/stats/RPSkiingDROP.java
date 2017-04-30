@@ -49,16 +49,13 @@ public class RPSkiingDROP extends FeatureTransform {
     public void consume(List<Datum> records) throws Exception {
     }
 
-    public Map<Integer, Double> genBasePlots(List<Datum> records) {
+    public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
         rpOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", rpOpt.getM(), rpOpt.getN());
         rpOpt.preprocess();
         log.debug("Processed Data");
-        currNt = rpOpt.getM();
-        log.debug("Beginning RP base run");
-        rpOpt.fit(currNt);
-        //sw.start();
 
+        log.debug("Beginning RP base run");
         return rpOpt.computeLBRs();
     }
 

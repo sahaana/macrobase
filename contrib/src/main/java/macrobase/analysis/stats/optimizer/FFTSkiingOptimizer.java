@@ -1,5 +1,6 @@
 package macrobase.analysis.stats.optimizer;
 
+import com.google.common.base.Stopwatch;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.jtransforms.fft.DoubleFFT_1D;
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class FFTSkiingOptimizer extends SkiingOptimizer {
     private static final Logger log = LoggerFactory.getLogger(FFTSkiingOptimizer.class);
@@ -44,19 +46,36 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         return transformedData.getSubMatrix(0,M-1,0,K-1);
     }
 
-    public Map<Integer, Double> computeLBRs(){
+    public Map<String,Map<Integer, Double>> computeLBRs(){
         //confidence interval based method for getting K
         Map<Integer, Double> LBRs = new HashMap<>();
+        Map<Integer, Double> times = new HashMap<>();
+        Map<String, Map<Integer, Double>> results = new HashMap<>();
+
+        Stopwatch sw =  Stopwatch.createUnstarted();
+
+        sw.start();
+        this.fit(M);
+        sw.stop();
+        times.put(0, (double) sw.elapsed(TimeUnit.MILLISECONDS));
+
         double[] CI;
         int interval = Math.max(2,this.N/20 + ((this.N/20) % 2)); //ensure even k always
         RealMatrix currTransform;
         for (int i = 2;i <= N; i+= interval){
+            sw.reset();
+            sw.start();
             currTransform = this.transform(i);
+            sw.stop();
+
             CI = this.LBRCI(currTransform, M, qThresh, 2./N);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
             LBRs.put(i, CI[1]);
+            times.put(i, (double) sw.elapsed(TimeUnit.MILLISECONDS));
         }
-        return LBRs;
+        results.put("LBR", LBRs);
+        results.put("time", times);
+        return results;
     }
 
     @Override

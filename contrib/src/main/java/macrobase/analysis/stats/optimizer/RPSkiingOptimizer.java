@@ -1,5 +1,6 @@
 package macrobase.analysis.stats.optimizer;
 
+import com.google.common.base.Stopwatch;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.Matrices;
 import no.uib.cipr.matrix.QR;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class RPSkiingOptimizer extends SkiingOptimizer{
     private static final Logger log = LoggerFactory.getLogger(RPSkiingOptimizer.class);
@@ -35,9 +37,9 @@ public class RPSkiingOptimizer extends SkiingOptimizer{
 
     @Override
     public RealMatrix transform(int K) {
-        //if (K > largestK){
+        if (K > largestK){
             cacheTransform(K);
-        //}
+        }
        return largestTransformation.getSubMatrix(0,M-1,0,K-1);
     }
 
@@ -64,21 +66,39 @@ public class RPSkiingOptimizer extends SkiingOptimizer{
         largestTransformation = new Array2DRowRealMatrix(Matrices.getArray(out));
     }
 
-    public Map<Integer, Double> computeLBRs(){
+    public Map<String,Map<Integer, Double>> computeLBRs(){
         //confidence interval based method for getting K. Just doing same k as FFT
         Map<Integer, Double> LBRs = new HashMap<>();
+        Map<Integer, Double> times = new HashMap<>();
+        Map<String, Map<Integer, Double>> results = new HashMap<>();
+
+        Stopwatch sw =  Stopwatch.createUnstarted();
+
+        sw.start();
+        this.fit(M);
+        int max = N;
+        this.cacheTransform(max);
+
+        sw.stop();
+        times.put(0, (double) sw.elapsed(TimeUnit.MILLISECONDS));
+
         double[] CI;
         int interval = Math.max(2,this.N/20 + ((this.N/20) % 2)); //ensure even k always
         RealMatrix currTransform;
-        int max = N;
-        cacheTransform(max);
         for (int i = 2;i <= max; i+= interval){
+            sw.reset();
+            sw.start();
             currTransform = this.transform(i);
+            sw.stop();
+
             CI = this.LBRCI(currTransform, M, qThresh, ((double) N)/i);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
             LBRs.put(i, CI[1]);
+            times.put(i, (double) sw.elapsed(TimeUnit.MILLISECONDS));
         }
-        return LBRs;
+        results.put("LBR", LBRs);
+        results.put("time", times);
+        return results;
     }
 
     public Map getKItersList(){ return KItersList; }

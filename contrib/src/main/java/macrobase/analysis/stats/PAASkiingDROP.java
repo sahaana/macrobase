@@ -49,16 +49,13 @@ public class PAASkiingDROP extends FeatureTransform {
     public void consume(List<Datum> records) throws Exception {
     }
 
-    public Map<Integer, Double> genBasePlots(List<Datum> records) {
+    public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
         paaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", paaOpt.getM(), paaOpt.getN());
         paaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = paaOpt.getM();
-        log.debug("Beginning PAA base run");
-        paaOpt.fit(currNt);
-        //sw.start();
 
+        log.debug("Beginning PAA base run");
         return paaOpt.computeLBRs();
     }
 

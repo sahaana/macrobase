@@ -58,16 +58,13 @@ public class FFTSkiingDROP extends FeatureTransform {
     }
 
 
-    public Map<Integer, Double> genBasePlots(List<Datum> records){
+    public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
         fftOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", fftOpt.getM(), fftOpt.getN());
         fftOpt.preprocess();
         log.debug("Processed Data");
-        currNt = fftOpt.getNextNt(iter, currNt);
-        log.debug("Beginning FFT base run");
-        fftOpt.fit(currNt);
-        //sw.start();
 
+        log.debug("Beginning FFT base run");
         return fftOpt.computeLBRs();
 
     }

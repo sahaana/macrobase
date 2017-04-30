@@ -112,17 +112,14 @@ public class PCASkiingDROP extends FeatureTransform {
         }
     }
 
-    public Map<Integer, Double> genBasePlots(List<Datum> records){
+    public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
         pcaOpt = new PCASkiingOptimizer(qThresh, algo);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = pcaOpt.getM();
-        log.debug("Beginning PCASVD base run");
-        pcaOpt.fit(currNt);
-        //sw.start();
 
+        log.debug("Beginning PCASVD base run");
         return pcaOpt.computeLBRs();
     }
 
