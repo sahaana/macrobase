@@ -70,7 +70,6 @@ public class FFTSkiingDROP extends FeatureTransform {
         log.debug("Beginning FFT base run");
         fftOpt.fit(currNt);
         //sw.start();
-        //fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
 
         return fftOpt.computeLBRs();
 

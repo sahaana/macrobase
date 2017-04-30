@@ -3,8 +3,6 @@ package macrobase.analysis.stats;
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
-import macrobase.analysis.stats.optimizer.SVDPCASkiingOptimizer;
-import macrobase.analysis.stats.optimizer.util.PCAPowerIteration;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -39,11 +37,15 @@ public class PCASkiingDROP extends FeatureTransform {
     double epsilon;
     double lbr;
 
+    PCASkiingOptimizer.PCAAlgo algo;
+
+
 
     public PCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr, PCASkiingOptimizer.PCAAlgo algo){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
+        this.algo = algo;
         pcaOpt = new PCASkiingOptimizer(epsilon, algo);
 
         MD = Stopwatch.createUnstarted();
@@ -111,17 +113,16 @@ public class PCASkiingDROP extends FeatureTransform {
         }
     }
 
-    public Map<Integer, Double> genBasePlots(List<Datum> records, PCASkiingOptimizer.PCAAlgo algo){
+    public Map<Integer, Double> genBasePlots(List<Datum> records){
         pcaOpt = new PCASkiingOptimizer(epsilon, algo);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = pcaOpt.getM();//pipcaOpt.getNextNt(iter, currNt, maxNt);
+        currNt = pcaOpt.getM();
         log.debug("Beginning PCASVD base run");
         pcaOpt.fit(currNt);
         //sw.start();
-        //fftOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
 
         return pcaOpt.computeLBRs();
     }

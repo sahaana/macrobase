@@ -79,10 +79,5 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         return LBRs;
     }
 
-    @Override
-    public int getNextNt(int iter, int currNt) {
-        return this.M;
-    }
-
     public Map getKItersList(){ return KItersList; }
 }

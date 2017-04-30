@@ -90,7 +90,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
 
         int iters = 0;
-        int iter = 8008;
         int low = 0;
         int high = Math.min(this.M, this.N) - 1;
         if (this.feasible) high = this.lastFeasible;
@@ -106,10 +105,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         while (low < high) {
             currTransform = this.getCachedTransform(mid);
-            LBR = evalK(targetLBR, currTransform);//this.meanLBR(iter, currTransform);
+            LBR = evalK(targetLBR, currTransform);
             if (targetLBR < LBR[0]) {
                 currTransform = this.getCachedTransform(mid - 1);
-                LBR = evalK(targetLBR, currTransform);//this.meanLBR(iter, currTransform);
+                LBR = evalK(targetLBR, currTransform);
                 if (targetLBR > LBR[0]) {
                     this.feasible = true;
                     this.lastFeasible = mid;
@@ -315,9 +314,9 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         //confidence interval based method for getting K
         Map<Integer, Double> LBRs = new HashMap<>();
         double[] CI = {0, 0, 0};
-        int interval = Math.max(2, this.N / 32);
+        int interval = Math.max(2, Math.min(N, M)/15);
         RealMatrix currTransform;
-        for (int i = 2; ((i <= this.N) && (CI[1] <= .9999)); i += interval) {
+        for (int i = 2; i <= Math.min(N, M); i += interval) {
             currTransform = this.transform(i);
             CI = this.LBRCI(currTransform, M, 1.96);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1], CI[2]);

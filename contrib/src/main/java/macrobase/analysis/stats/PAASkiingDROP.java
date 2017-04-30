@@ -56,11 +56,10 @@ public class PAASkiingDROP extends FeatureTransform {
         log.debug("Extracted {} Records of len {}", paaOpt.getM(), paaOpt.getN());
         paaOpt.preprocess();
         log.debug("Processed Data");
-        currNt = paaOpt.getNextNt(iter, currNt);
+        currNt = paaOpt.getM();
         log.debug("Beginning PAA base run");
         paaOpt.fit(currNt);
         //sw.start();
-        //paaOpt.setTrainTimeList(currNt, (double) sw.elapsed(TimeUnit.MILLISECONDS));
 
         return paaOpt.computeLBRs();
     }

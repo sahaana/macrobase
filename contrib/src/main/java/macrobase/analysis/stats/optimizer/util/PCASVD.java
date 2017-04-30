@@ -65,7 +65,7 @@ public class PCASVD implements PCA{
 
     public RealMatrix transform(RealMatrix inputData, int K){
         if (K > Math.min(this.N,this.M)){
-            log.warn("Watch your K...K {} M {} Nproc {}", K, this.M, this.N);
+            log.warn("Watch your K...K {} M {} N {}", K, this.M, this.N);
         }
         K = Math.min(Math.min(K, this.N), this.M);
         RealMatrix centeredInput = new Array2DRowRealMatrix(inputData.getData());
@@ -83,5 +83,4 @@ public class PCASVD implements PCA{
         ci.mult(t, transformedData);
         return new Array2DRowRealMatrix(Matrices.getArray(transformedData));
     }
-
 }

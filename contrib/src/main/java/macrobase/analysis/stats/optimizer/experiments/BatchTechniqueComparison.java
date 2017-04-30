@@ -1,9 +1,9 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
-//import macrobase.analysis.stats.DROP;
 import macrobase.analysis.stats.PAASkiingDROP;
 import macrobase.analysis.stats.FFTSkiingDROP;
-import macrobase.analysis.stats.SVDPCASkiingDROP;
+import macrobase.analysis.stats.PCASkiingDROP;
+import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -11,11 +11,8 @@ import macrobase.ingest.SchemalessCSVIngester;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by meep_me on 9/1/16.
@@ -109,7 +106,7 @@ public class BatchTechniqueComparison {
 
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, epsilon, lbr);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, epsilon, lbr);
-        SVDPCASkiingDROP pcaDrop = new SVDPCASkiingDROP(conf, epsilon, lbr);
+        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, epsilon, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
 
 
         paaResults = paaDrop.genBasePlots(data);

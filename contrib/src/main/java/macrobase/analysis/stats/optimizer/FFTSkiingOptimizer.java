@@ -51,15 +51,13 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         return transformedData.getSubMatrix(0,M-1,0,K-1);
     }
 
-
-
     public Map<Integer, Double> computeLBRs(){
         //confidence interval based method for getting K
         Map<Integer, Double> LBRs = new HashMap<>();
         double[] CI = {0,0,0};
-        int interval = Math.max(2,this.N/11 + ((this.N/11) % 2)); //ensure even k always
+        int interval = Math.max(2,this.N/10 + ((this.N/10) % 2)); //ensure even k always
         RealMatrix currTransform;
-        for (int i = 26;(i <= this.N); i+= interval){
+        for (int i = 2;i <= N; i+= interval){
             currTransform = this.transform(i);
             CI = this.LBRCI(currTransform, M, 1.96, 2./N);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
@@ -67,7 +65,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         }
         return LBRs;
     }
-
 
     @Override
     public int getNextNt(int iter, int currNt) {
