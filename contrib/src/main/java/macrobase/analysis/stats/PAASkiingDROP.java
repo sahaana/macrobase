@@ -25,18 +25,16 @@ public class PAASkiingDROP extends FeatureTransform {
 
     Map<String, Long> times;
 
-    double epsilon;
     double lbr;
 
-    public PAASkiingDROP(MacroBaseConf conf, double epsilon, double lbr){
+    public PAASkiingDROP(MacroBaseConf conf, double qThresh, double lbr){
         iter = 0;
         currNt = 0;
-        paaOpt = new PAASkiingOptimizer(epsilon);
+        paaOpt = new PAASkiingOptimizer(qThresh);
         sw = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
-        this.epsilon = epsilon;
         this.lbr = lbr;
 
         output = new MBStream<>();

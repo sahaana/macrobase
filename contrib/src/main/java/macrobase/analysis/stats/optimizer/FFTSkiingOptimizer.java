@@ -1,11 +1,7 @@
 package macrobase.analysis.stats.optimizer;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.transform.DftNormalization;
-import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.jtransforms.fft.DoubleFFT_1D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +12,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
     private static final Logger log = LoggerFactory.getLogger(FFTSkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
 
-    protected FastFourierTransformer transformer;
-
     protected DoubleFFT_1D t;
 
     protected RealMatrix paddedInput;
@@ -25,10 +19,9 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
 
     RealMatrix transformedData;
 
-    public FFTSkiingOptimizer(double epsilon) {
-        super(epsilon);
+    public FFTSkiingOptimizer(double qThresh) {
+        super(qThresh);
         this.KItersList = new HashMap<>();
-        transformer = new FastFourierTransformer(DftNormalization.STANDARD);
     }
 
     @Override
@@ -59,7 +52,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         RealMatrix currTransform;
         for (int i = 2;i <= N; i+= interval){
             currTransform = this.transform(i);
-            CI = this.LBRCI(currTransform, M, 1.96, 2./N);
+            CI = this.LBRCI(currTransform, M, qThresh, 2./N);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
             LBRs.put(i, CI[1]);
         }

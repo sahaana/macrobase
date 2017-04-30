@@ -68,7 +68,7 @@ public class DROP extends FeatureTransform {
         log.debug("Processed data w/ PAA");
         currNt = pcaOpt.getNextNt(iter, K, num_Nt);
         //currEp = paaOpt.LBRAttained(iter, currTransform);
-        //////currLBR = paaOpt.LBRAttained(iter, epsilon, currTransform);
+        //////currLBR = paaOpt.LBRAttained(iter, qThresh, currTransform);
         currBLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
         log.debug("Beginning DROP");
         sw.start();
@@ -77,8 +77,8 @@ public class DROP extends FeatureTransform {
             log.debug("Iteration {} with {} samples ", iter, currNt);
             //paaOpt.printData(0,5,0,5);
             currTransform = pcaOpt.transform(K, currNt);
-            //currEp = paaOpt.LBRAttained(iter, epsilon, currTransform);
-            /////currLBR = paaOpt.LBRAttained(iter, epsilon, currTransform);
+            //currEp = paaOpt.LBRAttained(iter, qThresh, currTransform);
+            /////currLBR = paaOpt.LBRAttained(iter, qThresh, currTransform);
             currBLBR = pcaOpt.blbLBRAttained(iter, epsilon, currTransform, b, s);
             /////paaOpt.setLBRList(paaOpt.getNtList(iter), currLBR);
             pcaOpt.setBLBRList(pcaOpt.getNtList(iter), currBLBR);

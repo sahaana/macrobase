@@ -63,7 +63,6 @@ public class SkiingBatchDROP {
         }
     }
 
-
     private static String LBROutFile(String dataset, double lbr, double ep){
         String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr, ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
@@ -94,16 +93,16 @@ public class SkiingBatchDROP {
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
-        double epsilon = Double.parseDouble(args[2]);
+        double qThresh = Double.parseDouble(args[2]);
         PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.valueOf(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
-        System.out.println(epsilon);
+        System.out.println(qThresh);
         System.out.println(algo);
 
         /*String dataset = "CinC";
         double lbr = .98;
-        double epsilon = .2;
+        double qThresh = 1.96;
         */
 
         Map<Integer, double[]> LBRResults;
@@ -118,26 +117,26 @@ public class SkiingBatchDROP {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        PCASkiingDROP drop = new PCASkiingDROP(conf, epsilon, lbr, algo);
+        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, algo);
         drop.consume(data);
 
         LBRResults = drop.getLBR();
-        mapArrayToCSV(LBRResults, LBROutFile(dataset,lbr,epsilon));
+        mapArrayToCSV(LBRResults, LBROutFile(dataset,lbr,qThresh));
 
         timeResults = drop.getTime();
-        mapDoubleToCSV(timeResults, timeOutFile(dataset,lbr,epsilon,"Actual"));
+        mapDoubleToCSV(timeResults, timeOutFile(dataset,lbr,qThresh,"Actual"));
 
         predTimeResults = drop.getPredTime();
-        mapDoubleToCSV(predTimeResults, timeOutFile(dataset,lbr,epsilon, "Predicted"));
+        mapDoubleToCSV(predTimeResults, timeOutFile(dataset,lbr,qThresh, "Predicted"));
 
         kResults = drop.getKList();
-        mapIntToCSV(kResults, kOutFile(dataset,lbr,epsilon));
+        mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh));
 
         kPred = drop.getKPred();
-        mapIntToCSV(kPred, kPredOutFile(dataset,lbr,epsilon));
+        mapIntToCSV(kPred, kPredOutFile(dataset,lbr,qThresh));
 
         kIters = drop.getKItersList();
-        //mapIntToCSV(kIters, kItersOutFile(dataset,b,s,lbr,epsilon));
+        mapIntToCSV(kIters, kItersOutFile(dataset,lbr,qThresh));
 
     }
 

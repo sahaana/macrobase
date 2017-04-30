@@ -34,25 +34,25 @@ public class PCASkiingDROP extends FeatureTransform {
 
     Map<String, Long> times;
 
-    double epsilon;
+    double qThresh;
     double lbr;
 
     PCASkiingOptimizer.PCAAlgo algo;
 
 
 
-    public PCASkiingDROP(MacroBaseConf conf, double epsilon, double lbr, PCASkiingOptimizer.PCAAlgo algo){
+    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
         this.algo = algo;
-        pcaOpt = new PCASkiingOptimizer(epsilon, algo);
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
 
         MD = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
-        this.epsilon = epsilon;
+        this.qThresh = qThresh;
         this.lbr = lbr;
         output = new MBStream<>();
     }
@@ -95,9 +95,8 @@ public class PCASkiingDROP extends FeatureTransform {
         finalTransform = currTransform.getData();
 
         log.debug("Computing Full Transform");
-        pcaOpt = new PCASkiingOptimizer(epsilon, PCASkiingOptimizer.PCAAlgo.SVD);
+        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD);
         pcaOpt.extractData(records);
-        pcaOpt.shuffleData();
         pcaOpt.preprocess();
         currNt = pcaOpt.getNextNtFull(0,currNt);
         log.debug("Running SVD");
@@ -114,7 +113,7 @@ public class PCASkiingDROP extends FeatureTransform {
     }
 
     public Map<Integer, Double> genBasePlots(List<Datum> records){
-        pcaOpt = new PCASkiingOptimizer(epsilon, algo);
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();

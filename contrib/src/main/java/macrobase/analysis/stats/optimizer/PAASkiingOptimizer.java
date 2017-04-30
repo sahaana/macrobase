@@ -16,8 +16,8 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
     protected Map<Integer, Integer> KItersList;
     protected List<Integer> factors;
 
-    public PAASkiingOptimizer(double epsilon){
-        super(epsilon);
+    public PAASkiingOptimizer(double qThresh){
+        super(qThresh);
         this.KItersList = new HashMap<>();
     }
 
@@ -72,7 +72,7 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
         for (int i: factors){
             currTransform = this.transform(i);
-            CI = this.LBRCI(currTransform,M, 1.96, ((double) N) /i);
+            CI = this.LBRCI(currTransform,M, qThresh, ((double) N) /i);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1],CI[2]);
             LBRs.put(i, CI[1]);
         }

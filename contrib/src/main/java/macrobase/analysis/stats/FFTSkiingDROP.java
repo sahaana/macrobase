@@ -32,19 +32,16 @@ public class FFTSkiingDROP extends FeatureTransform {
 
     Map<String, Long> times;
 
-    int procDim;
-    double epsilon;
     double lbr;
 
-    public FFTSkiingDROP(MacroBaseConf conf,  double epsilon, double lbr){
+    public FFTSkiingDROP(MacroBaseConf conf,  double qThresh, double lbr){
         iter = 0;
         currNt = 0;
-        fftOpt = new FFTSkiingOptimizer(epsilon);
+        fftOpt = new FFTSkiingOptimizer(qThresh);
         sw = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
-        this.epsilon = epsilon;
         this.lbr = lbr;
 
         output = new MBStream<>();

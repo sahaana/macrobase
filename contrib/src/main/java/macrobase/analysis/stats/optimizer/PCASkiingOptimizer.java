@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-//import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
-
 public class PCASkiingOptimizer extends SkiingOptimizer {
 
     private static final Logger log = LoggerFactory.getLogger(PCASkiingOptimizer.class);
@@ -23,9 +21,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         SVD, PI, TROPP, FAST;
     }
 
-
-    public PCASkiingOptimizer(double epsilon, PCAAlgo algo) {
-        super(epsilon);
+    public PCASkiingOptimizer(double qThresh, PCAAlgo algo) {
+        super(qThresh);
         this.KItersList = new HashMap<>();
         this.algo = algo;
 
@@ -77,12 +74,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return cachedTransform.getSubMatrix(0, this.M - 1, 0, K - 1);
     }
 
-
     @Override
     public RealMatrix transform(int K) {
         return this.pca.transform(dataMatrix, K);
     }
-
 
     public RealMatrix getKFull(double targetLBR) {
         // computes the best K for a complete transformation using all the data
@@ -186,13 +181,12 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     private double[] evalK(double LBRThresh, RealMatrix currTransform) {
         double[] CI = new double[]{0, 0, 0};
-        double q = 1.96;
         double prevMean = 0;
         int numPairs = (this.M) * ((this.M) - 1) / 2;
         int currPairs = 100;//Math.max(5, this.M);//new Double(0.005*numPairs).intValue());
         while (currPairs < numPairs) {
             //log.debug("num pairs {}", currPairs);
-            CI = this.LBRCI(currTransform, currPairs, q);
+            CI = this.LBRCI(currTransform, currPairs, qThresh);
             //all stopping conditions here
             if ((CI[0] > LBRThresh) || (CI[2] < LBRThresh) || (Math.abs(CI[1] - prevMean) < .01)) {
                 return CI;//LBRThresh;
@@ -223,7 +217,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         }
         return CI;
     }
-
 
     public double[] LBRCI(int K, int numPairs, double threshold) {
         int c = 0;
@@ -309,7 +302,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return new double[]{mean - slop, mean, mean + slop, std * std};
     }
 
-
     public Map<Integer, Double> computeLBRs() {
         //confidence interval based method for getting K
         Map<Integer, Double> LBRs = new HashMap<>();
@@ -318,7 +310,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         RealMatrix currTransform;
         for (int i = 2; i <= Math.min(N, M); i += interval) {
             currTransform = this.transform(i);
-            CI = this.LBRCI(currTransform, M, 1.96);
+            CI = this.LBRCI(currTransform, M, qThresh);
             log.debug("With K {}, LBR {} {} {}", i, CI[0], CI[1], CI[2]);
             LBRs.put(i, CI[1]);
         }
@@ -327,10 +319,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     public Map getKItersList() {
         return KItersList;
-    }
-
-    public RealMatrix getTransformation() {
-        return this.pca.getTransformationMatrix();
     }
 }
 

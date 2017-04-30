@@ -2,7 +2,6 @@ package macrobase.analysis.stats.optimizer;
 
 
 import macrobase.datamodel.Datum;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
@@ -39,7 +38,7 @@ public abstract class SkiingOptimizer {
     protected Map<Integer, Integer> kPredList;
 
 
-    protected double epsilon;
+    protected double qThresh;
 
     protected RealMatrix dataMatrix;
 
@@ -62,9 +61,9 @@ public abstract class SkiingOptimizer {
     protected int[] lastIndicesB;
     protected List<Double> lastLBRs;
 
-    public SkiingOptimizer(double epsilon) {
-        this.numDiffs = 3;
-        this.epsilon = epsilon;
+    public SkiingOptimizer(double qThresh) {
+        this.numDiffs = 3; //TODO: 3 to change to general param
+        this.qThresh = qThresh;
 
         this.NtList = new ArrayList<>();
         this.LBRList = new HashMap<>();
@@ -72,7 +71,7 @@ public abstract class SkiingOptimizer {
         this.trainTimeList = new HashMap<>();
         this.predictedTrainTimeList = new HashMap<>();
         this.kPredList = new HashMap<>();
-        this.kDiffs = new int[this.numDiffs]; //TODO: 3 to change to general param
+        this.kDiffs = new int[this.numDiffs];
         this.MDDiffs = new double[this.numDiffs];
 
         this.prevK = 0;
@@ -116,25 +115,10 @@ public abstract class SkiingOptimizer {
         }
 
         this.dataMatrix = new Array2DRowRealMatrix(metricArray);
-        this.NtInterval = Math.max(10, new Double(this.M*0.1).intValue()); //arbitrary 1%
-    }
-
-    public void shuffleData(){
-        List<Integer> indicesM = new ArrayList<>();
-        int[] indicesN = new int[N];
-        for (int i = 0; i < N; i++){
-            indicesN[i] = i;
-        }
-        for (int i = 0; i < M; i++){
-            indicesM.add(i);
-        }
-        Collections.shuffle(indicesM);
-        int[] iA = ArrayUtils.toPrimitive(indicesM.toArray(new Integer[M]));
-
-        dataMatrix = dataMatrix.getSubMatrix(iA, indicesN);
     }
 
     public void preprocess(){
+        this.NtInterval = Math.max(10, new Double(this.M*0.1).intValue()); //arbitrary 1%
     }
 
     public int getNextNtFixedInterval(int iter, int currNt){
@@ -143,7 +127,6 @@ public abstract class SkiingOptimizer {
         }
         return NtInterval + currNt;
     }
-
 
     public int getNextNtIncreaseOnly(int iter, int currNt){
         double avgDiff = 0;
@@ -391,25 +374,9 @@ public abstract class SkiingOptimizer {
         return new double[] {mean-slop, mean, mean+slop, std*std};
     }
 
+    //calls other function with constant set to 1
     public double[] LBRCI(RealMatrix transformedData, int numPairs, double threshold){
        return LBRCI(transformedData, numPairs, threshold, 1.0);
-    }
-
-
-    //TODO: this should really just call calcLBRList
-    public double LBR(RealVector trueDists, RealVector transformedDists){
-        int num_entries = trueDists.getDimension();
-        double lbr = 0;
-        for (int i = 0; i < num_entries; i++) {
-            if (transformedDists.getEntry(i) == 0){
-                if (trueDists.getEntry(i) == 0) lbr += 1; //they were same to begin w/, so max of 1
-                else lbr += 0; //can never be negative, so lowest
-            }
-            else lbr += transformedDists.getEntry(i)/trueDists.getEntry(i);
-        }
-
-        //arbitrarily choose to average all of the LBRs
-        return lbr/num_entries;
     }
 
     public List<Double> calcLBRList(RealVector trueDists, RealVector transformedDists){
@@ -428,8 +395,6 @@ public abstract class SkiingOptimizer {
     public int getN(){ return N;}
 
     public int getM(){return M;}
-
-    public RealMatrix getDataMatrix() {return dataMatrix;}
 
     ///toDO: do somethiing with the first drop information. Maybe just move this to PCAskiing and do this.feasible. Right now this only auto quits with objective function if you didn't improve
     public void setKDiff(int iter, int currK){
@@ -484,7 +449,6 @@ public abstract class SkiingOptimizer {
         return distances;
     }
 
-
     public int[] complexArgSort(Complex[] in, boolean ascending) {
         Integer[] indices = new Integer[in.length];
         for (int i = 0; i < indices.length; i++) {
@@ -514,7 +478,6 @@ public abstract class SkiingOptimizer {
         return toPrimitive(indices);
     }
 
-
     public double abs(double real, double imaginary) {
         double q;
         if(FastMath.abs(real) < FastMath.abs(imaginary)) {
@@ -531,8 +494,6 @@ public abstract class SkiingOptimizer {
             return FastMath.abs(real) * FastMath.sqrt(1.0D + q * q);
         }
     }
-
-
 
     public int[] argSort(int[] in, boolean ascending) {
         Integer[] indices = new Integer[in.length];
@@ -569,5 +530,4 @@ public abstract class SkiingOptimizer {
         });
         return toPrimitive(indices);
     }
-
 }

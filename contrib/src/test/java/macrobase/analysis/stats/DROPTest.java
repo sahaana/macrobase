@@ -61,7 +61,7 @@ public class DROPTest {
         int b = 200;
         int s = 20;
         double lbr = .9;
-        double epsilon = .01;
+        double qThresh = .01;
 
 
         MacroBaseConf conf = new MacroBaseConf();
@@ -72,7 +72,7 @@ public class DROPTest {
         CSVIngester ingester = new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        DROP drop = new DROP(new MacroBaseConf(), k, num_Nt, processedDim, epsilon, lbr, b, s);
+        DROP drop = new DROP(new MacroBaseConf(), k, num_Nt, processedDim, qThresh, lbr, b, s);
         drop.consume(data);
 
         List<Datum> transformed = drop.getStream().drain();
