@@ -34,7 +34,7 @@ public class SpectrumDump {
     }
 
 
-    //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
+    //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         String baseString = "/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/";
 
@@ -50,7 +50,7 @@ public class SpectrumDump {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format(baseString + "macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
         List<Datum> data = ingester.getStream().drain();
 
-        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.work.REUSE);
+        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
         spectrum = pcaDrop.getDataSpectrum(data);
 
         doubleToCSV(spectrum, spectrumOutFile(dataset));

@@ -7,6 +7,8 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -29,10 +31,11 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         REUSE, NOREUSE
     }
 
-    public PCASkiingOptimizer(double qThresh, PCAAlgo algo, work reuseWork) {
+    public PCASkiingOptimizer(double qThresh, int kExp, PCAAlgo algo, work reuseWork) {
         super(qThresh);
         this.KItersList = new HashMap<>();
         this.algo = algo;
+        this.kScaling = kExp;
 
         switch(reuseWork) {
             case NOREUSE:
@@ -42,6 +45,13 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 this.reuse = true;
                 break;
         }
+    }
+
+    public PCASkiingOptimizer(double qThresh, PCAAlgo algo) {
+        super(qThresh);
+        this.KItersList = new HashMap<>();
+        this.algo = algo;
+        this.reuse = true;
     }
 
     public int[] ListtoPrimitive(List<Integer> in) {

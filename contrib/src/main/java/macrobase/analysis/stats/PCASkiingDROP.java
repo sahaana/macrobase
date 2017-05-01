@@ -44,14 +44,31 @@ public class PCASkiingDROP extends FeatureTransform {
 
 
 
-    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse){
+    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse){
         iter = 0;
         currNt = 0;
         currK = 0;
         attainedLBR = false;
         this.algo = algo;
         this.reuse = reuse;
-        pcaOpt = new PCASkiingOptimizer(qThresh, algo, reuse);
+        pcaOpt = new PCASkiingOptimizer(qThresh, kExp, algo, reuse);
+
+        MD = Stopwatch.createUnstarted();
+
+        times = new HashMap<>();
+
+        this.qThresh = qThresh;
+        this.lbr = lbr;
+        output = new MBStream<>();
+    }
+
+    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo){
+        iter = 0;
+        currNt = 0;
+        currK = 0;
+        attainedLBR = false;
+        this.algo = algo;
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
 
         MD = Stopwatch.createUnstarted();
 
@@ -90,7 +107,7 @@ public class PCASkiingDROP extends FeatureTransform {
             //store the K obtained and the diff in K from this currNt
             pcaOpt.setKList(currNt, currK);
             pcaOpt.setKDiff(iter, currK);
-            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], transformedData.getColumnDimension());
+            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currK);
             //CurrNt, iter has been updated to next iterations. Pass in next iter (so ++iter) to this function
             currNt = pcaOpt.getNextNtPE(++iter, currNt);
         } while (currNt < pcaOpt.getM());
@@ -123,7 +140,7 @@ public class PCASkiingDROP extends FeatureTransform {
     }
 
     public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
-        pcaOpt = new PCASkiingOptimizer(qThresh, algo, reuse);
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();
@@ -134,7 +151,7 @@ public class PCASkiingDROP extends FeatureTransform {
     }
 
     public double[] getDataSpectrum(List<Datum> records){
-        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD, reuse);
+        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         PCASVD svd = new PCASVD(pcaOpt.getDataMatrix());

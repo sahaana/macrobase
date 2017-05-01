@@ -9,12 +9,17 @@ import macrobase.ingest.SchemalessCSVIngester;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
  * Created by meep_me on 9/1/16.
  */
-public class SkiingBatchDROP {
+public class SVDDropExperiments {
+    public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/SVDExperiments/";
+    public static DateFormat day = new SimpleDateFormat("MM-dd");
+    public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
     private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
         String eol =  System.getProperty("line.separator");
@@ -63,6 +68,12 @@ public class SkiingBatchDROP {
         }
     }
 
+    private static String LBROutFile(String dataset, double qThresh, String tag, Date date){
+        String output = String.format("%s_%s_q%.3f_%s",minute.format(date),dataset,qThresh, tag);
+        return String.format(baseString + day.format(date) + "/KvLBR/%s.csv", output);
+    }
+
+
     private static String LBROutFile(String dataset, double lbr, double ep){
         String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr, ep);
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
@@ -73,9 +84,9 @@ public class SkiingBatchDROP {
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
     }
 
-    private static String kOutFile(String dataset, double lbr, double ep){
-        String output = String.format("%s_lbr%.4f_ep%.3f",dataset,lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/k/%s.csv", output);
+    private static String kOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
+        return String.format(baseString + day.format(date) + "/NTvK/%s.csv", output);
     }
 
     private static String kPredOutFile(String dataset, double lbr, double ep){
@@ -88,38 +99,47 @@ public class SkiingBatchDROP {
         return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
     }
 
-    //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
+    //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
+        String baseString = "/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/";
+        Date date = new Date();
+
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double qThresh = Double.parseDouble(args[2]);
-        PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.valueOf(args[3]);
-        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[4]);
+        int kExp = Integer.parseInt(args[3]);
+        PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.valueOf(args[4]);
+        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[5]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
         System.out.println(algo);
 
-        /*String dataset = "CinC";
-        double lbr = .98;
-        double qThresh = 1.96;
-        */
+
+        Map<Integer, Integer> kResults;
+
+
+        MacroBaseConf conf = new MacroBaseConf();
+
+        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format(baseString + "macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
+        List<Datum> data = ingester.getStream().drain();
+
+        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+        drop.consume(data);
+
+        kResults = drop.getKList();
+        mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh,kExp,reuse,date));
+
+
+
+        /*
 
         Map<Integer, double[]> LBRResults;
         Map<Integer, Double> timeResults;
         Map<Integer, Double> predTimeResults;
-        Map<Integer, Integer> kResults;
         Map<Integer, Integer> kIters;
         Map<Integer, Integer> kPred;
-
-        MacroBaseConf conf = new MacroBaseConf();
-
-        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
-        List<Datum> data = ingester.getStream().drain();
-
-        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, algo, reuse);
-        drop.consume(data);
 
         LBRResults = drop.getLBR();
         mapArrayToCSV(LBRResults, LBROutFile(dataset,lbr,qThresh));
@@ -130,14 +150,14 @@ public class SkiingBatchDROP {
         predTimeResults = drop.getPredTime();
         mapDoubleToCSV(predTimeResults, timeOutFile(dataset,lbr,qThresh, "Predicted"));
 
-        kResults = drop.getKList();
-        mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh));
+
 
         kPred = drop.getKPred();
         mapIntToCSV(kPred, kPredOutFile(dataset,lbr,qThresh));
 
         kIters = drop.getKItersList();
         mapIntToCSV(kIters, kItersOutFile(dataset,lbr,qThresh));
+        */
 
     }
 
