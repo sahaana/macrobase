@@ -85,6 +85,7 @@ public class BatchTechniqueComparison {
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SkiingBatchDROP
     public static void main(String[] args) throws Exception{
+        String baseString = "/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/";
         Date date = new Date();
 
         String dataset = args[0];
@@ -101,7 +102,7 @@ public class BatchTechniqueComparison {
 
         MacroBaseConf conf = new MacroBaseConf();
 
-        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
+        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format(baseString + "macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
         List<Datum> data = ingester.getStream().drain();
 
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, qThresh, lbr);
