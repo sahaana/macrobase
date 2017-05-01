@@ -154,7 +154,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         }
     }
 
-    public RealMatrix getKCI(int iter, double targetLBR) {
+    public int getKCI(int iter, double targetLBR) {
         //confidence interval based method for getting K
         double[] LBR;
         RealMatrix currTransform;
@@ -173,9 +173,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         if (targetLBR > LBR[0]) {
             KItersList.put(this.NtList.get(iter), ++iters);
             currKCI = LBR;
-            currTransform = this.transform(high);
             updateTrainWorkReuse();
-            return currTransform;
+            return high;
         }
 
         //Binary search for lowest K that achieves LBR
@@ -194,7 +193,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         KItersList.put(this.NtList.get(iter), iters);
         currKCI = LBR;
         updateTrainWorkReuse();
-        return this.transform(mid);
+        return mid;
     }
 
     private double[] evalK(double LBRThresh, RealMatrix currTransform) {

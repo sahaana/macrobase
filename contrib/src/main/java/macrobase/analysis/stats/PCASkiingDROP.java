@@ -28,7 +28,8 @@ public class PCASkiingDROP extends FeatureTransform {
     int iter;
     boolean attainedLBR;
 
-    RealMatrix currTransform;
+    RealMatrix transformedData;
+    int currK;
     PCASkiingOptimizer pcaOpt;
     Stopwatch sw;
     Stopwatch MD;
@@ -46,6 +47,7 @@ public class PCASkiingDROP extends FeatureTransform {
     public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse){
         iter = 0;
         currNt = 0;
+        currK = 0;
         attainedLBR = false;
         this.algo = algo;
         this.reuse = reuse;
@@ -78,7 +80,7 @@ public class PCASkiingDROP extends FeatureTransform {
             MD.reset();
             MD.start();
             pcaOpt.fit(currNt);
-            currTransform = pcaOpt.getKCI(iter, lbr); //function to get knee for K for this transform;
+            currK = pcaOpt.getKCI(iter, lbr); //function to get knee for K for this transform;
             MD.stop();
             //store how long (MD) this currNt took, diff between last and this, and store this as prevMD
             pcaOpt.updateMDRuntime(iter, currNt, (double) MD.elapsed(TimeUnit.MILLISECONDS));
@@ -86,16 +88,19 @@ public class PCASkiingDROP extends FeatureTransform {
             currLBR = pcaOpt.getCurrKCI();
             pcaOpt.setLBRList(currNt, currLBR);
             //store the K obtained and the diff in K from this currNt
-            pcaOpt.setKList(currNt, currTransform.getColumnDimension());
-            pcaOpt.setKDiff(iter, currTransform.getColumnDimension());
-            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
+            pcaOpt.setKList(currNt, currK);
+            pcaOpt.setKDiff(iter, currK);
+            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], transformedData.getColumnDimension());
             //CurrNt, iter has been updated to next iterations. Pass in next iter (so ++iter) to this function
             currNt = pcaOpt.getNextNtPE(++iter, currNt);
         } while (currNt < pcaOpt.getM());
 
+        transformedData = pcaOpt.transform(currK);
+
+
         log.debug("MICDROP 'COMPLETE'");
         log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
-        finalTransform = currTransform.getData();
+        finalTransform = transformedData.getData();
 
         /*
         log.debug("Computing Full Transform");
@@ -105,9 +110,9 @@ public class PCASkiingDROP extends FeatureTransform {
         currNt = pcaOpt.getNextNtFull(0,currNt);
         log.debug("Running SVD");
         pcaOpt.fit(currNt);
-        currTransform = pcaOpt.getKFull(lbr);
-        currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);
-        log.debug("For full PCASVD, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
+        transformedData = pcaOpt.getKFull(lbr);
+        currLBR = pcaOpt.LBRCI(transformedData, pcaOpt.getM(), 1.96);
+        log.debug("For full PCASVD, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], transformedData.getColumnDimension());
         */
 
         int i = 0;
