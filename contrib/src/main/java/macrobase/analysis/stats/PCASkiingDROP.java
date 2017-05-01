@@ -26,7 +26,6 @@ public class PCASkiingDROP extends FeatureTransform {
     double[] currLBR;
     int currNt;
     int iter;
-    boolean attainedLBR;
 
     RealMatrix transformedData;
     int currK;
@@ -48,12 +47,12 @@ public class PCASkiingDROP extends FeatureTransform {
         iter = 0;
         currNt = 0;
         currK = 0;
-        attainedLBR = false;
         this.algo = algo;
         this.reuse = reuse;
         pcaOpt = new PCASkiingOptimizer(qThresh, kExp, algo, reuse);
 
         MD = Stopwatch.createUnstarted();
+        sw = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
@@ -66,11 +65,11 @@ public class PCASkiingDROP extends FeatureTransform {
         iter = 0;
         currNt = 0;
         currK = 0;
-        attainedLBR = false;
         this.algo = algo;
         pcaOpt = new PCASkiingOptimizer(qThresh, algo);
 
         MD = Stopwatch.createUnstarted();
+        sw = Stopwatch.createUnstarted();
 
         times = new HashMap<>();
 
@@ -92,6 +91,7 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Processed Data");
         currNt = pcaOpt.getNextNtPE(iter, currNt);
         log.debug("Beginning DROP");
+        sw.start();
         do {
             log.debug("Iteration {}, {} samples", iter, currNt);
             MD.reset();
@@ -113,6 +113,7 @@ public class PCASkiingDROP extends FeatureTransform {
         } while (currNt < pcaOpt.getM());
 
         transformedData = pcaOpt.transform(currK);
+        sw.stop();
 
 
         log.debug("MICDROP 'COMPLETE'");
@@ -170,6 +171,8 @@ public class PCASkiingDROP extends FeatureTransform {
     public MBStream<Datum> getStream() throws Exception {
         return output;
     }
+
+    public long totalTime() { return sw.elapsed(TimeUnit.MILLISECONDS);}
 
     public Map<Integer, double[]> getLBR() { return pcaOpt.getLBRList();}
 

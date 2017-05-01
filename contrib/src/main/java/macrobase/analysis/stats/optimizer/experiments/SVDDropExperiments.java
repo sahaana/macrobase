@@ -84,15 +84,6 @@ public class SVDDropExperiments {
         }
     }
 
-    private static String LBROutFile(String dataset, double lbr, double ep){
-        String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr, ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/Nt/%s.csv", output);
-    }
-
-    private static String timeOutFile(String dataset, double lbr, double ep, String tag){
-        String output = String.format("%s_%s_lbr%.4f_ep%.3f",dataset, tag, lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/time/%s.csv", output);
-    }
 
     private static String kOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date){
         String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
@@ -104,16 +95,6 @@ public class SVDDropExperiments {
         return String.format(baseString + day.format(date) + "/MDtimeEst/%s.csv", output);
     }
 
-
-    private static String kPredOutFile(String dataset, double lbr, double ep){
-        String output = String.format("%s_lbr%.4f_ep%.3f",dataset,lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kPred/%s.csv", output);
-    }
-
-    private static String kItersOutFile(String dataset, double lbr, double ep){
-        String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr,ep);
-        return String.format("contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/batch/skiing/kIter/%s.csv", output);
-    }
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
@@ -130,7 +111,9 @@ public class SVDDropExperiments {
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
+        System.out.print(kExp);
         System.out.println(algo);
+        System.out.println(reuse);
 
 
         Map<Integer, Integer> kResults;
@@ -150,33 +133,6 @@ public class SVDDropExperiments {
 
         MDTimeResults = drop.getMDRuntimes();
         mapArrayToCSV2(MDTimeResults, timeEstimateOutFile(dataset,lbr,qThresh,kExp,reuse,date));
-
-        /*
-
-        Map<Integer, double[]> LBRResults;
-        Map<Integer, Double> timeResults;
-        Map<Integer, Double> predTimeResults;
-        Map<Integer, Integer> kIters;
-        Map<Integer, Integer> kPred;
-
-        LBRResults = drop.getLBR();
-        mapArrayToCSV(LBRResults, LBROutFile(dataset,lbr,qThresh));
-
-        timeResults = drop.getTime();
-        mapDoubleToCSV(timeResults, timeOutFile(dataset,lbr,qThresh,"Actual"));
-
-        predTimeResults = drop.getPredTime();
-        mapDoubleToCSV(predTimeResults, timeOutFile(dataset,lbr,qThresh, "Predicted"));
-
-
-
-        kPred = drop.getKPred();
-        mapIntToCSV(kPred, kPredOutFile(dataset,lbr,qThresh));
-
-        kIters = drop.getKItersList();
-        mapIntToCSV(kIters, kItersOutFile(dataset,lbr,qThresh));
-        */
-
     }
 
 }
