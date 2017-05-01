@@ -181,6 +181,8 @@ public class PCASkiingDROP extends FeatureTransform {
         return pcaOpt.getKList();
     }
 
+    public Map<Integer, double[]> getMDRuntimes() { return pcaOpt.bundleMDTimeGuess(); }
+
     public Map<Integer, Integer> getKItersList(){
         return pcaOpt.getKItersList();
     }

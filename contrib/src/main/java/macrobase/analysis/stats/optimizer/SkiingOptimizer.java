@@ -220,6 +220,14 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
+    public Map<Integer, double[]> bundleMDTimeGuess(){
+        Map<Integer, double[]> predVact = new HashMap<>();
+        for (int Nt: trainTimeList.keySet()){
+            predVact.put(Nt, new double[] {trainTimeList.get(Nt), predictedTrainTimeList.getOrDefault(Nt,0.0)});
+        }
+        return predVact;
+    }
+
     //TODO: scale of Nt vs K is off. must normalize
     public int getNextNtObjectiveFunc(int iter, int currNt){
         double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);

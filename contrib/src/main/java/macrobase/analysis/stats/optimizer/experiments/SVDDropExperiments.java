@@ -50,7 +50,7 @@ public class SVDDropExperiments {
     }
 
 
-    private static void mapArrayToCSV(Map<Integer, double[]> dataMap, String file){
+    private static void mapArrayToCSV3(Map<Integer, double[]> dataMap, String file){
         String eol =  System.getProperty("line.separator");
         try (Writer writer = new FileWriter(file)) {
             for (Map.Entry<Integer, double[]> entry: dataMap.entrySet()) {
@@ -68,11 +68,21 @@ public class SVDDropExperiments {
         }
     }
 
-    private static String LBROutFile(String dataset, double qThresh, String tag, Date date){
-        String output = String.format("%s_%s_q%.3f_%s",minute.format(date),dataset,qThresh, tag);
-        return String.format(baseString + day.format(date) + "/KvLBR/%s.csv", output);
+    private static void mapArrayToCSV2(Map<Integer, double[]> dataMap, String file){
+        String eol =  System.getProperty("line.separator");
+        try (Writer writer = new FileWriter(file)) {
+            for (Map.Entry<Integer, double[]> entry: dataMap.entrySet()) {
+                writer.append(Integer.toString(entry.getKey()))
+                        .append(',')
+                        .append(Double.toString(entry.getValue()[0]))
+                        .append(',')
+                        .append(Double.toString(entry.getValue()[1]))
+                        .append(eol);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+        }
     }
-
 
     private static String LBROutFile(String dataset, double lbr, double ep){
         String output = String.format("%s_lbr%.4f_ep%.3f",dataset, lbr, ep);
@@ -88,6 +98,12 @@ public class SVDDropExperiments {
         String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
         return String.format(baseString + day.format(date) + "/NTvK/%s.csv", output);
     }
+
+    private static String timeEstimateOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
+        return String.format(baseString + day.format(date) + "/MDtimeEst/%s.csv", output);
+    }
+
 
     private static String kPredOutFile(String dataset, double lbr, double ep){
         String output = String.format("%s_lbr%.4f_ep%.3f",dataset,lbr,ep);
@@ -118,6 +134,7 @@ public class SVDDropExperiments {
 
 
         Map<Integer, Integer> kResults;
+        Map<Integer, double[]> MDTimeResults;
 
 
         MacroBaseConf conf = new MacroBaseConf();
@@ -131,7 +148,8 @@ public class SVDDropExperiments {
         kResults = drop.getKList();
         mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh,kExp,reuse,date));
 
-
+        MDTimeResults = drop.getMDRuntimes();
+        mapArrayToCSV2(MDTimeResults, timeEstimateOutFile(dataset,lbr,qThresh,kExp,reuse,date));
 
         /*
 
