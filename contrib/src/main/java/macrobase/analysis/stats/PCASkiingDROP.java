@@ -39,15 +39,17 @@ public class PCASkiingDROP extends FeatureTransform {
     double lbr;
 
     PCASkiingOptimizer.PCAAlgo algo;
+    PCASkiingOptimizer.work reuse;
 
 
 
-    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo){
+    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse){
         iter = 0;
         currNt = 0;
         attainedLBR = false;
         this.algo = algo;
-        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
+        this.reuse = reuse;
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo, reuse);
 
         MD = Stopwatch.createUnstarted();
 
@@ -95,8 +97,9 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
         finalTransform = currTransform.getData();
 
+        /*
         log.debug("Computing Full Transform");
-        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD);
+        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD, );
         pcaOpt.extractData(records);
         pcaOpt.preprocess();
         currNt = pcaOpt.getNextNtFull(0,currNt);
@@ -105,6 +108,7 @@ public class PCASkiingDROP extends FeatureTransform {
         currTransform = pcaOpt.getKFull(lbr);
         currLBR = pcaOpt.LBRCI(currTransform, pcaOpt.getM(), 1.96);
         log.debug("For full PCASVD, LOW {}, LBR {}, HIGH {}, VAR {} K {}", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currTransform.getColumnDimension());
+        */
 
         int i = 0;
         for (Datum d: records){
@@ -114,7 +118,7 @@ public class PCASkiingDROP extends FeatureTransform {
     }
 
     public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
-        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo, reuse);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();
@@ -125,7 +129,7 @@ public class PCASkiingDROP extends FeatureTransform {
     }
 
     public double[] getDataSpectrum(List<Datum> records){
-        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD);
+        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD, reuse);
         pcaOpt.extractData(records);
         log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         PCASVD svd = new PCASVD(pcaOpt.getDataMatrix());

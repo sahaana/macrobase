@@ -19,15 +19,29 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     protected PCA pca;
     protected PCAAlgo algo;
 
+    protected boolean reuse;
+
     public enum PCAAlgo{
-        SVD, PI, TROPP, FAST;
+        SVD, PI, TROPP, FAST
     }
 
-    public PCASkiingOptimizer(double qThresh, PCAAlgo algo) {
+    public enum work {
+        REUSE, NOREUSE
+    }
+
+    public PCASkiingOptimizer(double qThresh, PCAAlgo algo, work reuseWork) {
         super(qThresh);
         this.KItersList = new HashMap<>();
         this.algo = algo;
 
+        switch(reuseWork) {
+            case NOREUSE:
+                this.reuse = false;
+                break;
+            default:
+                this.reuse = true;
+                break;
+        }
     }
 
     public int[] ListtoPrimitive(List<Integer> in) {
@@ -127,14 +141,16 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     }
 
     public void updateTrainWorkReuse(){
-        Double[] primLBRs = lastLBRs.toArray(new Double[lastLBRs.size()]);
-        int numPoints = (int) Math.round(reusePercent*lastLBRs.size());
-        int[] sortedLBRs = Arrays.copyOfRange(argSort(primLBRs, true),0,numPoints);
-        for (int i: sortedLBRs){
-            trainList.add(lastIndicesA[i]);
-            trainList.add(lastIndicesB[i]);
-            testList.remove((Object) lastIndicesA[i]);
-            testList.remove((Object) lastIndicesB[i]);
+        if (reuse) {
+            Double[] primLBRs = lastLBRs.toArray(new Double[lastLBRs.size()]);
+            int numPoints = (int) Math.round(reusePercent*lastLBRs.size());
+            int[] sortedLBRs = Arrays.copyOfRange(argSort(primLBRs, true),0,numPoints);
+            for (int i: sortedLBRs){
+                trainList.add(lastIndicesA[i]);
+                trainList.add(lastIndicesB[i]);
+                testList.remove((Object) lastIndicesA[i]);
+                testList.remove((Object) lastIndicesB[i]);
+            }
         }
     }
 

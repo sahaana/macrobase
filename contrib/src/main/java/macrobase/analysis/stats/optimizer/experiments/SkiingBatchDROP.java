@@ -95,6 +95,7 @@ public class SkiingBatchDROP {
         double lbr = Double.parseDouble(args[1]);
         double qThresh = Double.parseDouble(args[2]);
         PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.valueOf(args[3]);
+        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[4]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
@@ -117,7 +118,7 @@ public class SkiingBatchDROP {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, algo);
+        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, algo, reuse);
         drop.consume(data);
 
         LBRResults = drop.getLBR();

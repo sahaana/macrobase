@@ -5,7 +5,6 @@ import macrobase.analysis.stats.FFTSkiingDROP;
 import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.analysis.stats.RPSkiingDROP;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
-import macrobase.analysis.stats.optimizer.RPSkiingOptimizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
@@ -108,7 +107,7 @@ public class BatchTechniqueComparison {
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, qThresh, lbr);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, qThresh, lbr);
         RPSkiingDROP rpSkiingDROP = new RPSkiingDROP(conf, qThresh, lbr);
-        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
+        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.work.REUSE);
 
         paaResults = paaDrop.genBasePlots(data);
         fftResults = fftDrop.genBasePlots(data);

@@ -1,9 +1,6 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
-import macrobase.analysis.stats.FFTSkiingDROP;
-import macrobase.analysis.stats.PAASkiingDROP;
 import macrobase.analysis.stats.PCASkiingDROP;
-import macrobase.analysis.stats.RPSkiingDROP;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -12,11 +9,7 @@ import macrobase.ingest.SchemalessCSVIngester;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by meep_me on 9/1/16.
@@ -56,7 +49,7 @@ public class SpectrumDump {
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));// new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();
 
-        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
+        PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.work.REUSE);
         spectrum = pcaDrop.getDataSpectrum(data);
 
         doubleToCSV(spectrum, spectrumOutFile(dataset));

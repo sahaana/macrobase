@@ -42,6 +42,10 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
         double temp;
         int entriesAveraged = this.N / K;
 
+        if (K == this.N){
+            return this.dataMatrix;
+        }
+
         for (int i = 0; i < this.M; i++){
             currVec = this.dataMatrix.getRowVector(i);
             temp = 0;
