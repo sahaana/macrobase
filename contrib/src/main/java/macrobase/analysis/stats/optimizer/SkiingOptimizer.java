@@ -431,6 +431,8 @@ public abstract class SkiingOptimizer {
 
     public Map getKPredList(){ return kPredList; }
 
+    public RealMatrix getDataMatrix(){ return dataMatrix; }
+
     public abstract void fit(int Nt);
 
     public abstract RealMatrix transform(int K);

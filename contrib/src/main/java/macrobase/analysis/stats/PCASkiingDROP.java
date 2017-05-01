@@ -3,6 +3,7 @@ package macrobase.analysis.stats;
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
+import macrobase.analysis.stats.optimizer.util.PCASVD;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -122,6 +123,17 @@ public class PCASkiingDROP extends FeatureTransform {
         log.debug("Beginning PCASVD base run");
         return pcaOpt.computeLBRs();
     }
+
+    public double[] getDataSpectrum(List<Datum> records){
+        pcaOpt = new PCASkiingOptimizer(qThresh, PCASkiingOptimizer.PCAAlgo.SVD);
+        pcaOpt.extractData(records);
+        log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
+        PCASVD svd = new PCASVD(pcaOpt.getDataMatrix());
+        log.debug("Dumping Spectrum");
+        return svd.getSpectrum();
+    }
+
+
 
     @Override
     public void shutdown() throws Exception {

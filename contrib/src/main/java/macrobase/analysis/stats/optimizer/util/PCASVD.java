@@ -15,6 +15,7 @@ public class PCASVD implements PCA{
     private RealMatrix transformationMatrix; // V
     private RealVector columnMeans;
     private SVD svd; //gives X = UDV', U=mxp D=pxp V' = pxn
+    private double[] spectrum;
     private int N;
     private int M;
     private int P;
@@ -46,7 +47,7 @@ public class PCASVD implements PCA{
             DenseMatrix cdm = new DenseMatrix(centeredDataMatrix.getData());
             svd = svd.factor(cdm);
             DenseMatrix tm = svd.getVt();
-            double[] ss = svd.getS();
+            spectrum = svd.getS();
             tm.transpose();
             transformationMatrix = new Array2DRowRealMatrix(Matrices.getArray(tm));
             P = transformationMatrix.getColumnDimension(); //TODO: remember this used to be rowdim
@@ -60,6 +61,8 @@ public class PCASVD implements PCA{
     }
 
     public int getM(){ return this.M; }
+
+    public double[] getSpectrum() { return this.spectrum; }
 
     public RealMatrix getTransformationMatrix(){ return this.transformationMatrix; }
 

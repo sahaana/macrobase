@@ -27,8 +27,6 @@ public class BatchTechniqueComparison {
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
-
-
     private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
         String eol =  System.getProperty("line.separator");
         try (Writer writer = new FileWriter(file)) {
@@ -42,7 +40,6 @@ public class BatchTechniqueComparison {
             ex.printStackTrace(System.err);
         }
     }
-
 
     private static void mapIntToCSV(Map<Integer, Integer> dataMap, String file){
         String eol =  System.getProperty("line.separator");
@@ -76,7 +73,6 @@ public class BatchTechniqueComparison {
             ex.printStackTrace(System.err);
         }
     }
-
 
     private static String LBROutFile(String dataset, double qThresh, String tag, Date date){
         String output = String.format("%s_%s_q%.3f_%s",minute.format(date),dataset,qThresh, tag);
