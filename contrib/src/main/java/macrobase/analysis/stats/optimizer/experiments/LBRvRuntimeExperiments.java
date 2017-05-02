@@ -40,7 +40,7 @@ public class LBRvRuntimeExperiments {
     }
 
     private static String timeOutFile(String dataset, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_%s_ep%.2f_kexp%d_%s",minute.format(date),dataset, algo, qThresh, kExp, reuse);
+        String output = String.format("%s_%s_%s_q%.2f_kexp%d_%s",minute.format(date),dataset, algo, qThresh, kExp, reuse);
         return String.format(baseString + day.format(date) + "/%s.csv", output);
     }
 

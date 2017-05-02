@@ -174,6 +174,8 @@ public class PCASkiingDROP extends FeatureTransform {
 
     public long totalTime() { return sw.elapsed(TimeUnit.MILLISECONDS);}
 
+    public int finalK() { return currK; }
+
     public Map<Integer, double[]> getLBR() { return pcaOpt.getLBRList();}
 
     public Map<Integer, Double> getTime(){
