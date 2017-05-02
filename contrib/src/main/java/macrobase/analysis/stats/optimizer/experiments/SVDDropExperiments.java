@@ -82,7 +82,7 @@ public class SVDDropExperiments {
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
-        System.out.print(kExp);
+        System.out.println(kExp);
         System.out.println(algo);
         System.out.println(reuse);
 
