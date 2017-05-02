@@ -6,6 +6,7 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -21,46 +22,15 @@ public class SVDDropExperiments {
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
-    private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(file)) {
-            for (Map.Entry<Integer, Double> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
-
     private static void mapIntToCSV(Map<Integer, Integer> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
         String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(file)) {
+        try (Writer writer = new FileWriter(f)) {
             for (Map.Entry<Integer, Integer> entry: dataMap.entrySet()) {
                 writer.append(Integer.toString(entry.getKey()))
                         .append(',')
                         .append(Integer.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
-
-
-    private static void mapArrayToCSV3(Map<Integer, double[]> dataMap, String file){
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(file)) {
-            for (Map.Entry<Integer, double[]> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()[0]))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()[1]))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()[2]))
                         .append(eol);
             }
         } catch (IOException ex) {
@@ -98,7 +68,6 @@ public class SVDDropExperiments {
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
-        String baseString = "/Users/meep_me/Desktop/Spring Rotation/workspace/OPTIMIZER/";
         Date date = new Date();
 
 
@@ -122,7 +91,7 @@ public class SVDDropExperiments {
 
         MacroBaseConf conf = new MacroBaseConf();
 
-        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format(baseString + "macrobase/contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
+        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
         List<Datum> data = ingester.getStream().drain();
 
         PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);

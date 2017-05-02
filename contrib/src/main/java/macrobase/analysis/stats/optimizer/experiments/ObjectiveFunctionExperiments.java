@@ -6,6 +6,7 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -25,8 +26,10 @@ public class ObjectiveFunctionExperiments {
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
     private static void mapLongToCSV(Map<Integer, Long> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
         String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(file)) {
+        try (Writer writer = new FileWriter(f)) {
             for (Map.Entry<Integer, Long> entry: dataMap.entrySet()) {
                 writer.append(Integer.toString(entry.getKey()))
                         .append(',')
@@ -39,12 +42,30 @@ public class ObjectiveFunctionExperiments {
     }
 
     private static void mapIntToCSV(Map<Integer, Integer> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
         String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(file)) {
+        try (Writer writer = new FileWriter(f)) {
             for (Map.Entry<Integer, Integer> entry: dataMap.entrySet()) {
                 writer.append(Integer.toString(entry.getKey()))
                         .append(',')
                         .append(Integer.toString(entry.getValue()))
+                        .append(eol);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
+    private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
+        String eol =  System.getProperty("line.separator");
+        try (Writer writer = new FileWriter(f)) {
+            for (Map.Entry<Integer, Double> entry: dataMap.entrySet()) {
+                writer.append(Integer.toString(entry.getKey()))
+                        .append(',')
+                        .append(Double.toString(entry.getValue()))
                         .append(eol);
             }
         } catch (IOException ex) {
@@ -62,6 +83,16 @@ public class ObjectiveFunctionExperiments {
         return String.format(baseString + day.format(date) + "/KEXPvK/%s.csv", output);
     }
 
+    private static String predictedOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,algo,reuse);
+        return String.format(baseString + day.format(date) + "/objValue/%s_predicted.csv", output);
+    }
+
+    private static String trueOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,algo,reuse);
+        return String.format(baseString + day.format(date) + "/objValue/%s_true.csv", output);
+    }
+
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
@@ -76,7 +107,7 @@ public class ObjectiveFunctionExperiments {
 
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
         PCASkiingOptimizer.work[] options = {PCASkiingOptimizer.work.NOREUSE, PCASkiingOptimizer.work.REUSE};
-        int[] kExps = {1,2,3,4,5};
+        int[] kExps = {1,2,3,4,5,6,7,8};
 
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;
@@ -95,6 +126,8 @@ public class ObjectiveFunctionExperiments {
                     drop.consume(data);
                     runtimes.put(kExp,drop.totalTime());
                     finalKs.put(kExp, drop.finalK());
+                    mapDoubleToCSV(drop.getTrueObjective(), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
+                    mapDoubleToCSV(drop.getPredictedObjective(), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
                 }
                 mapLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date));
                 mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date));

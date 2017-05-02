@@ -36,6 +36,8 @@ public abstract class SkiingOptimizer {
     protected Map<Integer, Double> trainTimeList;
     protected Map<Integer, Double> predictedTrainTimeList;
     protected Map<Integer, Integer> kPredList;
+    protected Map<Integer, Double> trueObjective;
+    protected Map<Integer, Double> predictedObjective;
 
 
     protected double qThresh;
@@ -70,6 +72,8 @@ public abstract class SkiingOptimizer {
         this.KList = new HashMap<>();
         this.trainTimeList = new HashMap<>();
         this.predictedTrainTimeList = new HashMap<>();
+        this.trueObjective = new HashMap<>();
+        this.predictedObjective = new HashMap<>();
         this.kPredList = new HashMap<>();
         this.kDiffs = new int[this.numDiffs];
         this.MDDiffs = new double[this.numDiffs];
@@ -283,19 +287,22 @@ public abstract class SkiingOptimizer {
     }
 
     public int getNextNtObjective(int iter, int currNt){
-        //lastk^scaling + MDtime(currNt)
+        //lastk^scaling + MDtime(currNt). Compute and store both predicted and actual
         double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
-        double currObjective;
+        double predObjective;
         int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
         int kGuess = predictK(iter, nextNt);
         double kTimeGuess = Math.pow(kGuess,kScaling);
 
-        currObjective = NtTimeGuess*(1./1) + kTimeGuess;
+        predObjective = NtTimeGuess*(1./1) + kTimeGuess;
+
+        trueObjective.put(currNt, prevObjective);
+        predictedObjective.put(nextNt, predObjective);
 
         // giving it a 10% wiggle and first feasible bump
-        if ((currObjective <= (1.0)*prevObjective) || (firstKDrop)){ //(nextNt <= 1000){ //
+        if ((predObjective <= (1.0)*prevObjective) || (firstKDrop)){ //(nextNt <= 1000){ //
             return nextNt;
         }
         return M+1;
@@ -440,6 +447,10 @@ public abstract class SkiingOptimizer {
     public Map getKPredList(){ return kPredList; }
 
     public RealMatrix getDataMatrix(){ return dataMatrix; }
+
+    public Map getTrueObjective() { return trueObjective; }
+
+    public Map getPredictedObjective() { return predictedObjective; }
 
     public abstract void fit(int Nt);
 
