@@ -16,7 +16,7 @@ import java.util.List;
  * Created by meep_me on 9/1/16.
  */
 public class SpectrumDump {
-    public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/baseline/spectrum";
+    public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/baselineExperiments/spectrum";
 
     private static void doubleToCSV(double[] vals, String file){
         File f = new File(file);
