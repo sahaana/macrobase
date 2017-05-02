@@ -68,6 +68,9 @@ public class BatchTechniqueComparison {
         Map<String,Map<Integer, Double>> paaResults;
         Map<String,Map<Integer, Double>> rpResults;
         Map<String,Map<Integer, Double>> pcaResults;
+        Map<String,Map<Integer, Double>> pcaTroppResults;
+        Map<String,Map<Integer, Double>> pcaFastResults;
+
 
         MacroBaseConf conf = new MacroBaseConf();
 
