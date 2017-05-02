@@ -187,6 +187,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             return high;
         }
 
+
         //Binary search for lowest K that achieves LBR
         while (low != high) {
             LBR = evalK(targetLBR, mid);
@@ -270,17 +271,14 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         double std = 0;
         double slop;
 
-        // Generate list to get entire dimension
-        //for (int i = 0; i < N; i++) {
-        //    allIndices[i] = i;
-        //}
         kIndices = Arrays.copyOf(allIndices, K); //list to get up to k
 
+        // No train and test separation because it isn't really required, and you'll run out of points towards the end
         for (int i = 0; i < numPairs; i++) {
-            indicesA[i] = testList.get(rand.nextInt(testList.size()));
-            indicesB[i] = testList.get(rand.nextInt(testList.size()));
+            indicesA[i] = rand.nextInt(M);//testList.get(rand.nextInt(testList.size()));
+            indicesB[i] = rand.nextInt(M);//testList.get(rand.nextInt(testList.size()));
             while (indicesA[i] == indicesB[i]) {
-                indicesA[i] = testList.get(rand.nextInt(testList.size()));
+                indicesA[i] = rand.nextInt(M);//testList.get(rand.nextInt(testList.size()));
             }
             //calculating indices union of A and B and the max index
             jIndices.add(indicesA[i]);
