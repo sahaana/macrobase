@@ -39,8 +39,10 @@ public class SVDDropExperiments {
     }
 
     private static void mapArrayToCSV2(Map<Integer, double[]> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
         String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(file)) {
+        try (Writer writer = new FileWriter(f)) {
             for (Map.Entry<Integer, double[]> entry: dataMap.entrySet()) {
                 writer.append(Integer.toString(entry.getKey()))
                         .append(',')
