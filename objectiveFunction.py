@@ -13,4 +13,4 @@ subprocess.call(comp, shell=True)
 subprocess.call(package, shell=True)
 
 for dataset in datasets:
-    subprocess.call(proc % (dataset, q, kExp), shell=True)
+    subprocess.call(proc % (dataset, LBR, q), shell=True)
