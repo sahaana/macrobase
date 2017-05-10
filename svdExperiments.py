@@ -9,7 +9,7 @@ kExp = 3
 algo = "SVD"
 work = "NOREUSE"
 
-proc = "java ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments %s %f %f %d %s %s"
+proc = "java -xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments %s %f %f %d %s %s"
 comp = "mvn compile -Dmaven.test.skip=true"
 package = "mvn package -DskipTests"
 subprocess.call(comp, shell=True)

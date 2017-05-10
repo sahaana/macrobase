@@ -105,7 +105,6 @@ public class BatchTechniqueComparison {
         mapDoubleToCSV(fftResults.get("time"), timeOutFile(dataset,qThresh, "FFT", date));
         mapDoubleToCSV(rpResults.get("time"),  timeOutFile(dataset,qThresh, "RP", date));
         mapDoubleToCSV(pcaResults.get("time"), timeOutFile(dataset,qThresh, "PCASVD", date));
-        mapDoubleToCSV(pcaResults.get("time"), timeOutFile(dataset,qThresh, "PCASVD", date));
         mapDoubleToCSV(pcaTroppResults.get("time"), timeOutFile(dataset,qThresh, "PCATROPP", date));
         mapDoubleToCSV(pcaFastResults.get("time"), timeOutFile(dataset,qThresh, "PCAFAST", date));
         

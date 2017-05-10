@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 public class FFTSkiingDROP extends FeatureTransform {
     private static final Logger log = LoggerFactory.getLogger(FFTSkiingDROP.class);
-
     private final MBStream<Datum> output;
     double[][] finalTransform;;
     double[] currLBR;

@@ -123,6 +123,13 @@ public abstract class SkiingOptimizer {
 
     public void preprocess(){
         this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
+        //touch all of the data
+        double touch;
+        for (int i = 0; i < M; i++){
+            for (int j = 0; j < N; j++){
+                touch = this.dataMatrix.getEntry(i,j);
+            }
+        }
     }
 
     public int getNextNtFixedInterval(int iter, int currNt){
