@@ -20,58 +20,11 @@ import java.util.Map;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class ObjectiveFunctionExperiments {
+public class ObjectiveFunctionExperiments extends Experiment {
     public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/ObjectiveFuncExperiments/";
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
-    private static void mapLongToCSV(Map<Integer, Long> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Integer, Long> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Long.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
-
-    private static void mapIntToCSV(Map<Integer, Integer> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Integer, Integer> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Integer.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
-
-    private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Integer, Double> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
 
     private static String timeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
         String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse);
@@ -129,7 +82,7 @@ public class ObjectiveFunctionExperiments {
                     mapDoubleToCSV(drop.getTrueObjective(), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
                     mapDoubleToCSV(drop.getPredictedObjective(), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
                 }
-                mapLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date));
+                mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date));
                 mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date));
             }
         }

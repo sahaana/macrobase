@@ -2,15 +2,10 @@ package macrobase.analysis.stats.optimizer.experiments;
 
 import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
-import macrobase.analysis.stats.optimizer.util.PCASVD;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,26 +16,11 @@ import java.util.Map;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class LBRvRuntimeExperiments {
+public class LBRvRuntimeExperiments extends Experiment {
     public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/LBRvTimeExperiments/";
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
-    private static void mapLongToCSV(Map<Double, Long> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Double, Long> entry: dataMap.entrySet()) {
-                writer.append(Double.toString(entry.getKey()))
-                        .append(',')
-                        .append(Long.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
 
     private static String timeOutFile(String dataset, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
         String output = String.format("%s_%s_%s_q%.2f_kexp%d_%s",minute.format(date),dataset, algo, qThresh, kExp, reuse);
@@ -76,7 +56,7 @@ public class LBRvRuntimeExperiments {
                     drop.consume(data);
                     runtimes.put(lbr,drop.totalTime());
                 }
-                mapLongToCSV(runtimes, timeOutFile(dataset,qThresh,kExp,algo,reuse,date));
+                mapDoubleLongToCSV(runtimes, timeOutFile(dataset,qThresh,kExp,algo,reuse,date));
             }
         }
     }

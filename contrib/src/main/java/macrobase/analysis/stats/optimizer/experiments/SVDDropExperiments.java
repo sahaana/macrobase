@@ -17,45 +17,10 @@ import java.util.*;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class SVDDropExperiments {
+public class SVDDropExperiments extends Experiment {
     public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/SVDExperiments/";
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
-
-    private static void mapIntToCSV(Map<Integer, Integer> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Integer, Integer> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Integer.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
-
-    private static void mapArrayToCSV2(Map<Integer, double[]> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Integer, double[]> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()[0]))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()[1]))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
-
 
     private static String kOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date){
         String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
@@ -67,10 +32,11 @@ public class SVDDropExperiments {
         return String.format(baseString + day.format(date) + "/MDtimeEst/%s.csv", output);
     }
 
-
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
+        int numTrials = 20;
+        double[] defDub = {0,0};
 
 
         String dataset = args[0];
@@ -87,23 +53,53 @@ public class SVDDropExperiments {
         System.out.println(reuse);
 
 
-        Map<Integer, Integer> kResults;
-        Map<Integer, double[]> MDTimeResults;
+        Map<Integer, Double> kcounts = new HashMap<>();
+        Map<Integer, Double> tcounts = new HashMap<>();
+        Map<Integer, Integer> kResults = new HashMap<>();
+        Map<Integer, double[]> MDTimeResults = new HashMap<>();
 
+        Map<Integer, Integer> tempkResults;
+        Map<Integer, double[]> tempMDTimeResults;
 
         MacroBaseConf conf = new MacroBaseConf();
 
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
         List<Datum> data = ingester.getStream().drain();
 
-        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
-        drop.consume(data);
+        for (int i = 0; i < numTrials; i++){
+            PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+            drop.consume(data);
 
-        kResults = drop.getKList();
+            tempkResults = drop.getKList();
+            tempMDTimeResults = drop.getMDRuntimes();
+
+            //update K results
+            for (Map.Entry<Integer, Integer> entry: tempkResults.entrySet()) {
+                int key = entry.getKey();
+                int kval = entry.getValue();
+
+                kcounts.put(key, 1 + kcounts.getOrDefault(key,0.0));
+                kResults.put(key, kval + kResults.getOrDefault(key,0));
+            }
+
+            //update time results
+            for (Map.Entry<Integer, double[]> entry: tempMDTimeResults.entrySet()) {
+                int key = entry.getKey();
+                double treal = entry.getValue()[0];
+                double tguess = entry.getValue()[1];
+                double oreal = MDTimeResults.getOrDefault(key,defDub)[0];
+                double oguess = MDTimeResults.getOrDefault(key,defDub)[1];
+
+                tcounts.put(key, 1 + tcounts.getOrDefault(key,0.0));
+                MDTimeResults.put(key, new double[] {treal+oreal, tguess+oguess});
+            }
+        }
+
+        kResults = scaleIntMap(kResults,kcounts);
+        MDTimeResults = scaleDouble2Map(MDTimeResults, tcounts);
+
         mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh,kExp,reuse,date));
-
-        MDTimeResults = drop.getMDRuntimes();
-        mapArrayToCSV2(MDTimeResults, timeEstimateOutFile(dataset,lbr,qThresh,kExp,reuse,date));
+        mapDouble2ToCSV(MDTimeResults, timeEstimateOutFile(dataset,lbr,qThresh,kExp,reuse,date));
     }
 
 }

@@ -246,13 +246,14 @@ public abstract class SkiingOptimizer {
 
     //TODO: scale of Nt vs K is off. must normalize
     public int getNextNtObjectiveFunc(int iter, int currNt){
-        double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
+        // objective = M*K^s + MD(Nt)
+        double prevObjective = (M*Math.pow(KList.get(currNt), kScaling)) + trainTimeList.get(currNt);
         double currObjective;
         int nextNt =  NtTimeGuessOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
         int kGuess = predictK(iter, nextNt);
-        double kTimeGuess = Math.pow(kGuess,kScaling);
+        double kTimeGuess = M*Math.pow(kGuess,kScaling);
 
         currObjective = NtTimeGuess*(1./1) + kTimeGuess;
 

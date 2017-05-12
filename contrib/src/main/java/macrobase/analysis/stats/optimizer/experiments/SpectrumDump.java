@@ -15,27 +15,12 @@ import java.util.List;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class SpectrumDump {
+public class SpectrumDump extends Experiment{
     public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/baselineExperiments/spectrum";
-
-    private static void doubleToCSV(double[] vals, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (double val: vals) {
-                writer.append(Double.toString(val))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
 
     private static String spectrumOutFile(String dataset){
         return String.format(baseString + "/%s_spec.csv", dataset);
     }
-
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
@@ -54,9 +39,7 @@ public class SpectrumDump {
         PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
         spectrum = pcaDrop.getDataSpectrum(data);
 
-        doubleToCSV(spectrum, spectrumOutFile(dataset));
-
-
+        doubleListToCSV(spectrum, spectrumOutFile(dataset));
     }
 
 }

@@ -22,26 +22,10 @@ import java.util.Map;
 /**
  * Created by meep_me on 9/1/16.
  */
-public class BatchTechniqueComparison {
+public class BatchTechniqueComparison extends Experiment {
     public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/baselineExperiments/";
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
-
-    private static void mapDoubleToCSV(Map<Integer, Double> dataMap, String file){
-        File f = new File(file);
-        f.getParentFile().mkdirs();
-        String eol =  System.getProperty("line.separator");
-        try (Writer writer = new FileWriter(f)) {
-            for (Map.Entry<Integer, Double> entry: dataMap.entrySet()) {
-                writer.append(Integer.toString(entry.getKey()))
-                        .append(',')
-                        .append(Double.toString(entry.getValue()))
-                        .append(eol);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-        }
-    }
 
     private static String LBROutFile(String dataset, double qThresh, String tag, Date date){
         String output = String.format("%s_%s_q%.3f_%s",minute.format(date),dataset,qThresh, tag);

@@ -68,12 +68,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         qr.factor(load);
         PCA tempPca = new PCASVD(rLoad);
         tempPca.transform(rLoad,1);
-        try {
-            TimeUnit.SECONDS.sleep(2);
-            log.debug("done waiting");
-        } catch (InterruptedException ie){
-            ie.printStackTrace();
-        }
     }
 
     public void warmUp(int Nt){
@@ -82,7 +76,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         for (int i = 0; i < Nt - currTrain; i++){
             int j = rand.nextInt(testList.size());
             trainList.add(testList.get(j));
-            //testList.remove(j);
         }
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
         switch (algo){
