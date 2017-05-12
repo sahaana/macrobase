@@ -90,10 +90,12 @@ public class PCASkiingDROP extends FeatureTransform {
         pcaOpt.preprocess();
         log.debug("Processed Data");
         currNt = pcaOpt.getNextNtPE(iter, currNt);
+        pcaOpt.warmUp(currNt);
+        log.debug("Warmed Up");
         log.debug("Beginning DROP");
         sw.start();
         do {
-            log.debug("Iteration {}, {} samples", iter, currNt);
+            ////log.debug("Iteration {}, {} samples", iter, currNt);
             MD.reset();
             MD.start();
             pcaOpt.fit(currNt);
@@ -107,14 +109,13 @@ public class PCASkiingDROP extends FeatureTransform {
             //store the K obtained and the diff in K from this currNt
             pcaOpt.setKList(currNt, currK);
             pcaOpt.setKDiff(iter, currK);
-            log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currK);
+            ////log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currK);
             //CurrNt, iter has been updated to next iterations. Pass in next iter (so ++iter) to this function
             currNt = pcaOpt.getNextNtPE(++iter, currNt);
         } while (currNt < pcaOpt.getM());
 
-        transformedData = pcaOpt.transform(currK);
         sw.stop();
-
+        transformedData = pcaOpt.transform(currK);
 
         log.debug("MICDROP 'COMPLETE'");
         log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());

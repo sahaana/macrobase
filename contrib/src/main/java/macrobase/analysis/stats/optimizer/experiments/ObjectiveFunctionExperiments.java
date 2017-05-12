@@ -107,7 +107,7 @@ public class ObjectiveFunctionExperiments {
 
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
         PCASkiingOptimizer.work[] options = {PCASkiingOptimizer.work.NOREUSE, PCASkiingOptimizer.work.REUSE};
-        int[] kExps = {1,2,3,4,5,6,7,8};
+        int[] kExps = {1,2,3};
 
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;

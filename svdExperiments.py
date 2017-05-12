@@ -5,7 +5,7 @@ datasets = ["50words", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken",
 
 lbr = 0.98
 q = 1.96
-kExp = 3
+kExp = 2
 algo = "SVD"
 work = "NOREUSE"
 

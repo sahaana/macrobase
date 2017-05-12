@@ -2,6 +2,10 @@ package macrobase.analysis.stats.optimizer;
 
 
 import macrobase.datamodel.Datum;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.NotConvergedException;
+import no.uib.cipr.matrix.QR;
+import no.uib.cipr.matrix.SVD;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
@@ -14,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public abstract class SkiingOptimizer {
     private static final Logger log = LoggerFactory.getLogger(SkiingOptimizer.class);
@@ -124,10 +129,10 @@ public abstract class SkiingOptimizer {
     public void preprocess(){
         this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
         //touch all of the data
-        double touch;
+        double touch = 0;
         for (int i = 0; i < M; i++){
             for (int j = 0; j < N; j++){
-                touch = this.dataMatrix.getEntry(i,j);
+                touch += this.dataMatrix.getEntry(i,j);
             }
         }
     }

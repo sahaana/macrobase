@@ -2,6 +2,10 @@ package macrobase.analysis.stats.optimizer;
 
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.stats.optimizer.util.*;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.Matrices;
+import no.uib.cipr.matrix.QR;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -52,6 +56,53 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         this.KItersList = new HashMap<>();
         this.algo = algo;
         this.reuse = true;
+    }
+
+    @Override
+    public void preprocess(){
+        super.preprocess();
+        //use jni once to load
+        DenseMatrix load = new DenseMatrix(3,3, new double[] {1,2,3,4,5,6,7,8,9},false);
+        RealMatrix rLoad = new Array2DRowRealMatrix(Matrices.getArray(load));
+        QR qr = new QR(3, 3);
+        qr.factor(load);
+        PCA tempPca = new PCASVD(rLoad);
+        tempPca.transform(rLoad,1);
+        try {
+            TimeUnit.SECONDS.sleep(2);
+            log.debug("done waiting");
+        } catch (InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    public void warmUp(int Nt){
+        Random rand = new Random();
+        int currTrain = trainList.size();
+        for (int i = 0; i < Nt - currTrain; i++){
+            int j = rand.nextInt(testList.size());
+            trainList.add(testList.get(j));
+            //testList.remove(j);
+        }
+        RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
+        switch (algo){
+            case PI:
+                this.pca = new PCAPowerIteration(trainMatrix);
+                break;
+
+            case TROPP:
+                this.pca = new PCATropp(trainMatrix);
+                break;
+
+            case FAST:
+                this.pca = new PCAFast(trainMatrix);
+                break;
+
+            case SVD:
+                this.pca = new PCASVD(trainMatrix);
+                break;
+        }
+        trainList = new ArrayList<>();
     }
 
     public int[] ListtoPrimitive(List<Integer> in) {
@@ -339,6 +390,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         this.fit(M);
         int max = Math.min(N, M);
         this.cacheInput(max);
+
         sw.stop();
         times.put(0, (double) sw.elapsed(TimeUnit.MILLISECONDS));
 
