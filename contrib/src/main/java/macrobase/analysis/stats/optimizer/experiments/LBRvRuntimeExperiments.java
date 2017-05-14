@@ -30,6 +30,8 @@ public class LBRvRuntimeExperiments extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
+        int numTrials = 20;
+        long tempRuntime;
 
         String dataset = args[0];
         double qThresh = Double.parseDouble(args[1]);
@@ -38,10 +40,10 @@ public class LBRvRuntimeExperiments extends Experiment {
         System.out.println(qThresh);
         System.out.println(kExp);
 
-        double[] lbrs = {0.8,0.9,0.95,0.98};
+        double[] lbrs = {0.80,.85,0.9,0.95,0.98};
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
         PCASkiingOptimizer.work[] options = {PCASkiingOptimizer.work.NOREUSE, PCASkiingOptimizer.work.REUSE};
-        Map<Double, Long> runtimes;
+        Map<Double, Long> runtimes; //lbr > runtime for all configs
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -52,9 +54,13 @@ public class LBRvRuntimeExperiments extends Experiment {
             for (PCASkiingOptimizer.work reuse: options){
                 runtimes = new HashMap<>();
                 for (double lbr: lbrs){
-                    PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
-                    drop.consume(data);
-                    runtimes.put(lbr,drop.totalTime());
+                    tempRuntime = 0;
+                    for (int i = 0; i < numTrials; i++){
+                        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+                        drop.consume(data);
+                        tempRuntime += drop.totalTime();
+                    }
+                    runtimes.put(lbr,tempRuntime/numTrials);
                 }
                 mapDoubleLongToCSV(runtimes, timeOutFile(dataset,qThresh,kExp,algo,reuse,date));
             }
