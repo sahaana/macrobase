@@ -130,6 +130,17 @@ public abstract class Experiment {
         return scaled;
     }
 
+    static Map<Integer, Double> scaleDoubleMap(Map<Integer, Double> toScale, Map<Integer,Double> counts){
+        Map<Integer, Double> scaled = new HashMap<>();
+        for (Map.Entry<Integer, Double> entry: toScale.entrySet()) {
+            int key = entry.getKey();
+            double kval = entry.getValue();
+            Double newK = new Double(kval)/counts.get(key);
+            scaled.put(key, newK);
+        }
+        return scaled;
+    }
+
     static Map<Integer, double[]> scaleDouble2Map(Map<Integer, double[]> toScale, Map<Integer,Double> counts){
         Map<Integer, double[]> scaled = new HashMap<>();
         for (Map.Entry<Integer, double[]> entry: toScale.entrySet()) {

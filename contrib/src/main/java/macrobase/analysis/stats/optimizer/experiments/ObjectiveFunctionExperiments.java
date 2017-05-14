@@ -49,6 +49,9 @@ public class ObjectiveFunctionExperiments extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
+        int numTrials = 20;
+        long tempRuntime;
+        int tempK;
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
@@ -65,6 +68,11 @@ public class ObjectiveFunctionExperiments extends Experiment {
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;
 
+        Map<Integer, Double> pcounts;
+        Map<Integer, Double> tcounts;
+        Map<Integer, Double> pObj;
+        Map<Integer, Double> tObj;
+
         MacroBaseConf conf = new MacroBaseConf();
 
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
@@ -74,13 +82,45 @@ public class ObjectiveFunctionExperiments extends Experiment {
             for (PCASkiingOptimizer.work reuse: options){
                 runtimes = new HashMap<>();
                 finalKs = new HashMap<>();
+
                 for (int kExp: kExps){
-                    PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
-                    drop.consume(data);
-                    runtimes.put(kExp,drop.totalTime());
-                    finalKs.put(kExp, drop.finalK());
-                    mapDoubleToCSV(drop.getTrueObjective(), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
-                    mapDoubleToCSV(drop.getPredictedObjective(), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
+                    tempK = 0;
+                    tempRuntime = 0;
+                    pcounts = new HashMap<>();
+                    tcounts = new HashMap<>();
+                    pObj = new HashMap<>();
+                    tObj = new HashMap<>();
+
+                    for (int i = 0; i < numTrials; i ++ ){
+                        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+                        drop.consume(data);
+
+                        //update k and total time
+                        tempK += drop.finalK();
+                        tempRuntime += drop.totalTime();
+
+                        //update predicted objective
+                        for (Map.Entry<Integer, Double> entry: drop.getPredictedObjective().entrySet()) {
+                            int key = entry.getKey();
+                            double pval = entry.getValue();
+
+                            pcounts.put(key, 1 + pcounts.getOrDefault(key,0.0));
+                            pObj.put(key, pval + pObj.getOrDefault(key,0.0));
+                        }
+
+                        //update true objective
+                        for (Map.Entry<Integer, Double> entry: drop.getTrueObjective().entrySet()) {
+                            int key = entry.getKey();
+                            double tval = entry.getValue();
+
+                            tcounts.put(key, 1 + tcounts.getOrDefault(key,0.0));
+                            tObj.put(key, tval + tObj.getOrDefault(key,0.0));
+                        }
+                    }
+                    mapDoubleToCSV(scaleDoubleMap(tObj,tcounts), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
+                    mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
+                    runtimes.put(kExp,tempRuntime/numTrials);
+                    finalKs.put(kExp, tempK/numTrials);
                 }
                 mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date));
                 mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date));
