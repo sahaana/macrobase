@@ -6,7 +6,7 @@ datasets = ["50words", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken",
 q = 1.96
 kExp = 2
 
-proc = "java -xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.LBRvRuntimeExperiments %s %f %d"
+proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.LBRvRuntimeExperiments %s %f %d"
 comp = "mvn compile -Dmaven.test.skip=true"
 package = "mvn package -DskipTests"
 subprocess.call(comp, shell=True)
