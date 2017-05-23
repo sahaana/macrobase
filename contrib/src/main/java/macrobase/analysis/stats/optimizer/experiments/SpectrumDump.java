@@ -33,8 +33,7 @@ public class SpectrumDump extends Experiment{
 
         MacroBaseConf conf = new MacroBaseConf();
 
-        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
-        List<Datum> data = ingester.getStream().drain();
+        List<Datum> data = getData(dataset);
 
         PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
         spectrum = pcaDrop.getDataSpectrum(data);

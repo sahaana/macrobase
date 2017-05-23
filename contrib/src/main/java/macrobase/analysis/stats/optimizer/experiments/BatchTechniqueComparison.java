@@ -58,8 +58,7 @@ public class BatchTechniqueComparison extends Experiment {
 
         MacroBaseConf conf = new MacroBaseConf();
 
-        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("contrib/src/test/resources/data/optimizer/raw/%s.csv", dataset));
-        List<Datum> data = ingester.getStream().drain();
+        List<Datum> data = getData(dataset);
 
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, qThresh, lbr);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, qThresh, lbr);

@@ -1,8 +1,5 @@
 package macrobase.analysis.stats.optimizer.experiments;
 
-import macrobase.analysis.stats.PCASkiingDROP;
-import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
-import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.SchemalessCSVIngester;
 
@@ -10,9 +7,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +144,11 @@ public abstract class Experiment {
             scaled.put(key, new double[] {real/counts.get(key), guess/counts.get(key)});
         }
         return scaled;
+    }
+
+    static List<Datum> getData(String dataset) throws Exception{
+        SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("optimizerData/raw/%s.csv", dataset));
+        return ingester.getStream().drain();
     }
 
 }
