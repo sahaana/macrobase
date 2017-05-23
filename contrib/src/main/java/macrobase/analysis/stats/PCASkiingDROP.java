@@ -39,17 +39,13 @@ public class PCASkiingDROP extends FeatureTransform {
     double lbr;
 
     PCASkiingOptimizer.PCAAlgo algo;
-    PCASkiingOptimizer.work reuse;
 
-
-
-    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse){
+    public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, PCASkiingOptimizer.optimize optimize){
         iter = 0;
         currNt = 0;
         currK = 0;
         this.algo = algo;
-        this.reuse = reuse;
-        pcaOpt = new PCASkiingOptimizer(qThresh, kExp, algo, reuse);
+        pcaOpt = new PCASkiingOptimizer(qThresh, kExp, algo, reuse, optimize);
 
         MD = Stopwatch.createUnstarted();
         sw = Stopwatch.createUnstarted();
@@ -61,6 +57,7 @@ public class PCASkiingDROP extends FeatureTransform {
         output = new MBStream<>();
     }
 
+    //for baseline
     public PCASkiingDROP(MacroBaseConf conf, double qThresh, double lbr, PCASkiingOptimizer.PCAAlgo algo){
         iter = 0;
         currNt = 0;

@@ -22,20 +22,20 @@ public class SVDDropExperiments extends Experiment {
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
-    private static String kOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
+    private static String kOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse, opt);
         return String.format(baseString + day.format(date) + "/NTvK/%s.csv", output);
     }
 
-    private static String timeEstimateOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse);
+    private static String timeEstimateOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,reuse,opt);
         return String.format(baseString + day.format(date) + "/MDtimeEst/%s.csv", output);
     }
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 50;
+        int numTrials = 10;
         double[] defDub = {0,0};
 
 
@@ -45,12 +45,15 @@ public class SVDDropExperiments extends Experiment {
         int kExp = Integer.parseInt(args[3]);
         PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.valueOf(args[4]);
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[5]);
+        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[6]);
+
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
         System.out.println(kExp);
         System.out.println(algo);
         System.out.println(reuse);
+        System.out.println(opt);
 
 
         Map<Integer, Double> kcounts = new HashMap<>();
@@ -66,7 +69,7 @@ public class SVDDropExperiments extends Experiment {
         List<Datum> data = getData(dataset);
 
         for (int i = 0; i < numTrials; i++){
-            PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+            PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
             drop.consume(data);
 
             tempkResults = drop.getKList();
@@ -97,8 +100,8 @@ public class SVDDropExperiments extends Experiment {
         kResults = scaleIntMap(kResults,kcounts);
         MDTimeResults = scaleDouble2Map(MDTimeResults, tcounts);
 
-        mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh,kExp,reuse,date));
-        mapDouble2ToCSV(MDTimeResults, timeEstimateOutFile(dataset,lbr,qThresh,kExp,reuse,date));
+        mapIntToCSV(kResults, kOutFile(dataset,lbr,qThresh,kExp,reuse,date,opt));
+        mapDouble2ToCSV(MDTimeResults, timeEstimateOutFile(dataset,lbr,qThresh,kExp,reuse,date,opt));
     }
 
 }

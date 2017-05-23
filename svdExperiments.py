@@ -8,12 +8,14 @@ q = 1.96
 kExp = 2
 algo = "SVD"
 work = "NOREUSE"
+opt = "NOOPTIMIZE"
 
-proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments %s %f %f %d %s %s"
+
+proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments %s %f %f %d %s %s %s"
 comp = "mvn compile -Dmaven.test.skip=true"
 package = "mvn package -DskipTests"
 subprocess.call(comp, shell=True)
 subprocess.call(package, shell=True)
 
 for dataset in datasets:
-    subprocess.call(proc % (dataset, lbr, q, kExp, algo, work), shell=True)
+    subprocess.call(proc % (dataset, lbr, q, kExp, algo, work, opt), shell=True)

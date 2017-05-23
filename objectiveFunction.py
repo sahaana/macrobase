@@ -5,12 +5,14 @@ datasets = ["50words", "Adiac", "ArrowHead", "Beef", "BeetleFly", "BirdChicken",
 
 LBR = 0.98
 q = 1.96
+opt = "OPTIMIZE"
 
-proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.ObjectiveFunctionExperiments %s %f %f"
+
+proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.ObjectiveFunctionExperiments %s %f %f %s"
 comp = "mvn compile -Dmaven.test.skip=true"
 package = "mvn package -DskipTests"
 subprocess.call(comp, shell=True)
 subprocess.call(package, shell=True)
 
 for dataset in datasets:
-    subprocess.call(proc % (dataset, LBR, q), shell=True)
+    subprocess.call(proc % (dataset, LBR, q, opt), shell=True)

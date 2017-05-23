@@ -22,8 +22,8 @@ public class LBRvRuntimeExperiments extends Experiment {
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
 
-    private static String timeOutFile(String dataset, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_%s_q%.2f_kexp%d_%s",minute.format(date),dataset, algo, qThresh, kExp, reuse);
+    private static String timeOutFile(String dataset, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_q%.2f_kexp%d_%s_%s",minute.format(date),dataset, algo, qThresh, kExp, reuse,opt);
         return String.format(baseString + day.format(date) + "/%s.csv", output);
     }
 
@@ -36,9 +36,11 @@ public class LBRvRuntimeExperiments extends Experiment {
         String dataset = args[0];
         double qThresh = Double.parseDouble(args[1]);
         int kExp = Integer.parseInt(args[2]);
+        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[3]);
         System.out.println(dataset);
         System.out.println(qThresh);
         System.out.println(kExp);
+        System.out.println(opt);
 
         double[] lbrs = {0.80,.85,0.9,0.95,0.98};
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
@@ -55,13 +57,13 @@ public class LBRvRuntimeExperiments extends Experiment {
                 for (double lbr: lbrs){
                     tempRuntime = 0;
                     for (int i = 0; i < numTrials; i++){
-                        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+                        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
                         drop.consume(data);
                         tempRuntime += drop.totalTime();
                     }
                     runtimes.put(lbr,tempRuntime/numTrials);
                 }
-                mapDoubleLongToCSV(runtimes, timeOutFile(dataset,qThresh,kExp,algo,reuse,date));
+                mapDoubleLongToCSV(runtimes, timeOutFile(dataset,qThresh,kExp,algo,reuse,date,opt));
             }
         }
     }

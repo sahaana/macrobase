@@ -68,6 +68,11 @@ public abstract class SkiingOptimizer {
     protected int[] lastIndicesB;
     protected List<Double> lastLBRs;
 
+
+    protected boolean opt;
+    protected boolean reuse;
+
+
     public SkiingOptimizer(double qThresh) {
         this.numDiffs = 3; //TODO: 3 to change to general param
         this.qThresh = qThresh;
@@ -98,6 +103,9 @@ public abstract class SkiingOptimizer {
         this.fitter = PolynomialCurveFitter.create(Ntdegree);
 
         this.reusePercent = .025;
+
+        this.reuse = true;
+        this.opt = false;
     }
 
     public void extractData(List<Datum> records){
@@ -294,20 +302,23 @@ public abstract class SkiingOptimizer {
         }
 
         //for all other iters, MD has been run with currNt
-        nextNt = getNextNtObjective(iter, currNt);
+        if (opt){
+            nextNt = getNextNtObjective(iter, currNt);
+        }
         NtList.add(nextNt);
         return nextNt;
     }
 
     public int getNextNtObjective(int iter, int currNt){
-        //lastk^scaling + MDtime(currNt). Compute and store both predicted and actual
-        double prevObjective = Math.pow(KList.get(currNt), kScaling) + trainTimeList.get(currNt);
+        //M*(lastk^scaling) + MDtime(currNt). Compute and store both predicted and actual
+        //changing the objective to being of global time changes this check to be f(kt) + MD(t) < f(k_{t-1}) + 0
+        double prevObjective = (M * Math.pow(KList.get(currNt), kScaling)); //+ trainTimeList.get(currNt);
         double predObjective;
         int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
         int kGuess = predictK(iter, nextNt);
-        double kTimeGuess = Math.pow(kGuess,kScaling);
+        double kTimeGuess = M*Math.pow(kGuess,kScaling);
 
         predObjective = NtTimeGuess*(1./1) + kTimeGuess;
 

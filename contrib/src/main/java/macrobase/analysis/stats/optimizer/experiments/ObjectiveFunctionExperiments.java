@@ -26,23 +26,23 @@ public class ObjectiveFunctionExperiments extends Experiment {
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
 
-    private static String timeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse);
+    private static String timeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse,opt);
         return String.format(baseString + day.format(date) + "/KEXPvTime/%s.csv", output);
     }
 
-    private static String kOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse);
+    private static String kOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse,opt);
         return String.format(baseString + day.format(date) + "/KEXPvK/%s.csv", output);
     }
 
-    private static String predictedOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,algo,reuse);
+    private static String predictedOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,algo,reuse,opt);
         return String.format(baseString + day.format(date) + "/objValue/%s_predicted.csv", output);
     }
 
-    private static String trueOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,algo,reuse);
+    private static String trueOutFile(String dataset, double lbr, double qThresh, int kExp, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_lbr%.2f_q%.2f_kexp%d_%s_%s_%s",minute.format(date),dataset,lbr,qThresh,kExp,algo,reuse,opt);
         return String.format(baseString + day.format(date) + "/objValue/%s_true.csv", output);
     }
 
@@ -56,10 +56,12 @@ public class ObjectiveFunctionExperiments extends Experiment {
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         double qThresh = Double.parseDouble(args[2]);
+        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[3]);
 
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
+        System.out.println(opt);
 
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
         PCASkiingOptimizer.work[] options = {PCASkiingOptimizer.work.NOREUSE, PCASkiingOptimizer.work.REUSE};
@@ -91,7 +93,7 @@ public class ObjectiveFunctionExperiments extends Experiment {
                     tObj = new HashMap<>();
 
                     for (int i = 0; i < numTrials; i ++ ){
-                        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+                        PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
                         drop.consume(data);
 
                         //update k and total time
@@ -116,13 +118,13 @@ public class ObjectiveFunctionExperiments extends Experiment {
                             tObj.put(key, tval + tObj.getOrDefault(key,0.0));
                         }
                     }
-                    mapDoubleToCSV(scaleDoubleMap(tObj,tcounts), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
-                    mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date));
+                    mapDoubleToCSV(scaleDoubleMap(tObj,tcounts), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
+                    mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
                     runtimes.put(kExp,tempRuntime/numTrials);
                     finalKs.put(kExp, tempK/numTrials);
                 }
-                mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date));
-                mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date));
+                mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+                mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
             }
         }
     }

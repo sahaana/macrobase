@@ -25,7 +25,6 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     protected PCA pca;
     protected PCAAlgo algo;
 
-    protected boolean reuse;
 
     public enum PCAAlgo{
         SVD, PI, TROPP, FAST
@@ -35,7 +34,11 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         REUSE, NOREUSE
     }
 
-    public PCASkiingOptimizer(double qThresh, int kExp, PCAAlgo algo, work reuseWork) {
+    public enum optimize{
+        OPTIMIZE, NOOPTIMIZE
+    }
+
+    public PCASkiingOptimizer(double qThresh, int kExp, PCAAlgo algo, work reuseWork, optimize opt) {
         super(qThresh);
         this.KItersList = new HashMap<>();
         this.algo = algo;
@@ -49,7 +52,17 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 this.reuse = true;
                 break;
         }
+
+        switch(opt) {
+            case OPTIMIZE:
+                this.opt = true;
+                break;
+            default:
+                this.opt = false;
+                break;
+        }
     }
+
 
     public PCASkiingOptimizer(double qThresh, PCAAlgo algo) {
         super(qThresh);

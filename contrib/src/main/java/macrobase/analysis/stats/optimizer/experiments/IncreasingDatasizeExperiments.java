@@ -22,13 +22,13 @@ public class IncreasingDatasizeExperiments extends Experiment {
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
 
-    private static String timeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse);
+    private static String timeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
         return String.format(baseString + day.format(date) + "/NvTime/%s.csv", output);
     }
 
-    private static String kOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date){
-        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse);
+    private static String kOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
         return String.format(baseString + day.format(date) + "/NvK/%s.csv", output);
     }
 
@@ -44,12 +44,13 @@ public class IncreasingDatasizeExperiments extends Experiment {
         double qThresh = Double.parseDouble(args[2]);
         int kExp = Integer.parseInt(args[3]);
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[4]);
+        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[5]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
         System.out.println(kExp);
         System.out.println(reuse);
-
+        System.out.println(opt);
 
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
 
@@ -72,7 +73,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 tempRuntime = 0;
 
                 for (int i = 0; i < numTrials; i++) {
-                    PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse);
+                    PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
                     drop.consume(data);
 
                     tempK += drop.finalK();
@@ -83,8 +84,8 @@ public class IncreasingDatasizeExperiments extends Experiment {
 
                 data.addAll(data);
             }
-            mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date));
-            mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date));
+            mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+            mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
         }
 
     }
