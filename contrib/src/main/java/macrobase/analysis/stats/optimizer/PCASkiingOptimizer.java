@@ -259,7 +259,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         this.feasible = true;
         this.lastFeasible = mid;
         KItersList.put(this.NtList.get(iter), iters);
-        currKCI = LBR;
+        currKCI = evalK(targetLBR,mid);
         updateTrainWorkReuse();
         return mid;
     }
