@@ -35,7 +35,7 @@ public class SVDDropExperiments extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 10;
+        int numTrials = 50;
         double[] defDub = {0,0};
 
 
