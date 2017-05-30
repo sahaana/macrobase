@@ -401,7 +401,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         times.put(0, (double) sw.elapsed(TimeUnit.MILLISECONDS));
 
         double[] CI;
-        int interval = Math.max(2, Math.min(N, M)/15);
+        int interval = Math.max(2, Math.min(N, M)/30);
         RealMatrix currTransform;
         for (int i = 2; i <= max; i += interval) {
             sw.reset();

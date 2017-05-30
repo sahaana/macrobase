@@ -60,7 +60,7 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         times.put(0, (double) sw.elapsed(TimeUnit.MILLISECONDS));
 
         double[] CI;
-        int interval = Math.max(2,this.N/20 + ((this.N/20) % 2)); //ensure even k always
+        int interval = Math.max(2,this.N/30 + ((this.N/30) % 2)); //ensure even k always
         RealMatrix currTransform;
         for (int i = 2;i <= N; i+= interval){
             sw.reset();

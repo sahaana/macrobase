@@ -50,7 +50,7 @@ public class BatchTechniqueComparison extends Experiment {
 
         Map<String,Map<Integer, Double>> fftResults;
         Map<String,Map<Integer, Double>> paaResults;
-        Map<String,Map<Integer, Double>> rpResults;
+        //Map<String,Map<Integer, Double>> rpResults;
         Map<String,Map<Integer, Double>> pcaResults;
         Map<String,Map<Integer, Double>> pcaTroppResults;
         Map<String,Map<Integer, Double>> pcaFastResults;
@@ -62,7 +62,7 @@ public class BatchTechniqueComparison extends Experiment {
 
         PAASkiingDROP paaDrop = new PAASkiingDROP(conf, qThresh, lbr);
         FFTSkiingDROP fftDrop = new FFTSkiingDROP(conf, qThresh, lbr);
-        RPSkiingDROP rpSkiingDROP = new RPSkiingDROP(conf, qThresh, lbr);
+        //RPSkiingDROP rpSkiingDROP = new RPSkiingDROP(conf, qThresh, lbr);
         PCASkiingDROP pcaDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.SVD);
         PCASkiingDROP pcaTroppDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.TROPP);
         PCASkiingDROP pcaFastDrop = new PCASkiingDROP(conf, qThresh, lbr, PCASkiingOptimizer.PCAAlgo.FAST);
@@ -74,11 +74,11 @@ public class BatchTechniqueComparison extends Experiment {
         pcaResults = pcaDrop.genBasePlots(data);
         pcaTroppResults = pcaTroppDrop.genBasePlots(data);
         pcaFastResults = pcaFastDrop.genBasePlots(data);
-        rpResults = rpSkiingDROP.genBasePlots(data);
+        //rpResults = rpSkiingDROP.genBasePlots(data);
 
         mapDoubleToCSV(paaResults.get("LBR"), LBROutFile(dataset,qThresh,"PAA", date));
         mapDoubleToCSV(fftResults.get("LBR"), LBROutFile(dataset,qThresh, "FFT", date));
-        mapDoubleToCSV(rpResults.get("LBR"),  LBROutFile(dataset,qThresh, "RP", date));
+        //mapDoubleToCSV(rpResults.get("LBR"),  LBROutFile(dataset,qThresh, "RP", date));
         mapDoubleToCSV(pcaResults.get("LBR"), LBROutFile(dataset,qThresh, "PCASVD", date));
         mapDoubleToCSV(pcaTroppResults.get("LBR"), LBROutFile(dataset,qThresh, "PCATROPP", date));
         mapDoubleToCSV(pcaFastResults.get("LBR"), LBROutFile(dataset,qThresh, "PCAFAST", date));
@@ -86,7 +86,7 @@ public class BatchTechniqueComparison extends Experiment {
 
         mapDoubleToCSV(paaResults.get("time"), timeOutFile(dataset,qThresh,"PAA", date));
         mapDoubleToCSV(fftResults.get("time"), timeOutFile(dataset,qThresh, "FFT", date));
-        mapDoubleToCSV(rpResults.get("time"),  timeOutFile(dataset,qThresh, "RP", date));
+        //mapDoubleToCSV(rpResults.get("time"),  timeOutFile(dataset,qThresh, "RP", date));
         mapDoubleToCSV(pcaResults.get("time"), timeOutFile(dataset,qThresh, "PCASVD", date));
         mapDoubleToCSV(pcaTroppResults.get("time"), timeOutFile(dataset,qThresh, "PCATROPP", date));
         mapDoubleToCSV(pcaFastResults.get("time"), timeOutFile(dataset,qThresh, "PCAFAST", date));
