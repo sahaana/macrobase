@@ -11,8 +11,6 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -87,8 +85,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         Random rand = new Random();
         int currTrain = trainList.size();
         for (int i = 0; i < Nt - currTrain; i++){
-            int j = rand.nextInt(testList.size());
-            trainList.add(testList.get(j));
+            int j = rand.nextInt(remList.size());
+            trainList.add(remList.get(j));
         }
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
         switch (algo){
@@ -123,11 +121,16 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     public void fit(int Nt) {
         //get Nt points from train and move to test
         Random rand = new Random();
-        int currTrain = trainList.size();
+        trainList = new ArrayList<>();
+        //importance sampling
+        int currTrain = sampleList.size();
+        for (int i : sampleList){
+            trainList.add(i);
+        }
         for (int i = 0; i < Nt - currTrain; i++){
-            int j = rand.nextInt(testList.size());
-            trainList.add(testList.get(j));
-            testList.remove(j);
+            int j = rand.nextInt(remList.size());
+            trainList.add(remList.get(j));
+            remList.remove(j);
         }
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
         switch (algo){
@@ -213,10 +216,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
             int numPoints = (int) Math.round(reusePercent*lastLBRs.size());
             int[] sortedLBRs = Arrays.copyOfRange(argSort(primLBRs, true),0,numPoints);
             for (int i: sortedLBRs){
-                trainList.add(lastIndicesA[i]);
-                trainList.add(lastIndicesB[i]);
-                testList.remove((Object) lastIndicesA[i]);
-                testList.remove((Object) lastIndicesB[i]);
+                sampleList.add(lastIndicesA[i]);
+                sampleList.add(lastIndicesB[i]);
+                remList.remove((Object) lastIndicesA[i]);
+                remList.remove((Object) lastIndicesB[i]);
             }
         }
     }
@@ -332,10 +335,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
         // No train and test separation because it isn't really required, and you'll run out of points towards the end
         for (int i = 0; i < numPairs; i++) {
-            indicesA[i] = rand.nextInt(M);//testList.get(rand.nextInt(testList.size()));
-            indicesB[i] = rand.nextInt(M);//testList.get(rand.nextInt(testList.size()));
+            indicesA[i] = rand.nextInt(M);//remList.get(rand.nextInt(remList.size()));
+            indicesB[i] = rand.nextInt(M);//remList.get(rand.nextInt(remList.size()));
             while (indicesA[i] == indicesB[i]) {
-                indicesA[i] = rand.nextInt(M);//testList.get(rand.nextInt(testList.size()));
+                indicesA[i] = rand.nextInt(M);//remList.get(rand.nextInt(remList.size()));
             }
             //calculating indices union of A and B and the max index
             jIndices.add(indicesA[i]);

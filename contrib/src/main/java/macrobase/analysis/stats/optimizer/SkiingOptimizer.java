@@ -2,10 +2,6 @@ package macrobase.analysis.stats.optimizer;
 
 
 import macrobase.datamodel.Datum;
-import no.uib.cipr.matrix.DenseMatrix;
-import no.uib.cipr.matrix.NotConvergedException;
-import no.uib.cipr.matrix.QR;
-import no.uib.cipr.matrix.SVD;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
@@ -18,14 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public abstract class SkiingOptimizer {
     private static final Logger log = LoggerFactory.getLogger(SkiingOptimizer.class);
     protected int N; //original data dimension
     protected int M; //original number of training samples
     protected List<Integer> trainList;
-    protected List<Integer> testList;
+    protected List<Integer> remList;
+    protected List<Integer> sampleList;
 
     protected int[] kDiffs;
     protected double[] MDDiffs;
@@ -118,13 +114,15 @@ public abstract class SkiingOptimizer {
 
 
         this.trainList = new ArrayList<>();
-        this.testList = new ArrayList<>();
+        this.remList = new ArrayList<>();
+        this.sampleList = new ArrayList<>();
         this.allIndicesN = new int[N];
         this.allIndicesM = new int[M];
         double[][] metricArray = new double[M][];
+
         for (int i = 0; i < M; i++){
             metricArray[i] = metrics.get(i);
-            this.testList.add(i, i);
+            this.remList.add(i, i);
             this.allIndicesM[i] = i;
         }
         for (int i = 0; i < N; i++){

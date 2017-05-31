@@ -39,20 +39,28 @@ public class IncreasingDatasizeExperiments extends Experiment {
         long tempRuntime;
         int tempK;
 
-        String dataset = args[0];
-        double lbr = Double.parseDouble(args[1]);
-        double qThresh = Double.parseDouble(args[2]);
-        int kExp = Integer.parseInt(args[3]);
-        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[4]);
-        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[5]);
-        System.out.println(dataset);
+        String dataset1 = args[0];
+        String dataset2 = args[1];
+        String dataset3 = args[2];
+        String dataset4 = args[3];
+        double lbr = Double.parseDouble(args[4]);
+        double qThresh = Double.parseDouble(args[5]);
+        int kExp = Integer.parseInt(args[6]);
+        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[7]);
+        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[8]);
+        System.out.println(dataset1);
+        System.out.println(dataset2);
+        System.out.println(dataset3);
+        System.out.println(dataset4);
         System.out.println(lbr);
         System.out.println(qThresh);
         System.out.println(kExp);
         System.out.println(reuse);
         System.out.println(opt);
 
-        PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.SVD, PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
+
+        String[] datasets = new String[] {dataset1, dataset2, dataset3, dataset4};
+        PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
 
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;
@@ -61,14 +69,12 @@ public class IncreasingDatasizeExperiments extends Experiment {
 
         List<Datum> data;
 
-
-
         for (PCASkiingOptimizer.PCAAlgo algo: algos) {
-            data = getData(dataset);
             runtimes = new HashMap<>();
             finalKs = new HashMap<>();
 
-            for (int d = 0; d <= 3; d++) {
+            for (String dataset: datasets) {
+                data = getData(dataset);
                 tempK = 0;
                 tempRuntime = 0;
 
@@ -81,11 +87,9 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 }
                 runtimes.put(data.size(), tempRuntime / numTrials);
                 finalKs.put(data.size(), tempK / numTrials);
-
-                data.addAll(data);
             }
-            mapIntLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
-            mapIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+            mapIntLongToCSV(runtimes, timeOutFile(dataset1,lbr,qThresh,algo,reuse,date,opt));
+            mapIntToCSV(finalKs, kOutFile(dataset1,lbr,qThresh,algo,reuse,date,opt));
         }
 
     }
