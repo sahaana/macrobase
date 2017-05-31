@@ -119,18 +119,26 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
 
     @Override
     public void fit(int Nt) {
+        //temporary array list to sample without replacement, then reset for next run
+        ArrayList<Integer> tempRemList = new ArrayList<>();
+        for (int i: remList){
+            tempRemList.add(i);
+        }
+
         //get Nt points from train and move to test
         Random rand = new Random();
         trainList = new ArrayList<>();
+
         //importance sampling
         int currTrain = sampleList.size();
         for (int i : sampleList){
             trainList.add(i);
         }
+
         for (int i = 0; i < Nt - currTrain; i++){
-            int j = rand.nextInt(remList.size());
-            trainList.add(remList.get(j));
-            remList.remove(j);
+                int j = rand.nextInt(tempRemList.size());
+                trainList.add(tempRemList.get(j));
+                tempRemList.remove(j);
         }
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
         switch (algo){
