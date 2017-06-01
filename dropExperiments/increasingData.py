@@ -2,9 +2,9 @@
 import subprocess
 
 dataset1 = 'synth'
-dataset2 = 'synth_5000'
-dataset3 = 'synth_10000'
-dataset4 = 'synth_15000'
+dataset2 = 'synth_15000'
+dataset3 = 'synth_45000'
+dataset4 = 'synth_135000'
 LBR = 0.98
 q = 1.96
 Kexp = 2

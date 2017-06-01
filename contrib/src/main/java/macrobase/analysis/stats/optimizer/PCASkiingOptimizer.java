@@ -61,6 +61,31 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         }
     }
 
+    public PCASkiingOptimizer(double qThresh, int kExp, PCAAlgo algo, work reuseWork, optimize opt, double fracReuse) {
+        super(qThresh);
+        this.KItersList = new HashMap<>();
+        this.algo = algo;
+        this.kScaling = kExp;
+        this.reusePercent = fracReuse;
+
+        switch(reuseWork) {
+            case NOREUSE:
+                this.reuse = false;
+                break;
+            default:
+                this.reuse = true;
+                break;
+        }
+
+        switch(opt) {
+            case OPTIMIZE:
+                this.opt = true;
+                break;
+            default:
+                this.opt = false;
+                break;
+        }
+    }
 
     public PCASkiingOptimizer(double qThresh, PCAAlgo algo) {
         super(qThresh);

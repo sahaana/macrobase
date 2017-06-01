@@ -78,6 +78,22 @@ public abstract class Experiment {
         }
     }
 
+    static void mapDoubleIntToCSV(Map<Double, Integer> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
+        String eol =  System.getProperty("line.separator");
+        try (Writer writer = new FileWriter(f)) {
+            for (Map.Entry<Double, Integer> entry: dataMap.entrySet()) {
+                writer.append(Double.toString(entry.getKey()))
+                        .append(',')
+                        .append(Integer.toString(entry.getValue()))
+                        .append(eol);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
     static void mapIntLongToCSV(Map<Integer, Long> dataMap, String file){
         File f = new File(file);
         f.getParentFile().mkdirs();

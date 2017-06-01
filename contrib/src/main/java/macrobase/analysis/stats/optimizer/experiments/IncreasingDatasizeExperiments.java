@@ -4,7 +4,6 @@ import macrobase.analysis.stats.PCASkiingDROP;
 import macrobase.analysis.stats.optimizer.PCASkiingOptimizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
-import macrobase.ingest.SchemalessCSVIngester;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
