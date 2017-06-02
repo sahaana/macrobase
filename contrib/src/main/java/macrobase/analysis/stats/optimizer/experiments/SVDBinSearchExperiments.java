@@ -22,7 +22,7 @@ public class SVDBinSearchExperiments extends Experiment {
 
 
     private static String kAndRuntimeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, Date date){
-        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh);
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f",minute.format(date),dataset, algo, lbr, qThresh);
         return String.format(baseString + day.format(date) + "/%s.csv", output);
     }
 
