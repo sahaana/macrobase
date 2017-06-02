@@ -180,6 +180,13 @@ public class PCASkiingDROP extends FeatureTransform {
         return svd.getSpectrum();
     }
 
+    public long[] baselineSVD(List<Datum> records) {
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
+        pcaOpt.extractData(records);
+        pcaOpt.preprocess();
+
+        return pcaOpt.getFullSVD(lbr);
+    }
 
 
     @Override

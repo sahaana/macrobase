@@ -300,6 +300,51 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         return mid;
     }
 
+
+    //same as getkci, just without the iter, becuase it's used for the baseline/full binary search w/ svd operation
+    public int getKCI(double targetLBR) {
+        //confidence interval based method for getting K
+        double[] LBR;
+        RealMatrix currTransform;
+
+        int iters = 0;
+        int low = 0;
+
+        int high = Math.min(this.N, this.M) - 1;
+        //if you weren't feasible, then the high remains. Else max is last feasible pt
+        if (this.feasible) high = this.lastFeasible + 5; //TODO: arbitrary buffer room
+        targetLBR += 0.002; //TODO: arbitrary buffer room
+        int mid = (low + high) / 2;
+
+        //If the max isn't feasible, just return it
+        LBR = evalK(targetLBR, high);
+        if (targetLBR > LBR[0]) {
+            KItersList.put(this.M, ++iters);
+            currKCI = LBR;
+            updateTrainWorkReuse();
+            return high;
+        }
+
+
+        //Binary search for lowest K that achieves LBR
+        while (low != high) {
+            LBR = evalK(targetLBR, mid);
+            if (LBR[0] <= targetLBR) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+            iters += 1;
+            mid = (low + high) / 2;
+        }
+        this.feasible = true;
+        this.lastFeasible = mid;
+        KItersList.put(this.M, iters);
+        currKCI = evalK(targetLBR,mid);
+        updateTrainWorkReuse();
+        return mid;
+    }
+
     private double[] evalK(double LBRThresh, RealMatrix currTransform) {
         double[] CI = new double[]{0, 0, 0};
         double prevMean = 0;
@@ -453,6 +498,21 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         results.put("LBR", LBRs);
         results.put("time", times);
         return results;
+    }
+
+    public long[] getFullSVD(double lbr){
+        long[] ktime = new long[] {0,0};
+        int k;
+        Stopwatch sw = Stopwatch.createUnstarted();
+
+        sw.start();
+        fit(M);
+        k = getKCI(lbr);
+        sw.stop();
+
+        ktime[0] = k;
+        ktime[1] = sw.elapsed(TimeUnit.MILLISECONDS);
+        return ktime;
     }
 
     public Map getKItersList() {

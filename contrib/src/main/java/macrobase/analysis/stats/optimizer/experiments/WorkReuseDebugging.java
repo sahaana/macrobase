@@ -70,7 +70,7 @@ public class WorkReuseDebugging extends Experiment {
                 tempRuntime = 0;
 
                 for (int i = 0; i < numTrials; i++) {
-                    PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
+                    PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt, pReuse);
                     drop.consume(data);
 
                     tempK += drop.finalK();
