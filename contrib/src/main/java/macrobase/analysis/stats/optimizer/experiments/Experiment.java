@@ -163,6 +163,36 @@ public abstract class Experiment {
         return scaled;
     }
 
+    static Map<Double, Integer> scaleIntMapWCount(Map<Double, Integer> toScale, int count){
+        Map<Double, Integer> scaled = new HashMap<>();
+        for (Map.Entry<Double, Integer> entry: toScale.entrySet()) {
+            double key = entry.getKey();
+            int val = entry.getValue();
+            scaled.put(key, val/count);
+        }
+        return scaled;
+    }
+
+    static Map<Double, Double> scaleDoubleMapWCount(Map<Double, Double> toScale, int count){
+        Map<Double, Double> scaled = new HashMap<>();
+        for (Map.Entry<Double, Double> entry: toScale.entrySet()) {
+            double key = entry.getKey();
+            double val = entry.getValue();
+            scaled.put(key, val/count);
+        }
+        return scaled;
+    }
+
+    static Map<Double, Long> scaleLongMapWCount(Map<Double, Long> toScale, int count){
+        Map<Double, Long> scaled = new HashMap<>();
+        for (Map.Entry<Double, Long> entry: toScale.entrySet()) {
+            double key = entry.getKey();
+            long val = entry.getValue();
+            scaled.put(key, val/count);
+        }
+        return scaled;
+    }
+
     static List<Datum> getData(String dataset) throws Exception{
         SchemalessCSVIngester ingester = new SchemalessCSVIngester(String.format("optimizerData/raw/%s.csv", dataset));
         return ingester.getStream().drain();

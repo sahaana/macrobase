@@ -34,7 +34,7 @@ public class WorkReuseDebugging extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 50;
+        int numTrials = 200;
         long tempRuntime;
         int tempK;
 
@@ -54,34 +54,28 @@ public class WorkReuseDebugging extends Experiment {
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.REUSE;
         double[] works = new double[] {0.0, 0.005, 0.01, 0.025, 0.05, 0.10};
 
-        Map<Double, Long> runtimes;
-        Map<Double, Integer> finalKs;
+        Map<Double, Long> runtimes = new HashMap<>();
+        Map<Double, Integer> finalKs = new HashMap<>();
 
         MacroBaseConf conf = new MacroBaseConf();
 
         List<Datum> data = getData(dataset);
 
         for (PCASkiingOptimizer.PCAAlgo algo: algos) {
-            runtimes = new HashMap<>();
-            finalKs = new HashMap<>();
-
-            for (double pReuse: works) {
-                tempK = 0;
-                tempRuntime = 0;
-
-                for (int i = 0; i < numTrials; i++) {
+            for (int i = 0; i < numTrials; i++) {
+                for (double pReuse: works){
                     PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt, pReuse);
                     drop.consume(data);
 
-                    tempK += drop.finalK();
-                    tempRuntime += drop.totalTime();
-                }
-                runtimes.put(pReuse, tempRuntime / numTrials);
-                finalKs.put(pReuse, tempK / numTrials);
-            }
-            mapDoubleLongToCSV(runtimes, timeOutFile(dataset,lbr,qThresh,algo,date,opt));
-            mapDoubleIntToCSV(finalKs, kOutFile(dataset,lbr,qThresh,algo,date,opt));
-        }
+                    tempRuntime = runtimes.getOrDefault(pReuse, (long) 0);
+                    tempK = finalKs.getOrDefault(pReuse, 0);
 
+                    runtimes.put(pReuse, tempRuntime + drop.totalTime());
+                    finalKs.put(pReuse, tempK + drop.finalK());
+                }
+                mapDoubleLongToCSV(scaleLongMapWCount(runtimes, numTrials), timeOutFile(dataset,lbr,qThresh,algo,date,opt));
+                mapDoubleIntToCSV(scaleIntMapWCount(finalKs, numTrials), kOutFile(dataset,lbr,qThresh,algo,date,opt));
+            }
+        }
     }
 }

@@ -105,13 +105,13 @@ public class PCASkiingDROP extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         pcaOpt.extractData(records);
-        log.debug("Extracted {} Records of dim {}", pcaOpt.getM(),pcaOpt.getN());
+        //log.debug("Extracted {} Records of dim {}", pcaOpt.getM(),pcaOpt.getN());
         pcaOpt.preprocess();
-        log.debug("Processed Data");
+        //log.debug("Processed Data");
         currNt = pcaOpt.getNextNtPE(iter, currNt);
         pcaOpt.warmUp(currNt);
-        log.debug("Warmed Up");
-        log.debug("Beginning DROP");
+        //log.debug("Warmed Up");
+        //log.debug("Beginning DROP");
         sw.start();
         do {
             ////log.debug("Iteration {}, {} samples", iter, currNt);
@@ -136,8 +136,8 @@ public class PCASkiingDROP extends FeatureTransform {
         sw.stop();
         transformedData = pcaOpt.transform(currK);
 
-        log.debug("MICDROP 'COMPLETE'");
-        log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
+        //log.debug("MICDROP 'COMPLETE'");
+        //log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
         finalTransform = transformedData.getData();
 
         /*
@@ -163,11 +163,11 @@ public class PCASkiingDROP extends FeatureTransform {
     public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
         pcaOpt = new PCASkiingOptimizer(qThresh, algo);
         pcaOpt.extractData(records);
-        log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
+        //log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();
-        log.debug("Processed Data");
+        //log.debug("Processed Data");
 
-        log.debug("Beginning PCASVD base run");
+        //log.debug("Beginning PCASVD base run");
         return pcaOpt.computeLBRs();
     }
 
