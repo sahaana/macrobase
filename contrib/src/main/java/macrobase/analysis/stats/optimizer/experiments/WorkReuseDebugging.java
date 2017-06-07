@@ -73,9 +73,9 @@ public class WorkReuseDebugging extends Experiment {
                     runtimes.put(pReuse, tempRuntime + drop.totalTime());
                     finalKs.put(pReuse, tempK + drop.finalK());
                 }
-                mapDoubleLongToCSV(scaleLongMapWCount(runtimes, numTrials), timeOutFile(dataset,lbr,qThresh,algo,date,opt));
-                mapDoubleIntToCSV(scaleIntMapWCount(finalKs, numTrials), kOutFile(dataset,lbr,qThresh,algo,date,opt));
             }
+            mapDoubleLongToCSV(scaleLongMapWCount(runtimes, numTrials), timeOutFile(dataset,lbr,qThresh,algo,date,opt));
+            mapDoubleIntToCSV(scaleIntMapWCount(finalKs, numTrials), kOutFile(dataset,lbr,qThresh,algo,date,opt));
         }
     }
 }
