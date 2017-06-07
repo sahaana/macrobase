@@ -34,7 +34,7 @@ public class WorkReuseDebugging extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 200;
+        int numTrials = 100;
         long tempRuntime;
         int tempK;
 
