@@ -54,14 +54,17 @@ public class WorkReuseDebugging extends Experiment {
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.REUSE;
         double[] works = new double[] {0.0, 0.005, 0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.50};
 
-        Map<Double, Long> runtimes = new HashMap<>();
-        Map<Double, Integer> finalKs = new HashMap<>();
+        Map<Double, Long> runtimes;
+        Map<Double, Integer> finalKs;
 
         MacroBaseConf conf = new MacroBaseConf();
 
         List<Datum> data = getData(dataset);
 
         for (PCASkiingOptimizer.PCAAlgo algo: algos) {
+            runtimes = new HashMap<>();
+            finalKs = new HashMap<>();
+
             for (int i = 0; i < numTrials; i++) {
                 for (double pReuse: works){
                     PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt, pReuse);
