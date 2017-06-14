@@ -57,7 +57,7 @@ public class SVDBinSearchExperiments extends Experiment {
             tempRuntime += tempKRuntime[1];
         }
 
-        //this is dumb
+        //this is dumb //why?
         Kruntimes.put(tempK / numTrials, tempRuntime / numTrials);
 
         mapIntLongToCSV(Kruntimes, kAndRuntimeOutFile(dataset,lbr,qThresh,algo,date));

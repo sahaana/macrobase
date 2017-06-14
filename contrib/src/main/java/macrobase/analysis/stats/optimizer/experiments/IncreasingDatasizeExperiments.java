@@ -31,10 +31,26 @@ public class IncreasingDatasizeExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/NvK/%s.csv", output);
     }
 
+    private static String pKOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_pred",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvK/%s.csv", output);
+    }
+
+    private static String pTrainOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_pred",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvTime/%s.csv", output);
+    }
+
+    private static String trainOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvTime/%s.csv", output);
+    }
+
+
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 50;
+        int numTrials = 100;
         long tempRuntime;
         int tempK;
 
@@ -126,10 +142,9 @@ public class IncreasingDatasizeExperiments extends Experiment {
                         trainTimes.put(key, val + trainTimes.getOrDefault(key,0.0));
                     }
                 }
-                ///stuff
-                mapDoubleToCSV(scaleDoubleMap(tObj,tcounts), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
-                mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
-                mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
+                mapDoubleToCSV(scaleDoubleMap(trainTimes,tcounts), trainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+                mapDoubleToCSV(scaleDoubleMap(predTrainTimes, pcounts), pTrainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+                mapIntToCSV(scaleIntMap(kPreds, kcounts), pKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
                 runtimes.put(data.size(), tempRuntime / numTrials);
                 finalKs.put(data.size(), tempK / numTrials);
