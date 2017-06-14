@@ -78,7 +78,6 @@ public class FFTSkiingOptimizer extends SkiingOptimizer {
         return results;
     }
 
-    @Override
     public int getNextNt(int iter, int currNt) {
         return this.M;
     }
