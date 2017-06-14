@@ -227,6 +227,7 @@ public class PCASkiingDROP extends FeatureTransform {
 
     public Map<Integer, Integer> getKPred() { return pcaOpt.getKPredList(); }
 
-    public Map<Integer, Double> getPredTime() { return pcaOpt.getPredictedTrainTimeList(); }
+    public Map<Integer, Double> getPredTrainTimes() { return pcaOpt.getPredictedTrainTimeList(); }
 
+    public Map<Integer, Double> getTrainTimes() { return pcaOpt.getTrainTimeList(); }
 }

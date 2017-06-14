@@ -177,6 +177,7 @@ public abstract class SkiingOptimizer {
         return NtInterval+currNt;
     }
 
+    /*
     public int getNextNtBasicDoubling(int iter, int currNt){
         double avgDiff = 0;
 
@@ -227,7 +228,9 @@ public abstract class SkiingOptimizer {
         this.predictedTrainTimeList.put(nextNt, NtTimeGuess);
         return nextNt;
     }
+    */
 
+    /*
     //TODO: check indices here
     public int NtTimeGuessOneStepGradient(int iter, int currNt){
         int nextNt = getNextNtIncreaseOnly(iter, currNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
@@ -240,7 +243,7 @@ public abstract class SkiingOptimizer {
         int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
         this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
         return nextNt;
-    }
+    }*/
 
     public Map<Integer, double[]> bundleMDTimeGuess(){
         Map<Integer, double[]> predVact = new HashMap<>();
@@ -249,7 +252,7 @@ public abstract class SkiingOptimizer {
         }
         return predVact;
     }
-
+    /*
     //TODO: scale of Nt vs K is off. must normalize
     public int getNextNtObjectiveFunc(int iter, int currNt){
         // objective = M*K^s + MD(Nt)
@@ -287,7 +290,7 @@ public abstract class SkiingOptimizer {
         NtList.add(M);
         return M;
     }
-
+    */
     // this is always called before anything else happens that iter
     public int getNextNtPE(int iter, int currNt){
         // tentative next Nt is this Nt + max{10, 1% data}

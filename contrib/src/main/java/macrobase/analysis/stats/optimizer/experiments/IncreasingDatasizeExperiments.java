@@ -64,6 +64,13 @@ public class IncreasingDatasizeExperiments extends Experiment {
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;
 
+        Map<Integer, Integer> kPreds;
+        Map<Integer, Double> kcounts;
+        Map<Integer, Double> trainTimes;
+        Map<Integer, Double> tcounts;
+        Map<Integer, Double> predTrainTimes;
+        Map<Integer, Double> pcounts;
+
         MacroBaseConf conf = new MacroBaseConf();
 
         List<Datum> data;
@@ -77,13 +84,53 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 tempK = 0;
                 tempRuntime = 0;
 
+                kPreds = new HashMap<>();
+                kcounts = new HashMap<>();
+                trainTimes = new HashMap<>();
+                tcounts = new HashMap();
+                predTrainTimes = new HashMap<>();
+                pcounts = new HashMap();
+
                 for (int i = 0; i < numTrials; i++) {
                     PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
                     drop.consume(data);
 
+                    //update k and total time
                     tempK += drop.finalK();
                     tempRuntime += drop.totalTime();
+
+                    //update predicted k
+                    for (Map.Entry<Integer, Integer> entry: drop.getKPred().entrySet()){
+                        int key = entry.getKey();
+                        int val = entry.getValue();
+
+                        kcounts.put(key, 1 + kcounts.getOrDefault(key, 0.0));
+                        kPreds.put(key, val + kPreds.getOrDefault(key, 0));
+                    }
+
+                    //update predicted times
+                    for (Map.Entry<Integer, Double> entry: drop.getPredTrainTimes().entrySet()) {
+                        int key = entry.getKey();
+                        double val = entry.getValue();
+
+                        pcounts.put(key, 1 + pcounts.getOrDefault(key,0.0));
+                        predTrainTimes.put(key, val + predTrainTimes.getOrDefault(key,0.0));
+                    }
+
+                    //update true train times
+                    for (Map.Entry<Integer, Double> entry: drop.getTrainTimes().entrySet()) {
+                        int key = entry.getKey();
+                        double val = entry.getValue();
+
+                        tcounts.put(key, 1 + tcounts.getOrDefault(key,0.0));
+                        trainTimes.put(key, val + trainTimes.getOrDefault(key,0.0));
+                    }
                 }
+                ///stuff
+                mapDoubleToCSV(scaleDoubleMap(tObj,tcounts), trueOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
+                mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
+                mapDoubleToCSV(scaleDoubleMap(pObj, pcounts), predictedOutFile(dataset,lbr,qThresh,kExp,algo,reuse,date,opt));
+
                 runtimes.put(data.size(), tempRuntime / numTrials);
                 finalKs.put(data.size(), tempK / numTrials);
             }
