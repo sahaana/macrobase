@@ -313,7 +313,7 @@ public abstract class SkiingOptimizer {
     public int getNextNtObjective(int iter, int currNt){
         //M*(lastk^scaling) + MDtime(currNt). Compute and store both predicted and actual
         //changing the objective to being of global time changes this check to be f(kt) + MD(t) < f(k_{t-1}) + 0
-        // storing left side as predicted, right as true.
+        // storing funck-k side as predicted, runtime pred as true.
         int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
@@ -321,11 +321,11 @@ public abstract class SkiingOptimizer {
         int kGuess = predictK(iter, nextNt);
         double predFk =  M*Math.pow(kGuess,kScaling);
 
-        trueObjective.put(currNt, prevFk);
-        predictedObjective.put(nextNt, NtTimeGuess + predFk);
+        trueObjective.put(currNt, prevFk - predFk);
+        predictedObjective.put(nextNt, NtTimeGuess);
 
         // giving it a first feasible bump
-        if ((prevFk >= NtTimeGuess + predFk ) || (firstKDrop)){ //(nextNt <= 1000){ //
+        if ((prevFk - predFk >= NtTimeGuess) || (firstKDrop)){ //(nextNt <= 1000){ //
             return nextNt;
         }
         return M+1;

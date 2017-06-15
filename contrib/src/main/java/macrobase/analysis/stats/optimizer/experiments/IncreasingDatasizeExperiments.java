@@ -117,6 +117,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
             finalKs = new HashMap<>();
 
             for (String dataset: datasets) {
+                System.out.println(dataset);
                 data = getData(dataset);
                 tempK = 0;
                 tempRuntime = 0;
@@ -136,7 +137,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
 
 
                 for (int i = 0; i < numTrials; i++) {
-                    System.out.println(i);
+                    System.out.print(i);
                     PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
                     drop.consume(data);
 
