@@ -137,7 +137,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
 
 
                 for (int i = 0; i < numTrials; i++) {
-                    System.out.print(i);
+                    //System.out.print(i);
                     PCASkiingDROP drop = new PCASkiingDROP(conf, qThresh, lbr, kExp, algo, reuse, opt);
                     drop.consume(data);
 

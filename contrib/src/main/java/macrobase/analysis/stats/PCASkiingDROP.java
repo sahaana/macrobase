@@ -136,6 +136,7 @@ public class PCASkiingDROP extends FeatureTransform {
         sw.stop();
         transformedData = pcaOpt.transform(currK);
 
+        System.out.print(pcaOpt.getNtList(iter-1));
         //log.debug("MICDROP 'COMPLETE'");
         //log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
         finalTransform = transformedData.getData();
