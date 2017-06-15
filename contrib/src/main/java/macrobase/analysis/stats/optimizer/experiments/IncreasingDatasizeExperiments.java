@@ -51,6 +51,16 @@ public class IncreasingDatasizeExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/NTvTime/%s.csv", output);
     }
 
+    private static String pObjOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_pred",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvObj/%s.csv", output);
+    }
+
+    private static String rObjOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvObj/%s.csv", output);
+    }
+
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
@@ -93,6 +103,10 @@ public class IncreasingDatasizeExperiments extends Experiment {
         Map<Integer, Double> tcounts;
         Map<Integer, Double> predTrainTimes;
         Map<Integer, Double> pcounts;
+        Map<Integer, Double> pObj;
+        Map<Integer, Double> pocounts;
+        Map<Integer, Double> tObj;
+        Map<Integer, Double> tocounts;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -115,6 +129,11 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 tcounts = new HashMap();
                 predTrainTimes = new HashMap<>();
                 pcounts = new HashMap();
+                pObj = new HashMap<>();
+                pocounts = new HashMap<>();
+                tObj = new HashMap<>();
+                tocounts = new HashMap<>();
+
 
                 for (int i = 0; i < numTrials; i++) {
                     System.out.println(i);
@@ -160,11 +179,34 @@ public class IncreasingDatasizeExperiments extends Experiment {
                         tcounts.put(key, 1 + tcounts.getOrDefault(key,0.0));
                         trainTimes.put(key, val + trainTimes.getOrDefault(key,0.0));
                     }
+
+
+                    //update predicted objective
+                    for (Map.Entry<Integer, Double> entry: drop.getPredictedObjective().entrySet()) {
+                        int key = entry.getKey();
+                        double val = entry.getValue();
+
+                        pocounts.put(key, 1 + pocounts.getOrDefault(key,0.0));
+                        pObj.put(key, val + pObj.getOrDefault(key,0.0));
+                    }
+
+                    //update true objective
+                    for (Map.Entry<Integer, Double> entry: drop.getTrueObjective().entrySet()) {
+                        int key = entry.getKey();
+                        double val = entry.getValue();
+
+                        tocounts.put(key, 1 + tocounts.getOrDefault(key,0.0));
+                        tObj.put(key, val + tObj.getOrDefault(key,0.0));
+                    }
+
+
                 }
                 mapDoubleToCSV(scaleDoubleMap(trainTimes,tcounts), trainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
                 mapDoubleToCSV(scaleDoubleMap(predTrainTimes, pcounts), pTrainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
                 mapIntToCSV(scaleIntMap(kReals, krcounts), rKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
                 mapIntToCSV(scaleIntMap(kPreds, kcounts), pKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+                mapDoubleToCSV(scaleDoubleMap(tObj,tocounts), rObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+                mapDoubleToCSV(scaleDoubleMap(pObj, pocounts), pObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
                 runtimes.put(data.size(), tempRuntime / numTrials);
                 finalKs.put(data.size(), tempK / numTrials);
