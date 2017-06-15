@@ -313,24 +313,23 @@ public abstract class SkiingOptimizer {
     public int getNextNtObjective(int iter, int currNt){
         //M*(lastk^scaling) + MDtime(currNt). Compute and store both predicted and actual
         //changing the objective to being of global time changes this check to be f(kt) + MD(t) < f(k_{t-1}) + 0
-        double prevObjective = (M * Math.pow(KList.get(currNt), kScaling)) + trainTimeList.get(currNt);
-        double predObjective;
+        // storing left side as predicted, right as true.
         int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
+        double prevFk =  (M * Math.pow(KList.get(currNt), kScaling));
         int kGuess = predictK(iter, nextNt);
-        double kTimeGuess = M*Math.pow(kGuess,kScaling);
+        double predFk =  M*Math.pow(kGuess,kScaling);
 
-        predObjective = NtTimeGuess*(1./1) + kTimeGuess;
+        trueObjective.put(currNt, prevFk);
+        predictedObjective.put(nextNt, NtTimeGuess + predFk);
 
-        trueObjective.put(currNt, prevObjective);
-        predictedObjective.put(nextNt, predObjective);
-
-        // giving it a 10% wiggle and first feasible bump
-        if ((predObjective <= (1.0)*prevObjective) || (firstKDrop)){ //(nextNt <= 1000){ //
+        // giving it a first feasible bump
+        if ((prevFk >= NtTimeGuess + predFk ) || (firstKDrop)){ //(nextNt <= 1000){ //
             return nextNt;
         }
         return M+1;
+
     }
 
     //TODO: check indices here
