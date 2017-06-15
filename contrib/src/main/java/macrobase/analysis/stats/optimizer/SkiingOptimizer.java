@@ -313,7 +313,7 @@ public abstract class SkiingOptimizer {
     public int getNextNtObjective(int iter, int currNt){
         //M*(lastk^scaling) + MDtime(currNt). Compute and store both predicted and actual
         //changing the objective to being of global time changes this check to be f(kt) + MD(t) < f(k_{t-1}) + 0
-        double prevObjective = (M * Math.pow(KList.get(currNt), kScaling)); //+ trainTimeList.get(currNt);
+        double prevObjective = (M * Math.pow(KList.get(currNt), kScaling)) + trainTimeList.get(currNt);
         double predObjective;
         int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
         double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
