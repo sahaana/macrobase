@@ -36,6 +36,11 @@ public class IncreasingDatasizeExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/NTvK/%s.csv", output);
     }
 
+    private static String rKOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvK/%s.csv", output);
+    }
+
     private static String pTrainOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
         String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_pred",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
         return String.format(baseString + day.format(date) + "/NTvTime/%s.csv", output);
@@ -80,6 +85,8 @@ public class IncreasingDatasizeExperiments extends Experiment {
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;
 
+        Map<Integer, Integer> kReals;
+        Map<Integer, Double> krcounts;
         Map<Integer, Integer> kPreds;
         Map<Integer, Double> kcounts;
         Map<Integer, Double> trainTimes;
@@ -100,6 +107,8 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 tempK = 0;
                 tempRuntime = 0;
 
+                kReals = new HashMap<>();
+                krcounts = new HashMap<>();
                 kPreds = new HashMap<>();
                 kcounts = new HashMap<>();
                 trainTimes = new HashMap<>();
@@ -115,6 +124,15 @@ public class IncreasingDatasizeExperiments extends Experiment {
                     //update k and total time
                     tempK += drop.finalK();
                     tempRuntime += drop.totalTime();
+
+                    //update real k
+                    for (Map.Entry<Integer, Integer> entry: drop.getKList().entrySet()){
+                        int key = entry.getKey();
+                        int val = entry.getValue();
+
+                        krcounts.put(key, 1 + krcounts.getOrDefault(key, 0.0));
+                        kReals.put(key, val + kReals.getOrDefault(key, 0));
+                    }
 
                     //update predicted k
                     for (Map.Entry<Integer, Integer> entry: drop.getKPred().entrySet()){
@@ -145,6 +163,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 }
                 mapDoubleToCSV(scaleDoubleMap(trainTimes,tcounts), trainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
                 mapDoubleToCSV(scaleDoubleMap(predTrainTimes, pcounts), pTrainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+                mapIntToCSV(scaleIntMap(kReals, krcounts), rKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
                 mapIntToCSV(scaleIntMap(kPreds, kcounts), pKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
                 runtimes.put(data.size(), tempRuntime / numTrials);
