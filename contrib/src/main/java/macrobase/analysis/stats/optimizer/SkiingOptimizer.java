@@ -438,7 +438,7 @@ public abstract class SkiingOptimizer {
     ///toDO: do somethiing with the first drop information. Maybe just move this to PCAskiing and do this.feasible. Right now this only auto quits with objective function if you didn't improve
     public void setKDiff(int iter, int currK){
         kDiffs[iter % numDiffs] = currK - prevK;
-        if ((currK - prevK) < 0){
+        if ((currK - prevK) <= 0){
             this.firstKDrop = false;
         }
         prevK = currK;
