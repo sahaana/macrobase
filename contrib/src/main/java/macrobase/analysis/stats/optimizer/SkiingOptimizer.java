@@ -24,7 +24,7 @@ public abstract class SkiingOptimizer {
     protected List<Integer> sampleList;
 
     protected int kDiff;
-    protected double[] MDDiffs;
+    protected double MDDiff;
     protected int prevK;
     protected double prevMDTime;
     protected double[] currKCI;
@@ -81,8 +81,8 @@ public abstract class SkiingOptimizer {
         this.trueObjective = new HashMap<>();
         this.predictedObjective = new HashMap<>();
         this.kPredList = new HashMap<>();
-        this.MDDiffs = new double[this.numDiffs];
 
+        this.MDDiff = 0;
         this.kDiff = 0;
         this.prevK = 0;
         this.prevMDTime = 0;
@@ -204,11 +204,11 @@ public abstract class SkiingOptimizer {
     public double NtTimePredictOneStepGradient(int iter, int nextNt){
         //int nextNt = getNextNtFixedInterval(iter, currNt);
         if (iter == 1){
-            double guess = MDDiffs[(iter-1) % numDiffs] + prevMDTime;
+            double guess = MDDiff + prevMDTime;
             this.predictedTrainTimeList.put(nextNt, guess);
             return guess;
         }
-        double ratio = MDDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
+        double ratio = MDDiff/ (NtList.get(iter-1) - NtList.get(iter-2));
         int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
         this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
         return guess + prevMDTime;
@@ -231,7 +231,7 @@ public abstract class SkiingOptimizer {
         MDruntimes.add(currNt, MDtime);
         trainTimeList.put(currNt, MDtime);
 
-        MDDiffs[iter % numDiffs] = MDtime - prevMDTime;
+        MDDiff = MDtime - prevMDTime;
         prevMDTime = MDtime;
     }
 
