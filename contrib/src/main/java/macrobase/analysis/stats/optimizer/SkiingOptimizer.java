@@ -216,9 +216,7 @@ public abstract class SkiingOptimizer {
 
     //predicting K for the "next" iteration and Nt
     public int predictK(int iter, int nextNt){
-        //should never be here
         if (iter == 1){
-            System.out.println("POO");
             int guess = kDiff + prevK;
             this.kPredList.put(nextNt, guess);
             return guess;
