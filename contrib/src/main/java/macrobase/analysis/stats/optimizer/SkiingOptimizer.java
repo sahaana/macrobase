@@ -23,7 +23,7 @@ public abstract class SkiingOptimizer {
     protected List<Integer> remList;
     protected List<Integer> sampleList;
 
-    protected int[] kDiffs;
+    protected int kDiff;
     protected double[] MDDiffs;
     protected int prevK;
     protected double prevMDTime;
@@ -81,9 +81,9 @@ public abstract class SkiingOptimizer {
         this.trueObjective = new HashMap<>();
         this.predictedObjective = new HashMap<>();
         this.kPredList = new HashMap<>();
-        this.kDiffs = new int[this.numDiffs];
         this.MDDiffs = new double[this.numDiffs];
 
+        this.kDiff = 0;
         this.prevK = 0;
         this.prevMDTime = 0;
         this.currKCI = new double[]{0, 0, 0};
@@ -150,100 +150,6 @@ public abstract class SkiingOptimizer {
         return NtInterval + currNt;
     }
 
-    public int getNextNtIncreaseOnly(int iter, int currNt){
-        double avgDiff = 0;
-
-        if (iter == 0) {
-         //   NtList.add(NtInterval);
-            return NtInterval;
-        }
-
-        for (double i: kDiffs){
-            avgDiff += i/numDiffs;
-        }
-
-        //double the interval if it's choking
-        if (avgDiff == NtInterval){
-            NtInterval = NtInterval*2;
-        }
-
-        //THIS IS FOR TESTING WITHOUT FULL MIC DROP FUNCTIONALITY
-        if (currNt >= 1100){
-        //    NtList.add(M+1);
-            return M+1;
-        }
-
-        //NtList.add(NtInterval + currNt);
-        return NtInterval+currNt;
-    }
-
-    /*
-    public int getNextNtBasicDoubling(int iter, int currNt){
-        double avgDiff = 0;
-
-        if (iter == 0) {
-        //    NtList.add(NtInterval);
-            return NtInterval;
-        }
-
-        for (double i: kDiffs){
-            avgDiff += i/numDiffs;
-        }
-
-        //if things haven't changed much on average, you can stop
-        if (avgDiff <= 1){
-        //    NtList.add(M+1);
-            return M+1;
-        }
-
-        //double the interval if it's choking and is increasing by the interval each time
-        if (avgDiff == NtInterval){
-            NtInterval = NtInterval*2;
-        }
-
-        //halve the interval if it's aight. overshoots tho. lbr-based?
-        // if (LBRList.get(currNt) >= )
-        if (avgDiff < NtInterval/2){
-            NtInterval = new Double(NtInterval/2).intValue();
-        }
-
-        //NtList.add(NtInterval + currNt);
-        return NtInterval+currNt;
-    }
-
-    public int getNextNt(int iter, int currNt){
-        int nextNt =  getNextNtIncreaseOnly(iter, currNt);
-        NtList.add(nextNt);
-        return nextNt;
-    }
-
-    public int NtTimeGuessFitPoly(int iter, int currNt){
-        double[] MDtimeCoeffs = fitter.fit(this.MDruntimes.toList());
-        double NtTimeGuess = 0;
-        int nextNt = getNextNtIncreaseOnly(iter, currNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
-
-        for (int i = 0; i <= this.Ntdegree; i++){
-            NtTimeGuess += MDtimeCoeffs[i]*Math.pow(nextNt, i);
-        }
-        this.predictedTrainTimeList.put(nextNt, NtTimeGuess);
-        return nextNt;
-    }
-    */
-
-    /*
-    //TODO: check indices here
-    public int NtTimeGuessOneStepGradient(int iter, int currNt){
-        int nextNt = getNextNtIncreaseOnly(iter, currNt); //getNextNtBasicDoubling(iter,currNt,maxNt);
-        if (iter == 1){
-            double guess = MDDiffs[(iter-1) % numDiffs] + prevMDTime;
-            this.predictedTrainTimeList.put(nextNt, guess);
-            return nextNt;
-        }
-        double ratio = MDDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
-        int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
-        this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
-        return nextNt;
-    }*/
 
     public Map<Integer, double[]> bundleMDTimeGuess(){
         Map<Integer, double[]> predVact = new HashMap<>();
@@ -252,45 +158,7 @@ public abstract class SkiingOptimizer {
         }
         return predVact;
     }
-    /*
-    //TODO: scale of Nt vs K is off. must normalize
-    public int getNextNtObjectiveFunc(int iter, int currNt){
-        // objective = M*K^s + MD(Nt)
-        double prevObjective = (M*Math.pow(KList.get(currNt), kScaling)) + trainTimeList.get(currNt);
-        double currObjective;
-        int nextNt =  NtTimeGuessOneStepGradient(iter, currNt);
-        double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
 
-        int kGuess = predictK(iter, nextNt);
-        double kTimeGuess = M*Math.pow(kGuess,kScaling);
-
-        currObjective = NtTimeGuess*(1./1) + kTimeGuess;
-
-        // giving it a 10% wiggle and first feasible bump
-        if ((currObjective <= (1.0)*prevObjective) || (firstKDrop)){ //(nextNt <= 1000){ //
-            return nextNt;
-        }
-        return M+1;
-    }
-
-    public int getNextNtPE(int iter, int currNt, boolean attainedLBR){
-        int nextNt;
-        if (!attainedLBR){
-            nextNt = getNextNtIncreaseOnly(iter, currNt);
-            NtList.add(nextNt);
-            return nextNt;
-        }
-        nextNt = getNextNtObjectiveFunc(iter, currNt);
-        log.debug("NextNt {}", nextNt);
-        NtList.add(nextNt);
-        return nextNt;
-    }
-
-    public int getNextNtFull(int iter, int currNt){
-        NtList.add(M);
-        return M;
-    }
-    */
     // this is always called before anything else happens that iter
     public int getNextNtPE(int iter, int currNt){
         // tentative next Nt is this Nt + max{10, 1% data}
@@ -304,21 +172,20 @@ public abstract class SkiingOptimizer {
 
         //for all other iters, MD has been run with currNt
         if (opt){
-            nextNt = getNextNtObjective(iter, currNt);
+            nextNt = getNextNtObjective(iter, currNt, nextNt);
         }
         NtList.add(nextNt);
         return nextNt;
     }
 
-    public int getNextNtObjective(int iter, int currNt){
+    public int getNextNtObjective(int iter, int currNt, int nextNt){
         //M*(lastk^scaling) + MDtime(currNt). Compute and store both predicted and actual
         //changing the objective to being of global time changes this check to be f(kt) + MD(t) < f(k_{t-1}) + 0
         // storing funck-k side as predicted, runtime pred as true.
-        int nextNt =  NtTimePredictOneStepGradient(iter, currNt);
-        double NtTimeGuess = this.predictedTrainTimeList.get(nextNt);
+        double NtTimeGuess = NtTimePredictOneStepGradient(iter, nextNt);
 
         double prevFk =  (M * Math.pow(KList.get(currNt), kScaling));
-        int kGuess = predictK(iter, nextNt);
+        int kGuess = predictK(iter, nextNt); //iter needed for currNt ans one before
         double predFk =  M*Math.pow(kGuess,kScaling);
 
         trueObjective.put(currNt, prevFk - predFk);
@@ -334,30 +201,31 @@ public abstract class SkiingOptimizer {
 
     //TODO: check indices here
     //Computes and stores the predicted nextNt and time it'll take. Returns nextNt
-    public int NtTimePredictOneStepGradient(int iter, int currNt){
-        int nextNt = getNextNtFixedInterval(iter, currNt);
+    public double NtTimePredictOneStepGradient(int iter, int nextNt){
+        //int nextNt = getNextNtFixedInterval(iter, currNt);
         if (iter == 1){
             double guess = MDDiffs[(iter-1) % numDiffs] + prevMDTime;
             this.predictedTrainTimeList.put(nextNt, guess);
-            return nextNt;
+            return guess;
         }
         double ratio = MDDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
         int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
         this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
-        return nextNt;
+        return guess + prevMDTime;
     }
 
-    //TODO: is the indexed here even right? Also for equivalent basic 1-step
     //predicting K for the "next" iteration and Nt
-    public int predictK(int iter, int currNt){
+    public int predictK(int iter, int nextNt){
+        //should never be here
         if (iter == 1){
-            int guess = kDiffs[(iter-1) % numDiffs] + prevK;
-            this.kPredList.put(currNt, guess);
+            System.out.println("POO");
+            int guess = kDiff + prevK;
+            this.kPredList.put(nextNt, guess);
             return guess;
         }
-        double ratio = (double) kDiffs[(iter-1) % numDiffs]/ (NtList.get(iter-1) - NtList.get(iter-2));
-        int guess = (int) Math.round(ratio*(currNt - NtList.get(iter-1)));
-        this.kPredList.put(currNt, guess + prevK);
+        double ratio = (double) kDiff/ (NtList.get(iter-1) - NtList.get(iter-2));
+        int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
+        this.kPredList.put(nextNt, guess + prevK);
         return guess + prevK;
     }
 
@@ -436,9 +304,9 @@ public abstract class SkiingOptimizer {
     public int getM(){return M;}
 
     ///toDO: do somethiing with the first drop information. Maybe just move this to PCAskiing and do this.feasible. Right now this only auto quits with objective function if you didn't improve
-    public void setKDiff(int iter, int currK){
-        kDiffs[iter % numDiffs] = currK - prevK;
-        if ((currK - prevK) <= 0){
+    public void setKDiff(int currK){
+        kDiff = currK - prevK;
+        if (kDiff <= 0){
             this.firstKDrop = false;
         }
         prevK = currK;

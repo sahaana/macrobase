@@ -108,6 +108,7 @@ public class PCASkiingDROP extends FeatureTransform {
         //log.debug("Extracted {} Records of dim {}", pcaOpt.getM(),pcaOpt.getN());
         pcaOpt.preprocess();
         //log.debug("Processed Data");
+        //iter is 0 here
         currNt = pcaOpt.getNextNtPE(iter, currNt);
         pcaOpt.warmUp(currNt);
         //log.debug("Warmed Up");
@@ -118,7 +119,7 @@ public class PCASkiingDROP extends FeatureTransform {
             MD.reset();
             MD.start();
             pcaOpt.fit(currNt);
-            currK = pcaOpt.getKCI(iter, lbr); //function to get knee for K for this transform;
+            currK = pcaOpt.getKCI(currNt, lbr); //function to get knee for K for this transform;
             MD.stop();
             //store how long (MD) this currNt took, diff between last and this, and store this as prevMD
             pcaOpt.updateMDRuntime(iter, currNt, (double) MD.elapsed(TimeUnit.MILLISECONDS));
@@ -127,7 +128,7 @@ public class PCASkiingDROP extends FeatureTransform {
             pcaOpt.setLBRList(currNt, currLBR);
             //store the K obtained and the diff in K from this currNt
             pcaOpt.setKList(currNt, currK);
-            pcaOpt.setKDiff(iter, currK);
+            pcaOpt.setKDiff(currK);
             ////log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currK);
             //CurrNt, iter has been updated to next iterations. Pass in next iter (so ++iter) to this function
             currNt = pcaOpt.getNextNtPE(++iter, currNt);

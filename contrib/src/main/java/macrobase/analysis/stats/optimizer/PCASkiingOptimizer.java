@@ -257,7 +257,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         }
     }
 
-    public int getKCI(int iter, double targetLBR) {
+    public int getKCI(int currNt, double targetLBR) {
         //confidence interval based method for getting K
         double[] LBR;
         RealMatrix currTransform;
@@ -265,7 +265,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int iters = 0;
         int low = 0;
 
-        int high = Math.min(this.N, this.NtList.get(iter)) - 1;
+        int high = Math.min(this.N, currNt) - 1;
         //if you weren't feasible, then the high remains. Else max is last feasible pt
         if (this.feasible) high = this.lastFeasible + 5; //TODO: arbitrary buffer room
         targetLBR += 0.002; //TODO: arbitrary buffer room
@@ -274,7 +274,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         //If the max isn't feasible, just return it
         LBR = evalK(targetLBR, high);
         if (targetLBR > LBR[0]) {
-            KItersList.put(this.NtList.get(iter), ++iters);
+            KItersList.put(currNt, ++iters);
             currKCI = LBR;
             updateTrainWorkReuse();
             return high;
@@ -294,7 +294,7 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         }
         this.feasible = true;
         this.lastFeasible = mid;
-        KItersList.put(this.NtList.get(iter), iters);
+        KItersList.put(currNt, iters);
         currKCI = evalK(targetLBR,mid);
         updateTrainWorkReuse();
         return mid;
