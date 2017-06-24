@@ -178,15 +178,26 @@ public abstract class SkiingOptimizer {
         return nextNt;
     }
 
+    public double kOrigFunc(int k){
+        return Math.max(0.0, (M * Math.pow(k, kScaling)));
+    }
+
+    public double kFunc(int k){
+        //r2:  0.996214764017
+        //      a        + b*x[0]  + c*x[1]    + d*x[0]*x[1] + e*x[0]*x[0] + f*x[0]*x[0]*x[1] 0=M,1=D
+        //[-5.63773557  0.01784894 -0.20522357  0.00100771 -0.00000249  0.00000065]
+        return Math.max(0.0, -5.63773557  + M*(0.01784894) + k*(-0.20522357) + M*k*(0.00100771) +  M*M*(-0.00000249) + M*M*k*(0.00000065));
+    }
+
     public int getNextNtObjective(int iter, int currNt, int nextNt){
         //M*(lastk^scaling) + MDtime(currNt). Compute and store both predicted and actual
         //changing the objective to being of global time changes this check to be f(kt) + MD(t) < f(k_{t-1}) + 0
         // storing funck-k side as predicted, runtime pred as true.
         double NtTimeGuess = NtTimePredictOneStepGradient(iter, nextNt);
 
-        double prevFk =  (M * Math.pow(KList.get(currNt), kScaling));
+        double prevFk =  kFunc(KList.get(currNt));
         int kGuess = predictK(iter, nextNt); //iter needed for currNt ans one before
-        double predFk =  M*Math.pow(kGuess,kScaling);
+        double predFk =  kFunc(kGuess);
 
         trueObjective.put(currNt, prevFk - predFk);
         predictedObjective.put(nextNt, NtTimeGuess);
@@ -209,7 +220,7 @@ public abstract class SkiingOptimizer {
             return guess;
         }
         double ratio = MDDiff/ (NtList.get(iter-1) - NtList.get(iter-2));
-        int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
+        double guess = Math.max(0.0, ratio*(nextNt - NtList.get(iter-1)));
         this.predictedTrainTimeList.put(nextNt, guess + prevMDTime);
         return guess + prevMDTime;
     }
@@ -222,7 +233,7 @@ public abstract class SkiingOptimizer {
             return guess;
         }
         double ratio = (double) kDiff/ (NtList.get(iter-1) - NtList.get(iter-2));
-        int guess = (int) Math.round(ratio*(nextNt - NtList.get(iter-1)));
+        int guess = Math.max(0, (int) Math.round(ratio*(nextNt - NtList.get(iter-1))));
         this.kPredList.put(nextNt, guess + prevK);
         return guess + prevK;
     }
