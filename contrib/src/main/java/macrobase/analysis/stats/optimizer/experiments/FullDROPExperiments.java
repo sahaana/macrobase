@@ -65,7 +65,6 @@ public class FullDROPExperiments extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 200;
         long tempRuntime;
         int tempK;
 
@@ -75,12 +74,14 @@ public class FullDROPExperiments extends Experiment {
         int kExp = 2; //Not used for anything because it's KNN objective function based
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[3]);
         PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[4]);
+        int numTrials = Integer.parseInt(args[5]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(qThresh);
         System.out.println(kExp);
         System.out.println(reuse);
         System.out.println(opt);
+        System.out.println(numTrials);
 
 
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
