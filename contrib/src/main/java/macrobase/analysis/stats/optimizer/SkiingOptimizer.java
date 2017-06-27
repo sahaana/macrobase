@@ -133,7 +133,7 @@ public abstract class SkiingOptimizer {
     }
 
     public void preprocess(){
-        this.NtInterval = 500;//Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
+        this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
         //touch all of the data
         double touch = 0;
         for (int i = 0; i < M; i++){
