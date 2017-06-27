@@ -137,7 +137,7 @@ public class PCASkiingDROP extends FeatureTransform {
         sw.stop();
         transformedData = pcaOpt.transform(currK);
 
-        System.out.print(pcaOpt.getNtList(iter-1));
+        //System.out.print(pcaOpt.getNtList(iter-1));
         //log.debug("MICDROP 'COMPLETE'");
         //log.debug("Looked at {}/{} samples", pcaOpt.getNtList(iter-1), pcaOpt.getM());
         finalTransform = transformedData.getData();
@@ -206,6 +206,8 @@ public class PCASkiingDROP extends FeatureTransform {
     public int finalK() { return currK; }
 
     public int getM() { return pcaOpt.getM(); }
+
+    public int getNt() { return pcaOpt.getNtList(iter-1); }
 
     public Map<Integer, double[]> getLBR() { return pcaOpt.getLBRList();}
 

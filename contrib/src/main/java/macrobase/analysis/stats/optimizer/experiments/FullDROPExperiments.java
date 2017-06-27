@@ -61,6 +61,10 @@ public class FullDROPExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/NTvObj/%s.csv", output);
     }
 
+    private static String examinedOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NT/%s.csv", output);
+    }
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
@@ -101,6 +105,7 @@ public class FullDROPExperiments extends Experiment {
         Map<Integer, Double> pocounts;
         Map<Integer, Double> tObj;
         Map<Integer, Double> tocounts;
+        Map<Integer, Integer> dataExamined;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -124,6 +129,7 @@ public class FullDROPExperiments extends Experiment {
             pocounts = new HashMap<>();
             tObj = new HashMap<>();
             tocounts = new HashMap<>();
+            dataExamined = new HashMap<>();
 
             data = getData(dataset);
 
@@ -134,6 +140,10 @@ public class FullDROPExperiments extends Experiment {
                 //update k and total time
                 tempK += drop.finalK();
                 tempRuntime += drop.totalTime();
+                int Nt = drop.getNt();
+
+                //update histogram of how much data was examined
+                dataExamined.put(Nt, 1 + dataExamined.getOrDefault(Nt,0));
 
                 //update real k
                 for (Map.Entry<Integer, Integer> entry: drop.getKList().entrySet()){
@@ -196,6 +206,8 @@ public class FullDROPExperiments extends Experiment {
             mapIntToCSV(scaleIntMap(kPreds, kcounts), pKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
             mapDoubleToCSV(scaleDoubleMap(tObj,tocounts), rObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
             mapDoubleToCSV(scaleDoubleMap(pObj, pocounts), pObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+
+            mapIntToCSV(dataExamined, examinedOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
             runtimes.put(data.size(), tempRuntime / numTrials);
             finalKs.put(data.size(), tempK / numTrials);
