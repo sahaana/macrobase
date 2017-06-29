@@ -135,7 +135,7 @@ public abstract class SkiingOptimizer {
 
     public void preprocess(){
         this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
-        this.NtSchedule = new double[] {0.001, .01, 0.025, .05, .10, .25, .50};
+        this.NtSchedule = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.20, .30, .65, 1.0, 1.5};
         //touch all of the data
         double touch = 0;
         for (int i = 0; i < M; i++){
@@ -153,7 +153,7 @@ public abstract class SkiingOptimizer {
     }
 
     public int getNextNtFixedSchedule(int iter, int currNt){
-        Double Nt = Math.max(10.0, NtSchedule[iter] * M);
+        Double Nt =  NtSchedule[iter] * M;
         return Nt.intValue();
     }
 
@@ -176,10 +176,14 @@ public abstract class SkiingOptimizer {
             return nextNt;
         }
 
-        //for all other iters, MD has been run with currNt
-        if (opt){
-            nextNt = getNextNtObjective(iter, currNt, nextNt);
+        if (nextNt > M){
+            return nextNt;
         }
+
+        //for all other iters, MD has been run with currNt
+        //if (opt){
+        nextNt = getNextNtObjective(iter, currNt, nextNt);
+        //}
         NtList.add(nextNt);
         return nextNt;
     }
@@ -212,7 +216,7 @@ public abstract class SkiingOptimizer {
         predictedObjective.put(nextNt, NtTimeGuess);
 
         // giving it a first feasible bump
-        if ((prevFk - predFk >= NtTimeGuess) || (firstKDrop)){ //(nextNt <= 1000){ //
+        if ((prevFk - predFk >= NtTimeGuess) || (firstKDrop) || (!opt)){ //(nextNt <= 1000){ //
             return nextNt;
         }
         return M+1;
