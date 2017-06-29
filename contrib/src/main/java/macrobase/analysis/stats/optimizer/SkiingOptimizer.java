@@ -30,6 +30,7 @@ public abstract class SkiingOptimizer {
     protected double[] currKCI;
     protected int numDiffs;
     protected int NtInterval;
+    protected double[] NtSchedule;
 
     protected List<Integer> NtList;
     protected Map<Integer, Integer> KList;
@@ -134,6 +135,7 @@ public abstract class SkiingOptimizer {
 
     public void preprocess(){
         this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
+        this.NtSchedule = new double[] {0.001, .01, 0.025, .05, .10, .25, .50};
         //touch all of the data
         double touch = 0;
         for (int i = 0; i < M; i++){
@@ -150,6 +152,10 @@ public abstract class SkiingOptimizer {
         return NtInterval + currNt;
     }
 
+    public int getNextNtFixedSchedule(int iter, int currNt){
+        Double Nt = Math.max(10.0, NtSchedule[iter] * M);
+        return Nt.intValue();
+    }
 
     public Map<Integer, double[]> bundleMDTimeGuess(){
         Map<Integer, double[]> predVact = new HashMap<>();
@@ -161,8 +167,8 @@ public abstract class SkiingOptimizer {
 
     // this is always called before anything else happens that iter
     public int getNextNtPE(int iter, int currNt){
-        // tentative next Nt is this Nt + max{10, 1% data}
-        int nextNt = getNextNtFixedInterval(iter, currNt);
+        // tentative next Nt
+        int nextNt = getNextNtFixedSchedule(iter, currNt);
 
         //iter 0 is special because currNt has not been run yet, so no #s exist
         if (iter == 0){
@@ -214,9 +220,7 @@ public abstract class SkiingOptimizer {
     }
 
     //TODO: check indices here
-    //Computes and stores the predicted nextNt and time it'll take. Returns nextNt
     public double NtTimePredictOneStepGradient(int iter, int nextNt){
-        //int nextNt = getNextNtFixedInterval(iter, currNt);
         if (iter == 1){
             double guess = MDDiff + prevMDTime;
             this.predictedTrainTimeList.put(nextNt, guess);
