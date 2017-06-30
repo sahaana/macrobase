@@ -129,6 +129,26 @@ public abstract class Experiment {
         }
     }
 
+    static void mapDouble3ToCSV(Map<Integer, double[]> dataMap, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
+        String eol =  System.getProperty("line.separator");
+        try (Writer writer = new FileWriter(f)) {
+            for (Map.Entry<Integer, double[]> entry: dataMap.entrySet()) {
+                writer.append(Integer.toString(entry.getKey()))
+                        .append(',')
+                        .append(Double.toString(entry.getValue()[0]))
+                        .append(',')
+                        .append(Double.toString(entry.getValue()[1]))
+                        .append(',')
+                        .append(Double.toString(entry.getValue()[2]))
+                        .append(eol);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
 
     static Map<Integer, Integer> scaleIntMap(Map<Integer, Integer> toScale, Map<Integer,Double> counts){
         Map<Integer, Integer> scaled = new HashMap<>();
@@ -159,6 +179,18 @@ public abstract class Experiment {
             double real = entry.getValue()[0];
             double guess = entry.getValue()[1];
             scaled.put(key, new double[] {real/counts.get(key), guess/counts.get(key)});
+        }
+        return scaled;
+    }
+
+    static Map<Integer, double[]> scaleDouble3Map(Map<Integer, double[]> toScale, Map<Integer,Double> counts){
+        Map<Integer, double[]> scaled = new HashMap<>();
+        for (Map.Entry<Integer, double[]> entry: toScale.entrySet()) {
+            int key = entry.getKey();
+            double e0 = entry.getValue()[0];
+            double e1 = entry.getValue()[1];
+            double e2 = entry.getValue()[2];
+            scaled.put(key, new double[] {e0/counts.get(key), e1/counts.get(key), e2/counts.get(key)});
         }
         return scaled;
     }

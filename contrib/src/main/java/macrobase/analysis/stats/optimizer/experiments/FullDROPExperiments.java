@@ -66,6 +66,11 @@ public class FullDROPExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/NT/%s.csv", output);
     }
 
+    private static String LBROutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/LBR/%s.csv", output);
+    }
+
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
@@ -106,6 +111,8 @@ public class FullDROPExperiments extends Experiment {
         Map<Integer, Double> tObj;
         Map<Integer, Double> tocounts;
         Map<Integer, Integer> dataExamined;
+        Map<Integer, Double> LBRCounts;
+        Map<Integer, double[]> LBRs;
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -130,6 +137,8 @@ public class FullDROPExperiments extends Experiment {
             tObj = new HashMap<>();
             tocounts = new HashMap<>();
             dataExamined = new HashMap<>();
+            LBRs = new HashMap<>();
+            LBRCounts = new HashMap<>();
 
             data = getData(dataset);
 
@@ -141,6 +150,20 @@ public class FullDROPExperiments extends Experiment {
                 tempK += drop.finalK();
                 tempRuntime += drop.totalTime();
                 int Nt = drop.getNt();
+
+                //update LBR
+                for (Map.Entry<Integer, double[]> entry : drop.getLBR().entrySet()) {
+                    int key = entry.getKey();
+                    double[] val = entry.getValue();
+                    double[] prev = LBRs.getOrDefault(key, new double[]{0, 0, 0});
+
+                    LBRCounts.put(key, 1 + LBRCounts.getOrDefault(key, 0.0));
+
+                    for (int ii = 0 ; ii < 3; i++) {
+                        val[ii] += prev[ii];
+                    }
+                    LBRs.put(key, val);
+                }
 
                 //update histogram of how much data was examined
                 dataExamined.put(Nt, 1 + dataExamined.getOrDefault(Nt,0));
@@ -208,6 +231,8 @@ public class FullDROPExperiments extends Experiment {
             mapDoubleToCSV(scaleDoubleMap(pObj, pocounts), pObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
             mapIntToCSV(dataExamined, examinedOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+
+            mapDouble3ToCSV(scaleDouble3Map(LBRs, LBRCounts),LBROutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
             runtimes.put(data.size(), tempRuntime / numTrials);
             finalKs.put(data.size(), tempK / numTrials);
