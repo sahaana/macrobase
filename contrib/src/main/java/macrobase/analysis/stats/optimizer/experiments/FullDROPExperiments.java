@@ -51,13 +51,23 @@ public class FullDROPExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/NTvTime/%s.csv", output);
     }
 
-    private static String pObjOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
-        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_pred",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
-        return String.format(baseString + day.format(date) + "/NTvObj/%s.csv", output);
+    private static String fObjCheckOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_F",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvObjCheck/%s.csv", output);
+    }
+
+    private static String dObjCheckOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_D",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvObjCheck/%s.csv", output);
     }
 
     private static String rObjOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
         String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format(baseString + day.format(date) + "/NTvObj/%s.csv", output);
+    }
+
+    private static String pObjOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s_pred",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
         return String.format(baseString + day.format(date) + "/NTvObj/%s.csv", output);
     }
 
@@ -110,6 +120,10 @@ public class FullDROPExperiments extends Experiment {
         Map<Integer, Double> pocounts;
         Map<Integer, Double> tObj;
         Map<Integer, Double> tocounts;
+        Map<Integer, Double> fObjCheck; //diff in f function
+        Map<Integer, Double> fCheckcounts;
+        Map<Integer, Double> dObjCheck; //pred drop time
+        Map<Integer, Double> dCheckcounts;
         Map<Integer, Integer> dataExamined;
         Map<Integer, Double> LBRCounts;
         Map<Integer, double[]> LBRs;
@@ -136,6 +150,10 @@ public class FullDROPExperiments extends Experiment {
             pocounts = new HashMap<>();
             tObj = new HashMap<>();
             tocounts = new HashMap<>();
+            fObjCheck = new HashMap<>();
+            fCheckcounts = new HashMap<>();
+            dObjCheck = new HashMap<>();
+            dCheckcounts = new HashMap<>();
             dataExamined = new HashMap<>();
             LBRs = new HashMap<>();
             LBRCounts = new HashMap<>();
@@ -222,6 +240,24 @@ public class FullDROPExperiments extends Experiment {
                     tObj.put(key, val + tObj.getOrDefault(key,0.0));
                 }
 
+                //update d part of obj
+                for (Map.Entry<Integer, Double> entry: drop.getdObjectiveCheck().entrySet()) {
+                    int key = entry.getKey();
+                    double val = entry.getValue();
+
+                    dCheckcounts.put(key, 1 + dCheckcounts.getOrDefault(key,0.0));
+                    dObjCheck.put(key, val + dObjCheck.getOrDefault(key,0.0));
+                }
+
+                //update f part of obj
+                for (Map.Entry<Integer, Double> entry: drop.getfObjectiveCheck().entrySet()) {
+                    int key = entry.getKey();
+                    double val = entry.getValue();
+
+                    fCheckcounts.put(key, 1 + fCheckcounts.getOrDefault(key,0.0));
+                    fObjCheck.put(key, val + fObjCheck.getOrDefault(key,0.0));
+                }
+
             }
             mapDoubleToCSV(scaleDoubleMap(trainTimes,tcounts), trainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
             mapDoubleToCSV(scaleDoubleMap(predTrainTimes, pcounts), pTrainOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
@@ -229,6 +265,8 @@ public class FullDROPExperiments extends Experiment {
             mapIntToCSV(scaleIntMap(kPreds, kcounts), pKOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
             mapDoubleToCSV(scaleDoubleMap(tObj,tocounts), rObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
             mapDoubleToCSV(scaleDoubleMap(pObj, pocounts), pObjOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+            mapDoubleToCSV(scaleDoubleMap(fObjCheck,fCheckcounts), fObjCheckOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
+            mapDoubleToCSV(scaleDoubleMap(dObjCheck, dCheckcounts), dObjCheckOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 
             mapIntToCSV(dataExamined, examinedOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
 

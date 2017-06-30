@@ -225,6 +225,10 @@ public class PCASkiingDROP extends FeatureTransform {
 
     public Map<Integer, Double> getPredictedObjective() { return pcaOpt.getPredictedObjective(); }
 
+    public Map<Integer, Double> getfObjectiveCheck() { return pcaOpt.getfObjectiveCheck(); }
+
+    public Map<Integer, Double> getdObjectiveCheck() { return pcaOpt.getdObjectiveCheck(); }
+
     public Map<Integer, Integer> getKItersList(){
         return pcaOpt.getKItersList();
     }

@@ -40,6 +40,10 @@ public abstract class SkiingOptimizer {
     protected Map<Integer, Integer> kPredList;
     protected Map<Integer, Double> trueObjective;
     protected Map<Integer, Double> predictedObjective;
+    protected Map<Integer, Double> fObjective;
+    protected Map<Integer, Double> dObjective;
+
+    double dropTimeSoFar;
 
 
     protected double qThresh;
@@ -81,6 +85,8 @@ public abstract class SkiingOptimizer {
         this.predictedTrainTimeList = new HashMap<>();
         this.trueObjective = new HashMap<>();
         this.predictedObjective = new HashMap<>();
+        this.fObjective = new HashMap<>();
+        this.dObjective = new HashMap<>();
         this.kPredList = new HashMap<>();
 
         this.MDDiff = 0;
@@ -88,6 +94,7 @@ public abstract class SkiingOptimizer {
         this.prevK = 0;
         this.prevMDTime = 0;
         this.currKCI = new double[]{0, 0, 0};
+        this.dropTimeSoFar = 0;
 
         this.feasible = false;
         this.firstKDrop = true;
@@ -212,8 +219,11 @@ public abstract class SkiingOptimizer {
         int kGuess = predictK(iter, nextNt); //iter needed for currNt ans one before
         double predFk =  kFunc(kGuess);
 
-        trueObjective.put(currNt, prevFk - predFk);
-        predictedObjective.put(nextNt, NtTimeGuess);
+        trueObjective.put(currNt, prevFk + dropTimeSoFar);
+        predictedObjective.put(nextNt, predFk + NtTimeGuess + dropTimeSoFar);
+
+        fObjective.put(currNt, prevFk - predFk);
+        dObjective.put(nextNt, NtTimeGuess);
 
         // giving it a first feasible bump
         if ((prevFk - predFk >= NtTimeGuess) || (firstKDrop) || (!opt)){ //(nextNt <= 1000){ //
@@ -250,6 +260,7 @@ public abstract class SkiingOptimizer {
     }
 
     public void updateMDRuntime(int iter, int currNt, double MDtime){
+        dropTimeSoFar += MDtime;
         MDruntimes.add(currNt, MDtime);
         trainTimeList.put(currNt, MDtime);
 
@@ -363,6 +374,10 @@ public abstract class SkiingOptimizer {
     public Map getTrueObjective() { return trueObjective; }
 
     public Map getPredictedObjective() { return predictedObjective; }
+
+    public Map getfObjectiveCheck() { return fObjective; }
+
+    public Map getdObjectiveCheck() { return dObjective; }
 
     public abstract void fit(int Nt);
 
