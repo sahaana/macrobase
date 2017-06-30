@@ -159,7 +159,7 @@ public class FullDROPExperiments extends Experiment {
 
                     LBRCounts.put(key, 1 + LBRCounts.getOrDefault(key, 0.0));
 
-                    for (int ii = 0 ; ii < 3; i++) {
+                    for (int ii = 0 ; ii < 3; ii++) {
                         val[ii] += prev[ii];
                     }
                     LBRs.put(key, val);
