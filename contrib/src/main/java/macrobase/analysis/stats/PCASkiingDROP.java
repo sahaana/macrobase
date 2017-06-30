@@ -132,7 +132,7 @@ public class PCASkiingDROP extends FeatureTransform {
             ////log.debug("LOW {}, LBR {}, HIGH {}, VAR {} K {}.", currLBR[0], currLBR[1], currLBR[2], currLBR[3], currK);
             //CurrNt, iter has been updated to next iterations. Pass in next iter (so ++iter) to this function
             currNt = pcaOpt.getNextNtPE(++iter, currNt);
-        } while (currNt < pcaOpt.getM());
+        } while (currNt <= pcaOpt.getM());
 
         sw.stop();
         transformedData = pcaOpt.transform(currK);
