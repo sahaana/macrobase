@@ -36,7 +36,6 @@ public class SVDBinSearchExperiments extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 50;
         long[] tempKRuntime;
         long tempRuntime;
         int tempK;
@@ -44,9 +43,11 @@ public class SVDBinSearchExperiments extends Experiment {
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
         PCASkiingOptimizer.PCAAlgo algo =  PCASkiingOptimizer.PCAAlgo.valueOf(args[2]);
+        int numTrials = Integer.parseInt(args[3]);
         System.out.println(dataset);
         System.out.println(lbr);
         System.out.println(algo);
+        System.out.println(numTrials);
 
         double qThresh = 1.96;
         Map<Integer, Long> Kruntimes = new HashMap<>();

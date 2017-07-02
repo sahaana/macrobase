@@ -20,8 +20,9 @@ datasets = ['50words', 'Adiac', 'CBF', 'ChlorineConcentration', 'CinC',
 
 lbr = 0.98
 algos = ['SVD', 'TROPP', 'FAST']
+numTrials = 50
 
-proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDBinSearchExperiments %s %f %s"
+proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDBinSearchExperiments %s %f %s %d"
 comp = "mvn compile -Dmaven.test.skip=true"
 package = "mvn package -DskipTests"
 subprocess.call(comp, shell=True)
@@ -29,6 +30,6 @@ subprocess.call(package, shell=True)
 
 for algo in algos:
     for dataset in datasets:
-        subprocess.call(proc % (dataset, lbr, algo), shell=True)
+        subprocess.call(proc % (dataset, lbr, algo, numTrials), shell=True)
 
 
