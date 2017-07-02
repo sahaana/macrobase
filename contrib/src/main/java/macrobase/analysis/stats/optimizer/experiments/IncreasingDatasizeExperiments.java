@@ -69,16 +69,18 @@ public class IncreasingDatasizeExperiments extends Experiment {
         long tempRuntime;
         int tempK;
 
-        String dataset1 = args[0];
-        String dataset2 = args[1];
-        String dataset3 = args[2];
-        String dataset4 = args[3];
-        double lbr = Double.parseDouble(args[4]);
-        double qThresh = Double.parseDouble(args[5]);
-        int kExp = Integer.parseInt(args[6]);
-        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[7]);
-        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[8]);
-        System.out.println(dataset1);
+	String base = args[0];
+        String dataset1 = args[1];
+        String dataset2 = args[2];
+        String dataset3 = args[3];
+        String dataset4 = args[4];
+        double lbr = Double.parseDouble(args[5]);
+        double qThresh = Double.parseDouble(args[6]);
+        int kExp = Integer.parseInt(args[7]);
+        PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.valueOf(args[8]);
+        PCASkiingOptimizer.optimize opt =   PCASkiingOptimizer.optimize.valueOf(args[9]);
+        System.out.println(base);
+	System.out.println(dataset1);
         System.out.println(dataset2);
         System.out.println(dataset3);
         System.out.println(dataset4);
@@ -212,8 +214,8 @@ public class IncreasingDatasizeExperiments extends Experiment {
                 runtimes.put(data.size(), tempRuntime / numTrials);
                 finalKs.put(data.size(), tempK / numTrials);
             }
-            mapIntLongToCSV(runtimes, timeOutFile(dataset1,lbr,qThresh,algo,reuse,date,opt));
-            mapIntToCSV(finalKs, kOutFile(dataset1,lbr,qThresh,algo,reuse,date,opt));
+            mapIntLongToCSV(runtimes, timeOutFile(base,lbr,qThresh,algo,reuse,date,opt));
+            mapIntToCSV(finalKs, kOutFile(base,lbr,qThresh,algo,reuse,date,opt));
         }
 
     }
