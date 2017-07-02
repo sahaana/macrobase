@@ -190,6 +190,14 @@ public class PCASkiingDROP extends FeatureTransform {
         return pcaOpt.getFullSVD(lbr);
     }
 
+    public long[] oracleSVD(List<Datum> records, double propn) {
+        pcaOpt = new PCASkiingOptimizer(qThresh, algo);
+        pcaOpt.extractData(records);
+        pcaOpt.preprocess();
+
+        return pcaOpt.getFullSVD(lbr, propn);
+    }
+
 
     @Override
     public void shutdown() throws Exception {
@@ -208,6 +216,8 @@ public class PCASkiingDROP extends FeatureTransform {
     public int getM() { return pcaOpt.getM(); }
 
     public int getNt() { return pcaOpt.getNtList(iter-1); }
+
+    public double[] getFinalLBR() { return pcaOpt.getCurrKCI(); }
 
     public Map<Integer, double[]> getLBR() { return pcaOpt.getLBRList();}
 

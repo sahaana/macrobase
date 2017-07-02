@@ -23,8 +23,15 @@ public class SVDBinSearchExperiments extends Experiment {
 
     private static String kAndRuntimeOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, Date date){
         String output = String.format("%s_%s_%s_lbr%.2f_q%.2f",minute.format(date),dataset, algo, lbr, qThresh);
-        return String.format(baseString + day.format(date) + "/%s.csv", output);
+        return String.format(baseString + day.format(date) + "/KR/%s.csv", output);
     }
+
+    private static String lbrOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, Date date){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f",minute.format(date),dataset, algo, lbr, qThresh);
+        return String.format(baseString + day.format(date) + "/lbr/%s.csv", output);
+    }
+
+    //todo: spit out lbr too
 
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
@@ -36,12 +43,14 @@ public class SVDBinSearchExperiments extends Experiment {
 
         String dataset = args[0];
         double lbr = Double.parseDouble(args[1]);
+        PCASkiingOptimizer.PCAAlgo algo =  PCASkiingOptimizer.PCAAlgo.valueOf(args[2]);
         System.out.println(dataset);
         System.out.println(lbr);
+        System.out.println(algo);
 
-        PCASkiingOptimizer.PCAAlgo algo = PCASkiingOptimizer.PCAAlgo.SVD;
         double qThresh = 1.96;
         Map<Integer, Long> Kruntimes = new HashMap<>();
+        double[] finalLBR = new double[]{0, 0, 0};
 
         MacroBaseConf conf = new MacroBaseConf();
 
@@ -55,12 +64,20 @@ public class SVDBinSearchExperiments extends Experiment {
             tempKRuntime = drop.baselineSVD(data);
             tempK += tempKRuntime[0];
             tempRuntime += tempKRuntime[1];
+            double[] templbr = drop.getFinalLBR();
+            for (int ii = 0; ii < 3; ii++) {
+                finalLBR[ii] += templbr[ii];
+            }
         }
 
         //this is dumb //why?
         Kruntimes.put(tempK / numTrials, tempRuntime / numTrials);
+        for (int ii = 0; ii < 3; ii++) {
+            finalLBR[ii] = finalLBR[ii]/numTrials;
+        }
 
-        mapIntLongToCSV(Kruntimes, kAndRuntimeOutFile(dataset,lbr,qThresh,algo,date));
+        mapIntLongToCSV(Kruntimes, kAndRuntimeOutFile(dataset, lbr, qThresh, algo, date));
+        doubleListToCSV(finalLBR, lbrOutFile(dataset, lbr, qThresh, algo, date));
 
     }
 }
