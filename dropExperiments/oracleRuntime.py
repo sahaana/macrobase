@@ -28,14 +28,14 @@ lbr = 0.98
 algos = ['SVD', 'TROPP', 'FAST']
 numTrials = 50
 
-proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.OracleBinSearchExperiments %s %f %s %d"
+proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.OracleBinSearchExperiments %s %f %s %f %d"
 comp = "mvn compile -Dmaven.test.skip=true"
 package = "mvn package -DskipTests"
 subprocess.call(comp, shell=True)
 subprocess.call(package, shell=True)
 
 for algo in algos:
-    for dataset,propn in datasets:
-        subprocess.call(proc % (dataset, lbr, algo, numTrials), shell=True)
+    for dataset,propn in zip(datasets,propns):
+        subprocess.call(proc % (dataset, lbr, algo, propn, numTrials), shell=True)
 
 
