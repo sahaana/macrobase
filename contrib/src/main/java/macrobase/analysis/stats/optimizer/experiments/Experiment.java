@@ -62,6 +62,23 @@ public abstract class Experiment {
         }
     }
 
+    static void double2dListToCSV(double[][] vals, String file){
+        File f = new File(file);
+        f.getParentFile().mkdirs();
+        String eol = System.getProperty("line.separator");
+        try (Writer writer = new FileWriter(f)) {
+            for (double[] val: vals) {
+                for (double entry: val){
+                    writer.append(Double.toString(entry))
+                            .append(',');
+                }
+                writer.append(eol);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
 
     static void mapDoubleLongToCSV(Map<Double, Long> dataMap, String file){
         File f = new File(file);

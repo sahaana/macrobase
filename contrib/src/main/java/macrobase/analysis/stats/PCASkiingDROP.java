@@ -209,6 +209,8 @@ public class PCASkiingDROP extends FeatureTransform {
         return output;
     }
 
+    public double[][] getFinalTransform() { return finalTransform; }
+
     public long totalTime() { return sw.elapsed(TimeUnit.MILLISECONDS);}
 
     public int finalK() { return currK; }
