@@ -507,12 +507,12 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     public long[] getFullSVD(double lbr, double propn){
         long[] ktime = new long[] {0,0};
         int k;
-        Double samples = M*propn;
+        int samples = new Double(M*propn).intValue();
         Stopwatch sw = Stopwatch.createUnstarted();
 
         sw.start();
-        fit(samples.intValue());
-        k = getKCI(lbr);
+        fit(samples);
+        k = getKCI(samples,lbr);
         sw.stop();
 
         ktime[0] = k;
