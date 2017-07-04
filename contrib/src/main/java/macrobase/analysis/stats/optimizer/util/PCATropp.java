@@ -26,7 +26,7 @@ public class PCATropp implements PCA{
 
     public PCATropp(RealMatrix rawDataMatrix){
         this.p = 5;
-        this.q = 2;
+        this.q = 1; //checking if this gives good enough results with 1
         this.highestK = 0;
         this.dataMatrix = rawDataMatrix;
         this.M = rawDataMatrix.getRowDimension();
