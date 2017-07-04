@@ -187,7 +187,11 @@ public class PCASkiingDROP extends FeatureTransform {
         pcaOpt.extractData(records);
         pcaOpt.preprocess();
 
-        return pcaOpt.getFullSVD(lbr);
+        long[] output = pcaOpt.getFullSVD(lbr);
+        transformedData = pcaOpt.transform(new Long(output[0]).intValue());
+        finalTransform = transformedData.getData();
+
+        return output;
     }
 
     public long[] oracleSVD(List<Datum> records, double propn) {
@@ -195,7 +199,11 @@ public class PCASkiingDROP extends FeatureTransform {
         pcaOpt.extractData(records);
         pcaOpt.preprocess();
 
-        return pcaOpt.getFullSVD(lbr, propn);
+        long[] output = pcaOpt.getFullSVD(lbr, propn);
+        transformedData = pcaOpt.transform(new Long(output[0]).intValue());
+        finalTransform = transformedData.getData();
+
+        return output;
     }
 
 

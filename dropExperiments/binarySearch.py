@@ -20,7 +20,7 @@ datasets = ['50words', 'Adiac', 'CBF', 'ChlorineConcentration', 'CinC',
 
 lbr = 0.98
 algos = ['SVD', 'TROPP', 'FAST']
-numTrials = 50
+numTrials = 1
 
 proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.SVDBinSearchExperiments %s %f %s %d"
 comp = "mvn compile -Dmaven.test.skip=true"

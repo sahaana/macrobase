@@ -26,7 +26,7 @@ propns = [0.23708533603026655, 0.12057953939637218, 0.69871437006488757, 0.03814
 
 lbr = 0.98
 algos = ['SVD', 'TROPP', 'FAST']
-numTrials = 50
+numTrials = 1
 
 proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.OracleBinSearchExperiments %s %f %s %f %d"
 comp = "mvn compile -Dmaven.test.skip=true"
