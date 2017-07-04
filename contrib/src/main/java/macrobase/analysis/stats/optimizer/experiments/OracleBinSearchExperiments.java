@@ -73,7 +73,7 @@ public class OracleBinSearchExperiments extends Experiment {
             }
         }
 
-        //this is dumb //why?
+        //this is dumb //why? //because I put it into a map just so I can print it
         Kruntimes.put(tempK / numTrials, tempRuntime / numTrials);
         for (int ii = 0; ii < 3; ii++) {
             finalLBR[ii] = finalLBR[ii]/numTrials;
@@ -81,6 +81,5 @@ public class OracleBinSearchExperiments extends Experiment {
 
         mapIntLongToCSV(Kruntimes, kAndRuntimeOutFile(dataset, lbr, qThresh, algo, propn, date));
         doubleListToCSV(finalLBR, lbrOutFile(dataset, lbr, qThresh, algo, propn, date));
-
     }
 }

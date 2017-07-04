@@ -81,6 +81,12 @@ public class FullDROPExperiments extends Experiment {
         return String.format(baseString + day.format(date) + "/LBR/%s.csv", output);
     }
 
+
+    private static String transformOutFile(String dataset, double lbr, double qThresh, PCASkiingOptimizer.PCAAlgo algo, PCASkiingOptimizer.work reuse, Date date, PCASkiingOptimizer.optimize opt){
+        String output = String.format("%s_%s_%s_lbr%.2f_q%.2f_%s_%s",minute.format(date),dataset, algo, lbr, qThresh, reuse, opt);
+        return String.format("/lfs/raiders6/0/sahaana/data/MIC_DROP/transformed/"+day.format(date)+"/%s.csv", output);
+    }
+
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
@@ -256,6 +262,11 @@ public class FullDROPExperiments extends Experiment {
 
                     fCheckcounts.put(key, 1 + fCheckcounts.getOrDefault(key,0.0));
                     fObjCheck.put(key, val + fObjCheck.getOrDefault(key,0.0));
+                }
+
+                //dump out an arbitrary low dimensional representation at end of DROP
+                if (i == numTrials-1){
+                    double2dListToCSV(drop.getFinalTransform(), transformOutFile(dataset,lbr,qThresh,algo,reuse,date,opt));
                 }
 
             }

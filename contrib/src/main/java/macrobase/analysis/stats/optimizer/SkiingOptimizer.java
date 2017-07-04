@@ -225,8 +225,8 @@ public abstract class SkiingOptimizer {
         fObjective.put(currNt, prevFk - predFk);
         dObjective.put(nextNt, NtTimeGuess);
 
-        // giving it a first feasible bump
-        if ((prevFk - predFk >= NtTimeGuess) || (firstKDrop) || (!opt)){ //(nextNt <= 1000){ //
+        // if obj says to keep going OR you're still not feasible OR you are in no opt mode
+        if ((prevFk - predFk >= NtTimeGuess) || (!this.feasible) || (!opt)){ //(nextNt <= 1000){ //
             return nextNt;
         }
         return M+1;
