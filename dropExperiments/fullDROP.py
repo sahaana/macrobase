@@ -18,11 +18,21 @@ datasets = ['50words', 'Adiac', 'CBF', 'ChlorineConcentration', 'CinC',
        'UWaveGestureLibraryAll', 'WordsSynonyms', 'synthetic',
        'uWaveGestureLibrary', 'wafer', 'yoga','MNIST_all']
 
+datasets = ['ChlorineConcentration', 'CinC', 'ECG5000',
+            'ElectricDevices', 'FordA',
+            'FordB', 'InlineSkate', 'InsectWingbeatSound',
+            'MALLAT',
+            'NonInvasiveFatalECG', 'Phoneme',
+            'StarLightCurves',
+            'Two',
+            'UWaveGestureLibraryAll',
+            'uWaveGestureLibrary', 'wafer', 'yoga']
+
 lbr = 0.98
 q = 1.96
 work = "REUSE"
 opt = "OPTIMIZE"
-numTrials = 200
+numTrials = 300
 
 
 proc = "java -Xms6g ${JAVA_OPTS} -cp 'assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes' macrobase.analysis.stats.optimizer.experiments.FullDROPExperiments %s %f %f %s %s %d"
