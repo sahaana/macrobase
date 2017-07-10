@@ -145,6 +145,10 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     @Override
     public void fit(int Nt) {
         //temporary array list to sample without replacement, then reset for next run
+        Stopwatch sw_t = Stopwatch.createUnstarted();
+        Stopwatch sw_t2 = Stopwatch.createUnstarted();
+        sw_t.start();
+
         ArrayList<Integer> tempRemList = new ArrayList<>();
         for (int i: remList){
             tempRemList.add(i);
@@ -166,6 +170,9 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 tempRemList.remove(j);
         }
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
+        sw_t.stop();
+        System.out.println(sw_t.elapsed(TimeUnit.MILLISECONDS));
+        sw_t2.start();
         switch (algo){
             case PI:
                 this.pca = new PCAPowerIteration(trainMatrix);
@@ -183,6 +190,8 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
                 this.pca = new PCASVD(trainMatrix);
                 break;
         }
+        sw_t2.stop();
+        System.out.println(sw_t2.elapsed(TimeUnit.MILLISECONDS));
     }
 
     public void cacheInput(int high) {
@@ -509,16 +518,13 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int k;
         int samples = new Double(M*propn).intValue();
         Stopwatch sw = Stopwatch.createUnstarted();
-        Stopwatch sw_t = Stopwatch.createUnstarted();
+
 
         sw.start();
-        sw_t.start();
         fit(samples);
-        sw_t.stop();
         k = getKCI(samples,lbr);
         sw.stop();
 
-        System.out.println(sw_t.elapsed(TimeUnit.MILLISECONDS));
         ktime[0] = k;
         ktime[1] = sw.elapsed(TimeUnit.MILLISECONDS);
         System.out.println(ktime[1]);
