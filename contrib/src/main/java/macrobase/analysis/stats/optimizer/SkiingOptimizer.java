@@ -226,7 +226,7 @@ public abstract class SkiingOptimizer {
 
         //for increasing data
         if (nextNt > 2000) {
-            return 10000000000;
+            return 10000000;
         }
 
         if (nextNt > M){
