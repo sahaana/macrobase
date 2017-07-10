@@ -181,7 +181,7 @@ public abstract class SkiingOptimizer {
         this.NtSchedule = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.20, .30, .65, 1.5};//, 1.0, 1.5};
 
         ///uncomment for increasing data
-        this.NtInterval = 100;
+        this.NtInterval = 500;
 
         //touch all of the data
         double touch = 0;
@@ -222,6 +222,11 @@ public abstract class SkiingOptimizer {
         if (iter == 0){
             NtList.add(nextNt);
             return nextNt;
+        }
+
+        //for increasing data
+        if (nextNt > 2000) {
+            return 10000000000;
         }
 
         if (nextNt > M){
