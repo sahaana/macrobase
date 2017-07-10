@@ -509,14 +509,19 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
         int k;
         int samples = new Double(M*propn).intValue();
         Stopwatch sw = Stopwatch.createUnstarted();
+        Stopwatch sw_t = Stopwatch.createUnstarted();
 
         sw.start();
+        sw_t.start();
         fit(samples);
+        sw_t.stop();
         k = getKCI(samples,lbr);
         sw.stop();
 
+        System.out.println(sw_t.elapsed(TimeUnit.MILLISECONDS));
         ktime[0] = k;
         ktime[1] = sw.elapsed(TimeUnit.MILLISECONDS);
+        System.out.println(ktime[1]);
         return ktime;
     }
 
