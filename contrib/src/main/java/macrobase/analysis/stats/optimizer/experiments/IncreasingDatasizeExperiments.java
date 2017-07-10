@@ -65,7 +65,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 100;
+        int numTrials = 10;
         long tempRuntime;
         int tempK;
 
