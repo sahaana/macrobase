@@ -92,7 +92,7 @@ public class IncreasingDatasizeExperiments extends Experiment {
 
 
         String[] datasets = new String[] {dataset1, dataset2, dataset3, dataset4};
-        PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
+        PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP};//, PCASkiingOptimizer.PCAAlgo.FAST};
 
         Map<Integer, Long> runtimes;
         Map<Integer, Integer> finalKs;
