@@ -179,6 +179,10 @@ public abstract class SkiingOptimizer {
     public void preprocess(){
         this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
         this.NtSchedule = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.20, .30, .65, 1.5};//, 1.0, 1.5};
+
+        ///uncomment for increasing data
+        this.NtInterval = 100;
+
         //touch all of the data
         double touch = 0;
         for (int i = 0; i < M; i++){
@@ -188,6 +192,7 @@ public abstract class SkiingOptimizer {
         }
     }
 
+    //use this for increasing data
     public int getNextNtFixedInterval(int iter, int currNt){
         if (iter == 0) {
             return NtInterval;
@@ -211,8 +216,8 @@ public abstract class SkiingOptimizer {
     // this is always called before anything else happens that iter
     public int getNextNtPE(int iter, int currNt){
         // tentative next Nt
-        int nextNt = getNextNtFixedSchedule(iter, currNt);
-
+        ///int nextNt = getNextNtFixedSchedule(iter, currNt);
+        int nextNt = getNextNtFixedInterval(iter, currNt);
         //iter 0 is special because currNt has not been run yet, so no #s exist
         if (iter == 0){
             NtList.add(nextNt);
