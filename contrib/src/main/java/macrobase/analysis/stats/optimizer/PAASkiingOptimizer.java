@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class PAASkiingOptimizer extends SkiingOptimizer{
     private static final Logger log = LoggerFactory.getLogger(PAASkiingOptimizer.class);
     protected Map<Integer, Integer> KItersList;
-    protected List<Integer> factors;
+    //protected List<Integer> factors;
 
     public PAASkiingOptimizer(double qThresh){
         super(qThresh);
@@ -30,9 +30,10 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
     @Override
     public void preprocess() {
         super.preprocess();
-        this.factors = this.findFactors();
+        //this.factors = this.findFactors();
     }
 
+    /*
     @Override
     public RealMatrix transform(int K) {
         // Implementation of PAA. TODO: not optimized as Keogh says
@@ -57,6 +58,59 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
                 temp += currVec.getEntry(j);
                 if (j == this.N - 1){
                     output.setEntry(i,this.N/entriesAveraged - 1, temp/entriesAveraged);
+                }
+            }
+        }
+        return output;
+    }*/
+
+    @Override
+    public RealMatrix transform(int K) {
+        // Implementation of PAA. TODO: not optimized as Keogh says. also such a hack omg
+        RealMatrix output = new Array2DRowRealMatrix(this.M, K);
+        RealVector currVec;
+        double temp;
+        //20, 3 > 6 entries averaged
+        int entriesAveraged = this.N / K;
+
+        if (K == this.N) {
+            return this.dataMatrix;
+        }
+        if (this.N % K == 0 ) {
+            for (int i = 0; i < this.M; i++) {
+                currVec = this.dataMatrix.getRowVector(i);
+                temp = 0;
+                for (int j = 0; j < this.N; j++) {
+                    if (j % entriesAveraged == 0 && j != 0) {
+                        output.setEntry(i, j / entriesAveraged - 1, temp / entriesAveraged);
+                        temp = 0;
+                    }
+                    temp += currVec.getEntry(j);
+                    if (j == this.N - 1) {
+                        output.setEntry(i, this.N / entriesAveraged - 1, temp / entriesAveraged);
+                    }
+                }
+            }
+            return output;
+        }
+
+        int entriesSeen = 0;
+        entriesAveraged += 1;
+        for (int i = 0; i < this.M; i++) {
+            currVec = this.dataMatrix.getRowVector(i);
+            temp = 0;
+            for (int j = 0; j < this.N; j++) {
+                if (j % entriesAveraged == 0 && j != 0) {
+                    output.setEntry(i, j / entriesAveraged - 1, temp / entriesAveraged);
+                    System.out.println(j / entriesAveraged - 1);
+                    temp = 0;
+                    entriesSeen = 0;
+                }
+                temp += currVec.getEntry(j);
+                entriesSeen +=1;
+                if (j == this.N - 1) {
+                    output.setEntry(i, K - 1, temp / entriesSeen);
+                    System.out.println(K - 1);
                 }
             }
         }
@@ -86,7 +140,8 @@ public class PAASkiingOptimizer extends SkiingOptimizer{
 
         double[] CI;
         RealMatrix currTransform; //= new Array2DRowRealMatrix();
-        for (int i: factors){
+        int interval = Math.max(2,this.N/30 + ((this.N/30) % 2)); //ensure even k always
+        for (int i = 2;i <= N; i+= interval){
             sw.reset();
             sw.start();
             currTransform = this.transform(i);

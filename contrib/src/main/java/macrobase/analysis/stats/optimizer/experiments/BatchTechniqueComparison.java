@@ -70,7 +70,7 @@ public class BatchTechniqueComparison extends Experiment {
 
 
         paaResults = paaDrop.genBasePlots(data);
-        fftResults = fftDrop.genBasePlots(data);
+        /*fftResults = fftDrop.genBasePlots(data);
         pcaResults = pcaDrop.genBasePlots(data);
         pcaTroppResults = pcaTroppDrop.genBasePlots(data);
         pcaFastResults = pcaFastDrop.genBasePlots(data);
@@ -89,7 +89,7 @@ public class BatchTechniqueComparison extends Experiment {
         //mapDoubleToCSV(rpResults.get("time"),  timeOutFile(dataset,qThresh, "RP", date));
         mapDoubleToCSV(pcaResults.get("time"), timeOutFile(dataset,qThresh, "PCASVD", date));
         mapDoubleToCSV(pcaTroppResults.get("time"), timeOutFile(dataset,qThresh, "PCATROPP", date));
-        mapDoubleToCSV(pcaFastResults.get("time"), timeOutFile(dataset,qThresh, "PCAFAST", date));
+        mapDoubleToCSV(pcaFastResults.get("time"), timeOutFile(dataset,qThresh, "PCAFAST", date));*/
         
 
     }
