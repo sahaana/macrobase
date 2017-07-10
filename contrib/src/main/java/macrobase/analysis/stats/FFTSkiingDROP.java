@@ -58,7 +58,7 @@ public class FFTSkiingDROP extends FeatureTransform {
 
 
     public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
-        fftOpt.extractData(records);
+        fftOpt.extractData(records, Boolean.TRUE);
         log.debug("Extracted {} Records of len {}", fftOpt.getM(), fftOpt.getN());
         fftOpt.preprocess();
         log.debug("Processed Data");

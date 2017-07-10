@@ -140,6 +140,42 @@ public abstract class SkiingOptimizer {
         this.dataMatrix = new Array2DRowRealMatrix(metricArray);
     }
 
+    public void extractData(List<Datum> records, Boolean limit){
+        ArrayList<double[]> metrics = new ArrayList<>();
+        for (Datum d: records) {
+            metrics.add(d.metrics().toArray());
+        }
+
+        this.M = metrics.size();
+
+        if (limit){
+            int Ntemp = metrics.get(0).length;
+            this.N = (Ntemp/20) * 20;
+
+        }
+        else {
+            this.N = metrics.get(0).length;
+        }
+
+        this.trainList = new ArrayList<>();
+        this.remList = new ArrayList<>();
+        this.sampleList = new ArrayList<>();
+        this.allIndicesN = new int[N];
+        this.allIndicesM = new int[M];
+        double[][] metricArray = new double[M][];
+
+        for (int i = 0; i < M; i++){
+            metricArray[i] = Arrays.copyOf(metrics.get(i),N);
+            this.remList.add(i, i);
+            this.allIndicesM[i] = i;
+        }
+        for (int i = 0; i < N; i++){
+            this.allIndicesN[i] = i;
+        }
+
+        this.dataMatrix = new Array2DRowRealMatrix(metricArray);
+    }
+
     public void preprocess(){
         this.NtInterval = Math.max(10, new Double(this.M*0.05).intValue()); //arbitrary 5%
         this.NtSchedule = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.20, .30, .65, 1.5};//, 1.0, 1.5};

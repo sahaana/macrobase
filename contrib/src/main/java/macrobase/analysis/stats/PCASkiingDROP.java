@@ -164,7 +164,7 @@ public class PCASkiingDROP extends FeatureTransform {
 
     public Map<String,Map<Integer, Double>> genBasePlots(List<Datum> records){
         pcaOpt = new PCASkiingOptimizer(qThresh, algo);
-        pcaOpt.extractData(records);
+        pcaOpt.extractData(records, Boolean.TRUE);
         //log.debug("Extracted {} Records of len {}", pcaOpt.getM(), pcaOpt.getN());
         pcaOpt.preprocess();
         //log.debug("Processed Data");
