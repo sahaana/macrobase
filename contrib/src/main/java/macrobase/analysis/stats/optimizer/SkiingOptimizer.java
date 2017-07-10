@@ -182,6 +182,7 @@ public abstract class SkiingOptimizer {
 
         ///uncomment for increasing data
         this.NtInterval = 500;
+        this.NtInterval = M;
 
         //touch all of the data
         double touch = 0;
@@ -225,9 +226,9 @@ public abstract class SkiingOptimizer {
         }
 
         //for increasing data
-        if (nextNt > 2000) {
-            return 10000000;
-        }
+        //if (nextNt > 2000) {
+        //    return 10000000;
+        //}
 
         if (nextNt > M){
             return nextNt;

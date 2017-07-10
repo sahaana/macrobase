@@ -16,7 +16,7 @@ import java.util.Map;
  * Created by meep_me on 9/1/16.
  */
 public class IncreasingDatasizeExperiments extends Experiment {
-    public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/IncreasingDataExperiments/";
+    public static String baseString = "contrib/src/main/java/macrobase/analysis/stats/optimizer/experiments/IncreasingDataExperiments/full_comp";
     public static DateFormat day = new SimpleDateFormat("MM-dd");
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
 
