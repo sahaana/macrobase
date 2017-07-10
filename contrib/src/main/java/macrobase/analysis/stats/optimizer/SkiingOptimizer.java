@@ -181,8 +181,8 @@ public abstract class SkiingOptimizer {
         this.NtSchedule = new double[] {0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.20, .30, .65, 1.5};//, 1.0, 1.5};
 
         ///uncomment for increasing data
-        this.NtInterval = 500;
-        this.NtInterval = M;
+        //this.NtInterval = 500;
+        //this.NtInterval = M;
 
         //touch all of the data
         double touch = 0;
@@ -217,8 +217,8 @@ public abstract class SkiingOptimizer {
     // this is always called before anything else happens that iter
     public int getNextNtPE(int iter, int currNt){
         // tentative next Nt
-        ///int nextNt = getNextNtFixedSchedule(iter, currNt);
-        int nextNt = getNextNtFixedInterval(iter, currNt);
+        int nextNt = getNextNtFixedSchedule(iter, currNt);
+
         //iter 0 is special because currNt has not been run yet, so no #s exist
         if (iter == 0){
             NtList.add(nextNt);
@@ -226,6 +226,7 @@ public abstract class SkiingOptimizer {
         }
 
         //for increasing data
+        //int nextNt = getNextNtFixedInterval(iter, currNt);
         //if (nextNt > 2000) {
         //    return 10000000;
         //}
