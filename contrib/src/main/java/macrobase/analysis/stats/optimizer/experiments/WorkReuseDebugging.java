@@ -34,7 +34,7 @@ public class WorkReuseDebugging extends Experiment {
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
-        int numTrials = 100;
+        int numTrials = 200;
         long tempRuntime;
         int tempK;
 
@@ -50,9 +50,10 @@ public class WorkReuseDebugging extends Experiment {
         System.out.println(opt);
 
 
-        PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
+        PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP};
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.REUSE;
-        double[] works = new double[] {0.0, 0.005, 0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.50,0.60,0.70,0.80,0.90,1};
+        //double[] works = new double[] {0.0, 0.005, 0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.50,0.60,0.70,0.80,0.90,1};
+        double[] works = new double[] {0.0, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6};
 
         Map<Double, Long> runtimes;
         Map<Double, Integer> finalKs;
