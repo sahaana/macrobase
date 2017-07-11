@@ -145,26 +145,44 @@ public class PCASkiingOptimizer extends SkiingOptimizer {
     @Override
     public void fit(int Nt) {
         //temporary array list to sample without replacement, then reset for next run
+        //sample list and rem list are disjoint
         ArrayList<Integer> tempRemList = new ArrayList<>();
         for (int i: remList){
             tempRemList.add(i);
         }
 
-        //get Nt points from train and move to test
+        //get Nt points from candidate and move to train
         Random rand = new Random();
         trainList = new ArrayList<>();
 
         //importance sampling
         int currTrain = sampleList.size();
-        for (int i : sampleList){
-            trainList.add(i);
+
+        //add all of the importance sampling points to trainlist if smaller than Nt,
+        if (currTrain <= Nt) {
+            for (int i : sampleList) {
+                trainList.add(i);
+            }
+        } else {  // else, subsample Nt  them
+            ArrayList<Integer> tempSampleList = new ArrayList<>();
+            for (int i: sampleList){
+                tempSampleList.add(i);
+            }
+            while (trainList.size() < Nt){ //guaranteed to terminate because currTrain (sampleList.size) > Nt
+                int j = rand.nextInt(tempSampleList.size());
+                trainList.add(tempSampleList.get(j));
+                tempSampleList.remove(j);
+            }
         }
 
-        for (int i = 0; i < Nt - currTrain; i++){
+        //fill the rest of the list with other points not being importance sampled
+        while (trainList.size() < Nt){
                 int j = rand.nextInt(tempRemList.size());
                 trainList.add(tempRemList.get(j));
                 tempRemList.remove(j);
         }
+
+
         RealMatrix trainMatrix = dataMatrix.getSubMatrix(ListtoPrimitive(trainList), allIndicesN);
         switch (algo){
             case PI:

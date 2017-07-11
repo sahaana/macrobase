@@ -52,7 +52,7 @@ public class WorkReuseDebugging extends Experiment {
 
         PCASkiingOptimizer.PCAAlgo[] algos = {PCASkiingOptimizer.PCAAlgo.TROPP, PCASkiingOptimizer.PCAAlgo.FAST};
         PCASkiingOptimizer.work reuse = PCASkiingOptimizer.work.REUSE;
-        double[] works = new double[] {0.0, 0.005, 0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.50};
+        double[] works = new double[] {0.0, 0.005, 0.01, 0.025, 0.05, 0.10, 0.15, 0.20, 0.25, 0.50,0.60,0.70,0.80,0.90,1};
 
         Map<Double, Long> runtimes;
         Map<Double, Integer> finalKs;
