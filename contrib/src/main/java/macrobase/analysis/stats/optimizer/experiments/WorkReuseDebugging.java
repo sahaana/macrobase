@@ -31,6 +31,11 @@ public class WorkReuseDebugging extends Experiment {
         return String.format(baseString + day.format(date) + "/PvK/%s.csv", output);
     }
 
+    private static String transformOutFile(String dataset, Date date, double propn){
+        String output = String.format("%s_%s_%s_reuse%.2f",minute.format(date),dataset, propn);
+        return String.format("/lfs/raiders6/0/sahaana/data/MIC_DROP/reuse/"+day.format(date)+"/%s.csv", output);
+    }
+
     //java ${JAVA_OPTS} -cp "assembly/target/*:core/target/classes:frontend/target/classes:contrib/target/classes" macrobase.analysis.stats.optimizer.experiments.SVDDropExperiments
     public static void main(String[] args) throws Exception{
         Date date = new Date();
@@ -76,6 +81,10 @@ public class WorkReuseDebugging extends Experiment {
 
                     runtimes.put(pReuse, tempRuntime + drop.totalTime());
                     finalKs.put(pReuse, tempK + drop.finalK());
+
+                    if (i == numTrials-1){
+                        double2dListToCSV(drop.getFinalTransform(), transformOutFile(dataset,date,pReuse));
+                    }
                 }
             }
             mapDoubleLongToCSV(scaleLongMapWCount(runtimes, numTrials), timeOutFile(dataset,lbr,qThresh,algo,date,opt));
