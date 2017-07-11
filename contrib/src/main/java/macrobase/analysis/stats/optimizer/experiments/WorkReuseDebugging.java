@@ -32,7 +32,7 @@ public class WorkReuseDebugging extends Experiment {
     }
 
     private static String transformOutFile(String dataset, Date date, double propn){
-        String output = String.format("%s_%s_%s_reuse%.2f",minute.format(date),dataset, propn);
+        String output = String.format("%s_%s_reuse%.2f",minute.format(date),dataset, propn);
         return String.format("/lfs/raiders6/0/sahaana/data/MIC_DROP/reuse/"+day.format(date)+"/%s.csv", output);
     }
 
